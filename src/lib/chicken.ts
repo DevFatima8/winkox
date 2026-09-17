@@ -1,0 +1,160 @@
+import { dbConnect } from "./mongo";
+import { ChickenGame, Game, GameResult, User, oid, type ObjectId } from "@/models";
+import { checkGameAccess } from "./gameAccess";
+import { payBetCommission } from "./platform";
+
+
+export const MIN_BET = 10;
+export const MAX_BET = 50000;
+export const MAX_WIN = 10_000_000; // Rs. 1 crore cap per game
+const CELLS = 25; // like the original: 25 cells, N of them have cars
+const RTP = 0.98; // 2% house edge
+
+export const DIFFICULTIES = {
+  easy: { cars: 1, label: "Easy" },
+  medium: { cars: 3, label: "Medium" },
+  hard: { cars: 5, label: "Hard" },
+  hardcore: { cars: 10, label: "Hardcore" },
+} as const;
+export type Difficulty = keyof typeof DIFFICULTIES;
+export const isDifficulty = (d: string): d is Difficulty => d in DIFFICULTIES;
+export const lanesFor = (d: Difficulty) => CELLS - DIFFICULTIES[d].cars;
+
+/** Multiplier after crossing `k` lanes safely: RTP / P(k safe steps in a row). */
+export function multiplierAt(d: Difficulty, k: number) {
+  if (k <= 0) return 1;
+  const lanes = lanesFor(d);
+  let p = 1;
+  for (let i = 0; i < k; i++) p *= (lanes - i) / (CELLS - i);
+  return Math.max(1, Math.floor((RTP / p) * 100) / 100);
+}
+
+export const multiplierTable = (d: Difficulty) => Array.from({ length: lanesFor(d) }, (_, i) => multiplierAt(d, i + 1));
+
+/** Decide (secretly, at game start) on which lane the chicken gets hit. lanes+1 = never. */
+function rollCrashLane(d: Difficulty) {
+  const lanes = lanesFor(d);
+  for (let k = 0; k < lanes; k++) {
+    const survive = (lanes - k) / (CELLS - k);
+    if (Math.random() >= survive) return k + 1;
+  }
+  return lanes + 1;
+}
+
+let cachedGameId: ObjectId | null = null;
+async function gameId() {
+  if (cachedGameId) return cachedGameId;
+  const g = await Game.findOneAndUpdate(
+    { slug: "chicken-road-2" },
+    { $setOnInsert: { name: "Chicken Road 2", slug: "chicken-road-2", icon: "🐔", description: "Chicken ko road cross karwayein — har lane par multiplier barhta hai!", isActive: true } },
+    { upsert: true, returnDocument: "after" },
+  ).lean();
+  cachedGameId = g!._id;
+  return cachedGameId;
+}
+
+type GameLike = { _id: ObjectId; difficulty: string; betAmount: number; lanes: number; position: number; status: string; winAmount: number; crashLane: number };
+
+function publicState(g: GameLike) {
+  const diff = g.difficulty as Difficulty;
+  return {
+    id: String(g._id),
+    difficulty: diff,
+    bet: g.betAmount,
+    lanes: g.lanes,
+    position: g.position,
+    status: g.status as "active" | "cashed" | "dead",
+    win: g.winAmount,
+    currentMultiplier: multiplierAt(diff, g.position),
+    nextMultiplier: g.position < g.lanes ? multiplierAt(diff, g.position + 1) : null,
+    crashLane: g.status === "active" ? null : g.crashLane, // revealed only after the game ends
+  };
+}
+
+const winFor = (bet: number, m: number) => Math.min(MAX_WIN, Math.floor(bet * m * 100) / 100);
+
+export async function getState(userId: string | null) {
+  await dbConnect();
+  const [active, me, recent] = userId
+    ? await Promise.all([
+        ChickenGame.findOne({ userId: oid(userId), status: "active" }).lean(),
+        User.findById(userId, "balance").lean(),
+        ChickenGame.find({ userId: oid(userId), status: { $ne: "active" } }).sort({ createdAt: -1 }).limit(12).lean(),
+      ])
+    : [null, null, []];
+  const keys = Object.keys(DIFFICULTIES) as Difficulty[];
+  return {
+    game: active ? publicState(active) : null,
+    balance: me?.balance ?? 0,
+    tables: Object.fromEntries(keys.map((d) => [d, multiplierTable(d)])),
+    difficulties: Object.fromEntries(keys.map((d) => [d, { ...DIFFICULTIES[d], lanes: lanesFor(d) }])),
+    limits: { min: MIN_BET, max: MAX_BET },
+    recent: recent.map((r) => ({ id: String(r._id), difficulty: r.difficulty, bet: r.betAmount, win: r.winAmount, status: r.status, position: r.position, multiplier: r.status === "cashed" ? multiplierAt(r.difficulty as Difficulty, r.position) : 0 })),
+  };
+}
+
+export async function startGame(userId: string, amount: number, difficulty: string) {
+  await dbConnect();
+  if (!isDifficulty(difficulty)) return { error: "Difficulty select karein." };
+  if (!Number.isFinite(amount) || amount < MIN_BET || amount > MAX_BET) return { error: `Bet Rs. ${MIN_BET} se Rs. ${MAX_BET} ke darmiyan honi chahiye.` };
+  amount = Math.floor(amount);
+  const denied = await checkGameAccess(userId, "chicken-road-2");
+  if (denied) return { error: denied };
+  const uid = oid(userId);
+  if (await ChickenGame.exists({ userId: uid, status: "active" })) return { error: "Pehle wali game abhi chal rahi hai." };
+
+  const r = await User.updateOne({ _id: uid, balance: { $gte: amount } }, { $inc: { balance: -amount } });
+  if (r.modifiedCount === 0) return { error: "Insufficient balance. Pehle deposit karein." };
+
+  const gid = await gameId();
+  const result = await GameResult.create({ gameId: gid, userId: uid, betAmount: amount, outcome: "pending", resultData: `${DIFFICULTIES[difficulty].label} · started` });
+  void payBetCommission(uid, amount);
+  const g = await ChickenGame.create({ userId: uid, resultId: result._id, difficulty, betAmount: amount, lanes: lanesFor(difficulty), crashLane: rollCrashLane(difficulty) });
+  return { ok: true, game: publicState(g.toObject()) };
+}
+
+export async function step(userId: string) {
+  await dbConnect();
+  const g = await ChickenGame.findOne({ userId: oid(userId), status: "active" });
+  if (!g) return { error: "Koi active game nahi." };
+  const next = g.position + 1;
+  const diff = g.difficulty as Difficulty;
+  const label = DIFFICULTIES[diff].label;
+
+  if (next >= g.crashLane) {
+    g.status = "dead";
+    g.position = next;
+    await g.save();
+    await GameResult.updateOne({ _id: g.resultId }, { $set: { outcome: "lose", resultData: `${label} · hit by car at lane ${next}` } });
+    return { ok: true, game: publicState(g.toObject()), event: "dead" as const };
+  }
+
+  g.position = next;
+  if (next >= g.lanes) {
+    const m = multiplierAt(diff, next);
+    const win = winFor(g.betAmount, m);
+    g.status = "cashed";
+    g.winAmount = win;
+    await g.save();
+    await User.updateOne({ _id: g.userId }, { $inc: { balance: win } });
+    await GameResult.updateOne({ _id: g.resultId }, { $set: { outcome: "win", winAmount: win, resultData: `${label} · crossed all ${g.lanes} lanes @ ${m.toFixed(2)}x` } });
+    return { ok: true, game: publicState(g.toObject()), event: "finished" as const };
+  }
+
+  await g.save();
+  return { ok: true, game: publicState(g.toObject()), event: "safe" as const };
+}
+
+export async function cashOut(userId: string) {
+  await dbConnect();
+  const g = await ChickenGame.findOneAndUpdate({ userId: oid(userId), status: "active", position: { $gte: 1 } }, { $set: { status: "cashed" } }, { returnDocument: "after" });
+  if (!g) return { error: "Cash out ke liye kam az kam ek lane cross karein." };
+  const diff = g.difficulty as Difficulty;
+  const m = multiplierAt(diff, g.position);
+  const win = winFor(g.betAmount, m);
+  g.winAmount = win;
+  await g.save();
+  await User.updateOne({ _id: g.userId }, { $inc: { balance: win } });
+  await GameResult.updateOne({ _id: g.resultId }, { $set: { outcome: "win", winAmount: win, resultData: `${DIFFICULTIES[diff].label} · cashed out at lane ${g.position} @ ${m.toFixed(2)}x` } });
+  return { ok: true, game: publicState(g.toObject()), multiplier: m, win };
+}
