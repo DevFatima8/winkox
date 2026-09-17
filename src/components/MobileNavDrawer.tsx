@@ -21,7 +21,7 @@ export function MobileNavDrawer({ items, title, footer }: { items: MobileNavItem
     <>
       <button onClick={() => setOpen(true)} aria-label="Menu" className="flex h-9 w-9 items-center justify-center rounded-lg bg-black/30 text-white ring-1 ring-[#3a2470]"><MenuIcon size={20} /></button>
       <Panel open={open} onClose={() => setOpen(false)} side="left" showClose={false}>
-        <div className="flex items-center justify-between border-b border-[#3a2470] px-4 py-3">
+        <div className="flex items-center justify-between border-b wx-drawer-border px-4 py-3">
           <span className="font-black text-gold-grad">WinX555 · {title}</span>
           <button onClick={() => setOpen(false)} aria-label="Close menu" className="flex h-9 w-9 items-center justify-center rounded-full bg-white/5 text-slate-300 ring-1 ring-white/10">✕</button>
         </div>
@@ -29,14 +29,14 @@ export function MobileNavDrawer({ items, title, footer }: { items: MobileNavItem
           {items.map((n) => {
             const active = path === n.href || (n.href !== "/admin" && n.href !== "/client" && path.startsWith(n.href));
             return (
-              <Link key={n.href} href={n.href} className={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold ${active ? "bg-[#8b5cf6]/20 text-white ring-1 ring-[#8b5cf6]/40" : "text-[#e9ddff] hover:bg-[#241546]"}`}>
-                <span className="text-[#c4b5fd]">{n.icon}</span>{n.label}
+              <Link key={n.href} href={n.href} className={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold ${active ? "bg-[#8b5cf6]/15 wx-rowtext ring-1 ring-[#8b5cf6]/40" : "wx-rowtext hover:wx-row"}`}>
+                <span className="wx-rowicon">{n.icon}</span>{n.label}
               </Link>
             );
           })}
-          <Link href="/" className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-[#e9ddff] hover:bg-[#241546]"><span className="text-[#c4b5fd]"><HomeIcon size={20} /></span>Home</Link>
+          <Link href="/" className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold wx-rowtext hover:wx-row"><span className="wx-rowicon"><HomeIcon size={20} /></span>Home</Link>
         </nav>
-        {footer && <div className="border-t border-[#3a2470] p-3">{footer}</div>}
+        {footer && <div className="border-t wx-drawer-border p-3">{footer}</div>}
       </Panel>
     </>
   );

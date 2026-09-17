@@ -20,7 +20,7 @@ export function BannerCarousel({ slides }: { slides: Slide[] }) {
     return () => clearInterval(id);
   }, [slides.length]);
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-[#3a2470] shadow-[0_10px_40px_rgba(139,92,246,.35)] md:rounded-3xl" dir="ltr">
+    <div className="relative overflow-hidden rounded-2xl border wx-drawer-border shadow-[0_10px_40px_rgba(139,92,246,.35)] md:rounded-3xl" dir="ltr">
       <div className="flex transition-transform duration-700 ease-out" style={{ transform: `translateX(-${i * 100}%)` }}>
         {slides.map((s, k) => (
           <Link key={k} href={s.href} className={`on-image relative block aspect-[2.2/1] w-full shrink-0 md:aspect-[3.2/1] lg:aspect-[3.6/1] ${s.bg}`}>
@@ -31,7 +31,7 @@ export function BannerCarousel({ slides }: { slides: Slide[] }) {
               <h2 className="max-w-[58%] text-[22px] font-black uppercase leading-[1.02] text-white drop-shadow-[0_2px_10px_rgba(0,0,0,.7)] sm:text-4xl lg:text-5xl">
                 <Hi s={s.title} />
               </h2>
-              {s.sub && <p className="mt-1.5 max-w-[58%] text-[11px] font-semibold text-[#e9ddff] drop-shadow sm:text-sm lg:text-base">{s.sub}</p>}
+              {s.sub && <p className="mt-1.5 max-w-[58%] text-[11px] font-semibold wx-rowtext drop-shadow sm:text-sm lg:text-base">{s.sub}</p>}
               <span className="btn-gold mt-3 w-max rounded-full px-4 py-1.5 text-xs font-black sm:text-sm">{s.cta} →</span>
             </div>
             {s.emoji && !s.img && <span className={`absolute top-1/2 -translate-y-1/2 text-[64px] drop-shadow-[0_10px_20px_rgba(0,0,0,.5)] sm:text-[110px] lg:text-[150px] ${isUr ? "left-4 lg:left-12" : "right-4 lg:right-12"}`}>{s.emoji}</span>}
@@ -107,11 +107,11 @@ export function LeaderboardTable({ rows, labels = ["Rank", "Username", "Winnings
   }, []);
   const all = [...rows, ...rows];
   return (
-    <div className="overflow-hidden rounded-xl border border-[#3a2470]">
+    <div className="overflow-hidden rounded-xl border wx-drawer-border">
       <div className="on-image grid grid-cols-[60px_1fr_1fr] bg-gradient-to-r from-[#8b5cf6] to-[#d946ef] px-3 py-1.5 text-center text-xs font-bold text-white"><span>{labels[0]}</span><span>{labels[1]}</span><span>{labels[2]}</span></div>
       <div ref={ref} className="h-32 overflow-hidden bg-black/30 md:h-44 lg:h-52">
         {all.map((r, i) => (
-          <div key={i} className="grid grid-cols-[60px_1fr_1fr] border-b border-[#3a2470]/60 px-3 py-1.5 text-center text-xs text-[#e9ddff]">
+          <div key={i} className="grid grid-cols-[60px_1fr_1fr] border-b wx-drawer-border/60 px-3 py-1.5 text-center text-xs wx-rowtext">
             <span className="font-bold text-white">{r.rank} <span className={r.up ? "text-emerald-400" : "text-[#ff3b5c]"}>{r.up ? "▲" : "▼"}</span></span>
             <span>{r.name}</span>
             <span className="font-semibold text-[#ffb800]">Rs. {r.amount.toLocaleString("en-US")}</span>
@@ -140,11 +140,11 @@ export function Drawer({ loggedIn, isAdmin }: { loggedIn: boolean; isAdmin: bool
           <BrandLogo className="h-9 w-9" /><span className="text-lg font-black text-gold-grad">WinX555</span>
         </div>
         <div className="space-y-2 px-3">
-          <div className="flex items-center justify-between rounded-xl bg-black/30 px-3 py-2.5 text-xs text-[#b8a7e6]"><span className="inline-flex items-center gap-2"><GlobeIcon size={14} /> {t("language")}</span><LanguageSwitch compact /></div>
-          <div className="flex items-center justify-between rounded-xl bg-black/30 px-3 py-2.5 text-xs text-[#b8a7e6]"><span>Theme</span><ThemeToggle compact /></div>
+          <div className="wx-chip flex items-center justify-between rounded-xl bg-black/30 px-3 py-2.5 text-xs text-[#b8a7e6]"><span className="inline-flex items-center gap-2"><GlobeIcon size={14} /> {t("language")}</span><LanguageSwitch compact /></div>
+          <div className="wx-chip flex items-center justify-between rounded-xl bg-black/30 px-3 py-2.5 text-xs text-[#b8a7e6]"><span>Theme</span><ThemeToggle compact /></div>
         </div>
         <nav className="mt-3 space-y-0.5 px-3">
-          {links.map(([i, l, h]) => <Link key={l + h} href={h} onClick={() => setOpen(false)} className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-[#e9ddff] hover:bg-[#241546]"><span className="text-[#c4b5fd]">{i}</span>{l}</Link>)}
+          {links.map(([i, l, h]) => <Link key={l + h} href={h} onClick={() => setOpen(false)} className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold wx-rowtext hover:wx-row"><span className="wx-rowicon">{i}</span>{l}</Link>)}
         </nav>
         {!loggedIn && (
           <div className="mt-5 grid grid-cols-2 gap-2 border-t border-white/10 p-4">

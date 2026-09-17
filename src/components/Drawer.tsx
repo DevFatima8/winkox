@@ -41,13 +41,12 @@ export function Drawer({
       {/* opaque overlay: completely hides page content */}
       <div
         onClick={onClose}
-        className={`absolute inset-0 h-[100dvh] bg-[#05010f] transition-opacity duration-200 ${open ? "opacity-100" : "opacity-0"}`}
+        className={`absolute inset-0 h-[100dvh] wx-drawer-overlay transition-opacity duration-200 ${open ? "opacity-100" : "opacity-0"}`}
         aria-label="Close menu"
       />
       {/* panel */}
       <aside
-        className={`absolute inset-y-0 top-0 ${sidePos} flex h-[100dvh] w-full ${widthClass} max-w-[90vw] flex-col border-[#3a2470] shadow-2xl transition-transform duration-200 ease-out ${side === "right" ? "border-l" : "border-r"} ${open ? "translate-x-0" : translateClosed}`}
-        style={{ background: "linear-gradient(180deg,#140c2a 0%,#0c0720 100%)" }}
+        className={`absolute inset-y-0 top-0 ${sidePos} flex h-[100dvh] w-full ${widthClass} max-w-[90vw] flex-col border shadow-2xl transition-transform duration-200 ease-out ${side === "right" ? "border-l" : "border-r"} wx-drawer-panel ${open ? "translate-x-0" : translateClosed}`}
       >
         {showClose && (
           <button onClick={onClose} aria-label="Close menu" className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white/5 text-slate-300 ring-1 ring-white/10 hover:bg-white/10">

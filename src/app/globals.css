@@ -380,3 +380,49 @@ table { min-width: max-content; }
 @media (min-width: 1920px) {
   main > .mx-auto { max-width: 1800px; }
 }
+
+/* ===== Drawer / side menu theme ===== */
+.wx-drawer-panel {
+  background: linear-gradient(180deg, #140c2a 0%, #0c0720 100%);
+  border-color: #3a2470;
+  color: #e9ddff;
+}
+.wx-drawer-panel .wx-scroll::-webkit-scrollbar-thumb { background: rgba(139,92,246,.5); }
+.wx-drawer-overlay { background: rgba(5,1,15,.92); }
+html.light .wx-drawer-panel {
+  background-color: #ffffff !important;
+  background-image: linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%) !important;
+  border-color: #d5dde6;
+  color: #0f172a;
+  box-shadow: 0 20px 50px rgba(15,23,42,.25);
+}
+html.light .wx-drawer-overlay { background: rgba(15,23,42,.55); }
+/* panel text colors */
+html.light .wx-drawer-panel { color: #0f172a; }
+html.light .wx-drawer-panel .text-\[\#e9ddff\],
+html.light .wx-drawer-panel .text-white { color: #0f172a !important; }
+html.light .wx-drawer-panel .text-\[\#c4b5fd\] { color: #6d28d9 !important; }
+html.light .wx-drawer-panel .text-slate-300,
+html.light .wx-drawer-panel .text-slate-400,
+html.light .wx-drawer-panel .text-\[\#b8a7e6\] { color: #475569 !important; }
+html.light .wx-drawer-panel .text-gold-grad { color: #b45309 !important; -webkit-text-fill-color: #b45309; }
+html.light .wx-drawer-panel .text-\[\#b8a7e6\] { color: #475569 !important; }
+/* panel inner rows / chips */
+html.light .wx-drawer-panel .bg-black\/30,
+html.light .wx-drawer-panel .bg-\[\#241546\]\/0 { background-color: #eef2f7 !important; }
+html.light .wx-drawer-panel .hover\:bg-\[\#241546\]:hover { background-color: #ede9fe !important; }
+html.light .wx-drawer-panel .border-white\/10,
+html.light .wx-drawer-panel .border-\[\#3a2470\] { border-color: #d5dde6 !important; }
+html.light .wx-drawer-panel .bg-white\/5 { background-color: #e2e8f0 !important; }
+html.light .wx-drawer-panel .bg-white\/5:hover { background-color: #cbd5e1 !important; }
+/* drawer row tokens (dark default) */
+.wx-rowtext { color: #e9ddff; }
+.wx-rowicon { color: #c4b5fd; }
+.hover\:wx-row:hover { background-color: #241546; }
+.wx-drawer-border { border-color: #3a2470; }
+html.light .wx-rowtext { color: #1e293b !important; }
+html.light .wx-rowicon { color: #6d28d9 !important; }
+html.light .hover\:wx-row:hover { background-color: #ede9fe !important; }
+html.light .wx-drawer-border { border-color: #d5dde6 !important; }
+/* lobby drawer language/theme chips */
+html.light .wx-drawer-panel .wx-chip { background-color: #eef2f7 !important; color: #334155 !important; }
