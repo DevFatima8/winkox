@@ -22,14 +22,14 @@ export const BRAND = { name: "WinX555", domain: "winx555games.shop", whatsapp: "
 export const GAME_META: Record<string, { img: string; provider: string; label: string; cat: string[]; hot?: boolean; badge?: string }> = {
   aviator: { img: "/games/aviator.jpg", provider: "SPRIBE", label: "Aviator", cat: ["Hot", "Mini Games", "Demo"], hot: true, badge: "HOT" },
   "chicken-dash": { img: "/games/chicken-dash.jpg", provider: "JILI", label: "Chicken Dash", cat: ["Hot", "Mini Games", "Demo"], badge: "NEW" },
-  "dragon-tiger": { img: "/games/dragon.jpg", provider: "WG", label: "Dragon Tiger", cat: ["Hot", "Cards", "Live", "Demo"], badge: "LIVE" },
+  "dragon-tiger": { img: "/games/dragon-tiger.jpg", provider: "WG", label: "Dragon Tiger", cat: ["Hot", "Cards", "Live", "Demo"], badge: "LIVE" },
   "andar-bahar": { img: "/games/andar-bahar.jpg", provider: "JILI", label: "Andar Bahar", cat: ["Hot", "Cards", "Live", "Demo"], badge: "LIVE" },
   "chicken-road-2": { img: "/games/chicken-road.jpg", provider: "IN", label: "Chicken Road 2", cat: ["Hot", "Mini Games", "Demo"], hot: true },
   plinko: { img: "/games/plinko.jpg", provider: "WG", label: "Plinko", cat: ["Hot", "Mini Games", "Demo"], badge: "1000x" },
-  "aviator-x": { img: "/games/aviatorx.jpg", provider: "SPRIBE", label: "Aviator X", cat: ["Hot", "Mini Games", "Demo"], badge: "NEW" },
+  "aviator-x": { img: "/games/aviator-x.jpg", provider: "SPRIBE", label: "Aviator X", cat: ["Hot", "Mini Games", "Demo"], badge: "NEW" },
   limbo: { img: "/games/limbo.jpg", provider: "WG", label: "Limbo", cat: ["Hot", "Mini Games", "Demo"], badge: "1M x" },
   mines: { img: "/games/mines.jpg", provider: "SPRIBE", label: "Mines", cat: ["Hot", "Mini Games", "Demo"], hot: true },
-  "lucky-777": { img: "/games/lucky777.jpg", provider: "JILI", label: "Lucky 777", cat: ["Hot", "Slot", "Demo"], badge: "777x" },
+  "lucky-777": { img: "/games/lucky-777.jpg", provider: "JILI", label: "Lucky 777", cat: ["Hot", "Slot", "Demo"], badge: "777x" },
 };
 export const GAME_ORDER = ["aviator", "aviator-x", "chicken-dash", "mines", "dragon-tiger", "limbo", "andar-bahar", "chicken-road-2", "plinko", "lucky-777"];
 
@@ -37,18 +37,18 @@ const PROVIDER_STYLE: Record<string, string> = { SPRIBE: "text-[#ff5c5c] trackin
 const BADGE_STYLE: Record<string, string> = { "777x": "bg-gradient-to-r from-[#ef4444] to-[#b91c1c]", "1M x": "bg-gradient-to-r from-[#0ea5e9] to-[#6366f1]", HOT: "bg-gradient-to-r from-[#ff3b5c] to-[#ff8a00]", NEW: "bg-gradient-to-r from-[#22c55e] to-[#16a34a]", LIVE: "bg-gradient-to-r from-[#d946ef] to-[#8b5cf6]", "1000x": "bg-gradient-to-r from-[#ffb800] to-[#ff8a00] text-slate-950" };
 
 export const MARQUEE = [
-  "WinX555 mein khush aamdeed! Register karein aur PKR 1500 welcome bonus hasil karein",
-  "Har deposit par 7% bonus — PKR 60,000 tak! JazzCash & Easypaisa instant",
-  "1 dost invite karein jo top-up kare — 588 PKR bonus + 1.5% betting commission + 4% top-up commission",
+"WinX555 mein khush aamdeed! Register karein aur PKR 1500 welcome bonus hasil karein",
+"Har deposit par 7% bonus — PKR 60,000 tak! JazzCash & Easypaisa instant",
+"1 dost invite karein jo top-up kare — 588 PKR bonus + 1.5% betting commission + 4% top-up commission",
   "💵 Har bet par cashback — agle din 00:00 ke baad claim karein 📅",
-  "🆘 Har hafte PKR 100,000 tak rescue fund!",
-  "Rozana 3 random red packets — PKR 888,888 tak jeetne ka mauqa",
+"🆘 Har hafte PKR 100,000 tak rescue fund!",
+"Rozana 3 random red packets — PKR 888,888 tak jeetne ka mauqa",
 ];
 
 const SLIDES: Slide[] = [
   { bg: "bg-gradient-to-r from-[#04261f] via-[#0b5a4a] to-[#0a8f9e]", img: "/lobby/hero.jpg", kicker: "Welcome bonus", title: "Receive |PKR 1500| for free", sub: "Register now & claim your welcome reward instantly", href: "/signup", cta: "Register now" },
   { bg: "bg-gradient-to-r from-[#0a0f14] via-[#12252e] to-[#0e7490]", img: "/games/aviator.jpg", kicker: "Most played", title: "Aviator |up to 1000x|", sub: "Cash out before the plane flies away", href: "/games/aviator", cta: "Play now" },
-  { bg: "bg-gradient-to-r from-[#3b0a0a] via-[#7a1f2b] to-[#c2410c]", img: "/games/tiger.jpg", kicker: "WG Cards live", title: "Dragon Tiger |Tie pays 8:1|", sub: "20-second live rounds · real cards", href: "/games/dragon-tiger", cta: "Join table" },
+  { bg: "bg-gradient-to-r from-[#3b0a0a] via-[#7a1f2b] to-[#c2410c]", img: "/games/dragon-tiger.jpg", kicker: "WG Cards live", title: "Dragon Tiger |Tie pays 8:1|", sub: "20-second live rounds · real cards", href: "/games/dragon-tiger", cta: "Join table" },
   { bg: "bg-gradient-to-r from-[#0b2a12] via-[#0f5132] to-[#059669]", img: "/lobby/jackpot.jpg", kicker: "Every deposit", title: "|7% bonus| on every deposit", sub: "Win up to PKR 60,000 — JazzCash & Easypaisa", href: "/promo", cta: "View promo" },
 ];
 
@@ -156,7 +156,7 @@ export function GameCard({ slug, href }: { slug: string; href: string }) {
         {m.badge && <span className={`absolute right-1.5 top-1.5 rounded-md px-1.5 py-0.5 text-[9px] font-black text-white shadow ${BADGE_STYLE[m.badge]}`}>{m.badge}</span>}
         <span className="btn-gold absolute bottom-2 left-1/2 flex -translate-x-1/2 items-center gap-1 rounded-full px-3.5 py-1 text-[10px] font-black opacity-0 transition group-hover:opacity-100"><PlayIcon size={10} /> PLAY</span>
       </div>
-    </span>
+      </span>
       <div className="flex items-center justify-between bg-[#140c2a] px-2 py-1.5">
         <span className="truncate text-xs font-bold text-white">{m.label}</span>
         <span className="text-[#ffb800]"><CrownIcon size={12} /></span>

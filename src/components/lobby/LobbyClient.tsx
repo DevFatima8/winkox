@@ -6,6 +6,7 @@ import { useI18n, Hi } from "@/lib/i18n/client";
 import { LanguageSwitch } from "@/components/LanguageSwitch";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { BrandLogo } from "@/components/BrandLogo";
+import { Drawer as GlobalDrawer } from "@/components/Drawer";
 import { HomeIcon, FlameIcon, SpadeIcon, GamepadIcon, GiftIcon, WalletIcon, BanknoteIcon, HistoryIcon, BookIcon, UserIcon, MegaphoneIcon, MailIcon, ArrowUpIcon, XIcon, MenuIcon, GlobeIcon, CrownIcon, UsersIcon } from "@/components/Icons";
 import type { ReactNode } from "react";
 
@@ -134,30 +135,28 @@ export function Drawer({ loggedIn, isAdmin }: { loggedIn: boolean; isAdmin: bool
   return (
     <>
       <button onClick={() => setOpen(true)} className="flex h-9 w-9 items-center justify-center rounded-lg text-white" aria-label="Menu"><MenuIcon size={24} /></button>
-      {open && (
-        <div className="fixed inset-0 z-[60] bg-black/70" onClick={() => setOpen(false)}>
-          <aside className="h-full w-72 max-w-[80%] bg-[#140c2a] p-4 shadow-2xl rtl:ml-auto" onClick={(e) => e.stopPropagation()}>
-            <div className="mb-4 flex items-center justify-between">
-              <span className="flex items-center gap-2"><BrandLogo className="h-8 w-8" /><span className="text-lg font-black text-gold-grad">WinX555</span></span>
-              <button onClick={() => setOpen(false)} className="text-slate-400"><XIcon size={20} /></button>
-            </div>
-            <div className="mb-2 flex items-center justify-between rounded-lg bg-black/30 px-3 py-2 text-xs text-[#b8a7e6]"><span className="inline-flex items-center gap-1.5"><GlobeIcon size={14} /> {t("language")}</span><LanguageSwitch compact /></div>
-            <div className="mb-3 flex items-center justify-between rounded-lg bg-black/30 px-3 py-2 text-xs text-[#b8a7e6]"><span>Theme</span><ThemeToggle compact /></div>
-            <nav className="space-y-1">
-              {links.map(([i, l, h]) => <Link key={l + h} href={h} onClick={() => setOpen(false)} className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold text-[#e9ddff] hover:bg-[#241546]"><span className="text-[#c4b5fd]">{i}</span>{l}</Link>)}
-            </nav>
-            {!loggedIn && (
-              <div className="mt-5 grid grid-cols-2 gap-2">
-                <Link href="/signup" className="btn-gold rounded-lg py-2 text-center text-sm font-black">{t("register")}</Link>
-                <Link href="/login" className="btn-outline rounded-lg py-2 text-center text-sm font-bold">{t("login")}</Link>
-              </div>
-            )}
-          </aside>
+      <GlobalDrawer open={open} onClose={() => setOpen(false)} side="left">
+        <div className="flex items-center gap-2 p-4 pb-3">
+          <BrandLogo className="h-9 w-9" /><span className="text-lg font-black text-gold-grad">WinX555</span>
         </div>
-      )}
+        <div className="space-y-2 px-3">
+          <div className="flex items-center justify-between rounded-xl bg-black/30 px-3 py-2.5 text-xs text-[#b8a7e6]"><span className="inline-flex items-center gap-2"><GlobeIcon size={14} /> {t("language")}</span><LanguageSwitch compact /></div>
+          <div className="flex items-center justify-between rounded-xl bg-black/30 px-3 py-2.5 text-xs text-[#b8a7e6]"><span>Theme</span><ThemeToggle compact /></div>
+        </div>
+        <nav className="mt-3 space-y-0.5 px-3">
+          {links.map(([i, l, h]) => <Link key={l + h} href={h} onClick={() => setOpen(false)} className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-[#e9ddff] hover:bg-[#241546]"><span className="text-[#c4b5fd]">{i}</span>{l}</Link>)}
+        </nav>
+        {!loggedIn && (
+          <div className="mt-5 grid grid-cols-2 gap-2 border-t border-white/10 p-4">
+            <Link href="/signup" className="btn-gold rounded-xl py-2.5 text-center text-sm font-black">{t("register")}</Link>
+            <Link href="/login" className="btn-outline rounded-xl py-2.5 text-center text-sm font-bold">{t("login")}</Link>
+          </div>
+        )}
+      </GlobalDrawer>
     </>
   );
 }
+
 
 /* ---------- TOP button ---------- */
 export function TopButton() {
