@@ -97,3 +97,5 @@ export const AndroidIcon = ({ size = 20, ...p }: P) => (
 );
 export const LaptopIcon = ({ size, ...p }: P) => (<svg {...stroke(size, p)}><rect x="3" y="4" width="18" height="12" rx="1.5" /><path d="M2 20h20" /></svg>);
 export const TabletIcon = ({ size, ...p }: P) => (<svg {...stroke(size, p)}><rect x="5" y="2" width="14" height="20" rx="2" /><path d="M11 18h2" /></svg>);
+
+export const ShareIcon = ({ size, ...p }: P) => (<svg {...stroke(size, p)}><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4" /></svg>);
