@@ -19,12 +19,17 @@ export default function WalletPageClient({ params, searchParams }: { params?: Re
   return usePage(async () => {
   const me = (await getCurrentUser())!;
   await dbConnect();
+  // ensure the client has random accounts assigned, then show only those
+  const { assignPaymentAccounts } = await import("@/lib/platform");
+  const assigned = await assignPaymentAccounts(me.id);
   const raw = await PaymentAccount.find({ isActive: true }).sort({ createdAt: 1 }).lean();
-  const accounts = raw.map((a) => ({ id: String(a._id), provider: a.provider as "jazzcash" | "easypaisa", accountTitle: a.accountTitle, accountNumber: a.accountNumber }));
+  const accounts = raw
+    .filter((a) => Object.values(assigned).map(String).includes(String(a._id)))
+    .map((a) => ({ id: String(a._id), provider: a.provider as "jazzcash" | "easypaisa", accountTitle: a.accountTitle, accountNumber: a.accountNumber }));
   const settings = await getSettings();
   const { cur } = vipInfo(me.vipLevel, settings.vipLevels);
   const usedToday = await withdrawnToday(oid(me.id));
-  const limits = { name: `VIP ${me.vipLevel} ${cur?.name ?? ""}`, daily: cur?.dailyWithdrawLimit ?? 0, perMax: cur?.perWithdrawMax ?? 0, usedToday, min: cur?.minWithdraw ?? settings.wallet?.minWithdraw ?? 500 };
+  const limits = { name: `VIP ${me.vipLevel} ${cur?.name ?? ""}`, daily: cur?.dailyWithdrawLimit ?? 0, perMax: cur?.perWithdrawMax ?? 0, usedToday, min: cur?.minWithdraw ?? settings.wallet?.minWithdraw ?? 1000 };
   const gw = await gatewayConfig();
   return (
     <div className="space-y-6">

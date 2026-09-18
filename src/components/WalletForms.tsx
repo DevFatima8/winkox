@@ -81,12 +81,16 @@ export function WithdrawForm({ balance, hasPin, limits }: { balance: number; has
         </select>
       </label>
       <label className="block">
+        <span className="mb-1 block text-sm font-medium text-slate-300">Account holder name (jis ke naam account hai)</span>
+        <input name="holderName" required placeholder="e.g. Ahmed Ali" className={input} />
+      </label>
+      <label className="block">
         <span className="mb-1 block text-sm font-medium text-slate-300">{t("yourAccountNumber")}</span>
         <input name="accountNumber" required placeholder="03XXXXXXXXX" className={input} />
       </label>
       <label className="block">
-        <span className="mb-1 block text-sm font-medium text-slate-300">{t("amountMin", { n: limits?.min ?? 500 })}</span>
-        <input name="amount" type="number" min={limits?.min ?? 500} required placeholder={String(limits?.min ?? 500)} className={input} />
+        <span className="mb-1 block text-sm font-medium text-slate-300">{t("amountMin", { n: limits?.min ?? 1000 })} — minimum Rs. 1000</span>
+        <input name="amount" type="number" min={limits?.min ?? 1000} required placeholder={String(limits?.min ?? 1000)} className={input} />
       </label>
       <label className="block">
         <span className="mb-1 block text-sm font-medium text-slate-300">{t("withdrawPin")}</span>

@@ -1,14 +1,20 @@
 "use client";
 import { dbConnect } from "@/lib/mongo";
-import { Transaction } from "@/models";
+import { PaymentAccount, Transaction } from "@/models";
 import { Card, StatCard, fmt } from "@/components/Shell";
 import { usePage, NOT_FOUND, REDIRECT } from "@/lib/useDb";
+import { getCurrentUser } from "@/lib/auth";
 
 export default function RecordsPageClient({ params, searchParams }: { params?: Record<string, string>; searchParams?: Record<string, string> }) {
   void params; void searchParams;
   return usePage(async () => {
   await dbConnect();
-  const agg = await Transaction.aggregate<{ _id: { type: string; status: string }; c: number; s: number }>([{ $group: { _id: { type: "$type", status: "$status" }, c: { $sum: 1 }, s: { $sum: "$amount" } } }]);
+  const me = await getCurrentUser();
+  const isSuper = me && me.level >= 2;
+  let ownedIds: unknown[] = [];
+  if (!isSuper) { const owned = await PaymentAccount.find({ ownerId: me!.id }).select("_id").lean(); ownedIds = owned.map((o) => o._id); }
+  const scope = isSuper ? {} : { paymentAccountId: { $in: ownedIds } };
+  const agg = await Transaction.aggregate<{ _id: { type: string; status: string }; c: number; s: number }>([{ $match: scope }, { $group: { _id: { type: "$type", status: "$status" }, c: { $sum: 1 }, s: { $sum: "$amount" } } }]);
   const get = (t: string, st: string) => agg.find((a) => a._id.type === t && a._id.status === st) ?? { c: 0, s: 0 };
   const daily = await Transaction.aggregate<{ _id: { d: string; type: string }; s: number; c: number }>([
     { $match: { status: "approved" } },
@@ -16,13 +22,13 @@ export default function RecordsPageClient({ params, searchParams }: { params?: R
     { $sort: { "_id.d": -1 } }, { $limit: 60 },
   ]);
   const days = Array.from(new Set(daily.map((d) => d._id.d)));
-  const byProvider = await Transaction.aggregate<{ _id: { p: string; type: string }; s: number; c: number }>([{ $match: { status: "approved" } }, { $group: { _id: { p: "$provider", type: "$type" }, s: { $sum: "$amount" }, c: { $sum: 1 } } }]);
+  const byProvider = await Transaction.aggregate<{ _id: { p: string; type: string }; s: number; c: number }>([{ $match: { status: "approved", ...scope } }, { $group: { _id: { p: "$provider", type: "$type" }, s: { $sum: "$amount" }, c: { $sum: 1 } } }]);
   const topDep = await Transaction.aggregate<{ _id: string; s: number; c: number; user: { name: string; phone: string }[] }>([
-    { $match: { status: "approved", type: "deposit" } }, { $group: { _id: "$userId", s: { $sum: "$amount" }, c: { $sum: 1 } } }, { $sort: { s: -1 } }, { $limit: 10 },
+    { $match: { status: "approved", type: "deposit", ...scope } }, { $group: { _id: "$userId", s: { $sum: "$amount" }, c: { $sum: 1 } } }, { $sort: { s: -1 } }, { $limit: 10 },
     { $lookup: { from: "users", localField: "_id", foreignField: "_id", as: "user" } },
   ]);
   const depA = get("deposit", "approved"), wdA = get("withdraw", "approved");
-  const gwAgg = await Transaction.aggregate<{ _id: string; s: number; c: number }>([{ $match: { method: "gateway", status: "approved" } }, { $group: { _id: "$type", s: { $sum: "$amount" }, c: { $sum: 1 } } }]);
+  const gwAgg = await Transaction.aggregate<{ _id: string; s: number; c: number }>([{ $match: { method: "gateway", status: "approved", ...scope } }, { $group: { _id: "$type", s: { $sum: "$amount" }, c: { $sum: 1 } } }]);
   const gwDep = gwAgg.find((g) => g._id === "deposit"), gwWd = gwAgg.find((g) => g._id === "withdraw");
   return (
     <div className="space-y-6">

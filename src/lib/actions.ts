@@ -7,6 +7,7 @@ const readCookie = (name: string) => (typeof document === "undefined" ? "" : (do
 import { AdminLog, Commission, Feedback, Game, HelpArticle, Notification, PaymentAccount, Settings, SupportMessage, SupportThread, Transaction, User, oid, type Provider } from "@/models";
 import { createSession, destroySession, hashPassword, verifyPassword, getCurrentUser, isStaff, staffLevel, type CurrentUser } from "./auth";
 import { ensureAdmin } from "./seed";
+import { assignPaymentAccounts } from "./platform";
 import { genReferralCode, genUsername, getSettings, payDepositCommission, recomputeVip, vipInfo, withdrawnToday } from "./platform";
 
 export type ActionState = { error?: string; success?: string } | undefined;
@@ -46,6 +47,7 @@ export async function signupAction(_: ActionState, form: FormData): Promise<Acti
     role: "client", lastLoginAt: new Date(), referralCode, referredBy, balance: bonus > 0 ? bonus : 0,
   });
   if (bonus > 0 && referredBy) await Commission.create({ beneficiaryId: u._id, fromUserId: referredBy, kind: "signup", baseAmount: 0, pct: 0, amount: bonus, note: "Signup bonus" });
+  await assignPaymentAccounts(String(u._id));
   await createSession({ id: String(u._id), role: "client", name: u.name });
   redirect("/client");
 }
@@ -67,6 +69,7 @@ export async function loginAction(_: ActionState, form: FormData): Promise<Actio
   const role = isStaff(u.role) ? "admin" : "client";
   await createSession({ id: String(u._id), role, name: u.name });
   if (role === "admin") await logAdmin({ id: String(u._id), name: u.name, dbRole: u.role } as CurrentUser, "login", "", "");
+  else await assignPaymentAccounts(String(u._id));
   redirect(role === "admin" ? "/admin" : "/client");
 }
 
@@ -117,7 +120,7 @@ export async function depositAction(_: ActionState, form: FormData): Promise<Act
   if (!senderNumber || !referenceId) return { error: "Sender number aur Transaction ID (TID) zaroori hai." };
   const acc = await PaymentAccount.findById(paymentAccountId).lean();
   if (!acc || !acc.isActive) return { error: "Invalid payment account." };
-  await Transaction.create({ userId: oid(me.id), type: "deposit", provider: acc.provider, amount, paymentAccountId: acc._id, senderNumber, referenceId });
+  await Transaction.create({ userId: oid(me.id), type: "deposit", provider: acc.provider, amount, paymentAccountId: acc._id, assignedAccountId: acc._id, accountName: acc.accountTitle, senderNumber, referenceId, method: "manual" });
   revalidatePath("/client/wallet"); revalidatePath("/admin");
   return { success: "Deposit request submit ho gayi. Admin verify kar ke balance add karega." };
 }
@@ -129,12 +132,14 @@ export async function withdrawAction(_: ActionState, form: FormData): Promise<Ac
   const amount = num(form, "amount");
   const provider = str(form, "provider") as Provider;
   const accountNumber = str(form, "accountNumber");
+  const holderName = str(form, "holderName") || str(form, "accountName");
   const pin = str(form, "pin");
-  const u = await User.findById(me.id, "withdrawPin vipLevel").lean();
+  if (!holderName || holderName.trim().length < 3) return { error: "Apne JazzCash/Easypaisa account holder ka naam likhein." };
+  const u = await User.findById(me.id, "withdrawPin vipLevel assignedAccounts").lean();
   if (!u?.withdrawPin) return { error: "Pehle Profile se Withdrawal PIN set karein." };
   if (pin !== u.withdrawPin) return { error: "Withdrawal PIN ghalat hai." };
   const { cur } = vipInfo(u.vipLevel ?? 0, settings.vipLevels);
-  const minW = cur?.minWithdraw ?? settings.wallet?.minWithdraw ?? 500;
+  const minW = cur?.minWithdraw ?? settings.wallet?.minWithdraw ?? 1000;
   if (!amount || amount < minW) return { error: `Minimum withdraw Rs. ${minW} hai.` };
   if (cur?.perWithdrawMax && amount > cur.perWithdrawMax) return { error: `Aapki VIP level (${cur.name}) par ek withdraw max Rs. ${cur.perWithdrawMax.toLocaleString()} hai.` };
   if (!["jazzcash", "easypaisa"].includes(provider)) return { error: "Provider select karein." };
@@ -142,9 +147,19 @@ export async function withdrawAction(_: ActionState, form: FormData): Promise<Ac
   const today = await withdrawnToday(oid(me.id));
   if (cur?.dailyWithdrawLimit && today + amount > cur.dailyWithdrawLimit) return { error: `Daily limit Rs. ${cur.dailyWithdrawLimit.toLocaleString()} (${cur.name}). Aaj baqi: Rs. ${Math.max(0, cur.dailyWithdrawLimit - today).toLocaleString()}. VIP level barhayein.` };
 
+  // the admin whose account was assigned to this client will handle the payout
+  const assignedId = (u.assignedAccounts?.[provider] as string) ?? null;
+  const payAcc = assignedId ? await PaymentAccount.findById(assignedId).lean() : null;
   const r = await User.updateOne({ _id: oid(me.id), balance: { $gte: amount } }, { $inc: { balance: -amount } });
   if (r.modifiedCount === 0) return { error: "Insufficient balance." };
-  await Transaction.create({ userId: oid(me.id), type: "withdraw", provider, amount, senderNumber: accountNumber });
+  await Transaction.create({
+    userId: oid(me.id), type: "withdraw", provider, amount,
+    senderNumber: accountNumber, holderName,
+    assignedAccountId: payAcc?._id ? String(payAcc._id) : null,
+    paymentAccountId: payAcc?._id ? payAcc._id : null,
+    accountName: payAcc?.accountTitle ?? null,
+    method: "manual",
+  });
   revalidatePath("/client/wallet"); revalidatePath("/admin");
   return { success: "Withdraw request submit ho gayi. Amount 24 ghanton mein aapke account mein aa jayegi." };
 }
@@ -248,23 +263,32 @@ export async function changeOwnPasswordAction(_: ActionState, form: FormData): P
 }
 
 export async function addPaymentAccountAction(_: ActionState, form: FormData): Promise<ActionState> {
-  await requireSuper();
+  const me = await requireAdmin(1);
   const provider = str(form, "provider") as Provider;
   const accountTitle = str(form, "accountTitle");
   const accountNumber = str(form, "accountNumber").replace(/\s|-/g, "");
   if (!["jazzcash", "easypaisa"].includes(provider)) return { error: "Provider select karein." };
-  if (!accountTitle || !accountNumber) return { error: "Account title aur number zaroori hain." };
-  await PaymentAccount.create({ provider, accountTitle, accountNumber });
+  if (!accountTitle || !accountNumber) return { error: "Account holder name aur number zaroori hain." };
+  // sub-admin accounts belong to them; super-admin accounts go into the shared pool (ownerId null)
+  const ownerId = me.level >= 2 ? null : me.id;
+  await PaymentAccount.create({ provider, accountTitle, accountNumber, accountHolderName: accountTitle, ownerId });
+  await logAdmin(me, "payment_account_create", accountNumber, provider);
   revalidatePath("/admin/payments");
-  return { success: "Account connect ho gaya." };
+  return { success: "Account add ho gaya." };
 }
 export async function togglePaymentAccountAction(id: string, isActive: boolean) {
-  await requireSuper();
+  const me = await requireAdmin(1);
+  const acc = await PaymentAccount.findById(oid(id));
+  if (!acc) return { error: "Account nahi mila." };
+  if (me.level < 2 && String(acc.ownerId ?? "") !== me.id) return { error: "Sirf apna account manage kar saktay hain." };
   await PaymentAccount.updateOne({ _id: oid(id) }, { $set: { isActive } });
   revalidatePath("/admin/payments");
 }
 export async function deletePaymentAccountAction(id: string) {
-  await requireSuper();
+  const me = await requireAdmin(1);
+  const acc = await PaymentAccount.findById(oid(id));
+  if (!acc) return { error: "Account nahi mila." };
+  if (me.level < 2 && String(acc.ownerId ?? "") !== me.id) return { error: "Sirf apna account delete kar saktay hain." };
   await Transaction.updateMany({ paymentAccountId: oid(id) }, { $set: { paymentAccountId: null } });
   await PaymentAccount.deleteOne({ _id: oid(id) });
   revalidatePath("/admin/payments");
@@ -272,7 +296,16 @@ export async function deletePaymentAccountAction(id: string) {
 
 export async function processTransactionAction(id: string, decision: "approved" | "rejected", note?: string) {
   const me = await requireAdmin(1);
-  const t = await Transaction.findOneAndUpdate({ _id: oid(id), status: "pending" }, { $set: { status: decision, adminNote: note ?? null, processedAt: new Date() } }, { returnDocument: "after" });
+  // find the pending transaction, restricting sub-admins to accounts they own or withdrawals with their assigned account
+  const pending = await Transaction.findOne({ _id: oid(id), status: "pending" });
+  if (!pending) return { error: "Pending request nahi mili." };
+  const acc = pending.paymentAccountId ? await PaymentAccount.findById(oid(pending.paymentAccountId)) : null;
+  if (me.level < 2 && acc && String(acc.ownerId ?? "") !== me.id) return { error: "Ye payment kisi aur admin ke account par hai." };
+  const t = await Transaction.findOneAndUpdate(
+    { _id: oid(id), status: "pending" },
+    { $set: { status: decision, adminNote: note ?? null, processedAt: new Date(), processedById: me.id, processedByName: me.name, accountName: acc?.accountTitle ?? null } },
+    { returnDocument: "after" },
+  );
   if (t) {
     if (t.type === "deposit" && decision === "approved") {
       await User.updateOne({ _id: t.userId }, { $inc: { balance: t.amount } });

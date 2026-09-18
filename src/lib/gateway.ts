@@ -8,7 +8,7 @@ const r2 = (n: number) => Math.round(n * 100) / 100;
 export async function gatewayConfig() {
   const s = await getSettings();
   const g: { enabled?: boolean; autoWithdraw?: boolean; testOtp?: string; maxPerTxn?: number; dailyLimit?: number; label?: string } = s.fakeGateway ?? {};
-  return { enabled: g.enabled ?? true, autoWithdraw: g.autoWithdraw ?? true, testOtp: g.testOtp ?? "1234", maxPerTxn: g.maxPerTxn ?? 50000, dailyLimit: g.dailyLimit ?? 200000, label: g.label ?? "Instant Deposit (Test Mode)", minDeposit: s.wallet?.minDeposit ?? 100, minWithdraw: s.wallet?.minWithdraw ?? 500, vipLevels: s.vipLevels };
+  return { enabled: g.enabled ?? true, autoWithdraw: g.autoWithdraw ?? true, testOtp: g.testOtp ?? "1234", maxPerTxn: g.maxPerTxn ?? 50000, dailyLimit: g.dailyLimit ?? 200000, label: g.label ?? "Instant Deposit (Test Mode)", minDeposit: s.wallet?.minDeposit ?? 100, minWithdraw: s.wallet?.minWithdraw ?? 1000, vipLevels: s.vipLevels };
 }
 
 async function usedToday(userId: string, kind: "deposit" | "withdraw") {
@@ -17,7 +17,7 @@ async function usedToday(userId: string, kind: "deposit" | "withdraw") {
   return agg?.s ?? 0;
 }
 
-export async function createSession(userId: string, kind: "deposit" | "withdraw", provider: "jazzcash" | "easypaisa", amount: number, accountNumber: string, pin?: string) {
+export async function createSession(userId: string, kind: "deposit" | "withdraw", provider: "jazzcash" | "easypaisa", amount: number, accountNumber: string, pin?: string, holderName = "") {
   await dbConnect();
   const cfg = await gatewayConfig();
   if (!cfg.enabled) return { error: "Test gateway abhi band hai." };
@@ -33,6 +33,7 @@ export async function createSession(userId: string, kind: "deposit" | "withdraw"
   const u = await User.findById(userId, "balance withdrawPin vipLevel isActive").lean();
   if (!u || !u.isActive) return { error: "Account block hai." };
   if (kind === "withdraw") {
+    if (!holderName || holderName.trim().length < 3) return { error: "Apne account holder ka naam likhein." };
     if (!u.withdrawPin) return { error: "Pehle Profile se Withdrawal PIN set karein." };
     if (pin !== u.withdrawPin) return { error: "Withdrawal PIN ghalat hai." };
     if ((u.balance ?? 0) < amount) return { error: "Insufficient balance." };
@@ -42,7 +43,7 @@ export async function createSession(userId: string, kind: "deposit" | "withdraw"
     if (cur?.dailyWithdrawLimit && today + amount > cur.dailyWithdrawLimit) return { error: `VIP daily withdraw limit Rs. ${cur.dailyWithdrawLimit.toLocaleString()}.` };
   }
   await GatewaySession.updateMany({ userId: oid(userId), status: { $in: ["created", "otp"] } }, { $set: { status: "cancelled" } });
-  const sess = await GatewaySession.create({ userId: oid(userId), kind, provider, amount, accountNumber, expiresAt: new Date(Date.now() + TTL_MS) });
+  const sess = await GatewaySession.create({ userId: oid(userId), kind, provider, amount, accountNumber, holderName, expiresAt: new Date(Date.now() + TTL_MS) });
   return { ok: true, id: String(sess._id) };
 }
 
@@ -78,7 +79,10 @@ export async function verifyOtp(userId: string, id: string, otp: string) {
   const uid = oid(userId);
   const ref = `TST${Date.now().toString().slice(-8)}${Math.floor(Math.random() * 90 + 10)}`;
   if (s.kind === "deposit") {
-    const tx = await Transaction.create({ userId: uid, type: "deposit", provider: s.provider, amount: s.amount, senderNumber: s.accountNumber, referenceId: ref, method: "gateway", status: "approved", adminNote: "Test gateway (instant)", processedAt: new Date() });
+    const u = await User.findById(uid, "assignedAccounts").lean();
+    const assignedId = (u?.assignedAccounts?.[s.provider] as string) ?? null;
+    const acc = assignedId ? await import("@/models").then(() => null) : null; void acc;
+    const tx = await Transaction.create({ userId: uid, type: "deposit", provider: s.provider, amount: s.amount, senderNumber: s.accountNumber, assignedAccountId: assignedId, paymentAccountId: assignedId, referenceId: ref, method: "gateway", status: "approved", adminNote: "Test gateway (instant)", processedAt: new Date(), processedByName: "System (test gateway)" });
     await User.updateOne({ _id: uid }, { $inc: { balance: s.amount } });
     await recomputeVip(uid);
     await payDepositCommission(uid, s.amount);
@@ -86,7 +90,7 @@ export async function verifyOtp(userId: string, id: string, otp: string) {
   } else {
     const upd = await User.updateOne({ _id: uid, balance: { $gte: s.amount } }, { $inc: { balance: -s.amount } });
     if (!upd.modifiedCount) { s.status = "failed"; await s.save(); return { error: "Insufficient balance.", failed: true }; }
-    const tx = await Transaction.create({ userId: uid, type: "withdraw", provider: s.provider, amount: s.amount, senderNumber: s.accountNumber, referenceId: ref, method: "gateway", status: "approved", adminNote: "Test gateway (instant)", processedAt: new Date() });
+    const tx = await Transaction.create({ userId: uid, type: "withdraw", provider: s.provider, amount: s.amount, senderNumber: s.accountNumber, holderName: s.holderName ?? "", accountName: "Client payout", referenceId: ref, method: "gateway", status: "approved", adminNote: "Auto-approved test payout", processedAt: new Date(), processedByName: "System (test gateway)" });
     await recomputeVip(uid);
     s.transactionId = tx._id;
   }

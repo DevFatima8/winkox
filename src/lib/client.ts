@@ -76,7 +76,7 @@ export async function localApi(url: string, init?: RequestInit): Promise<Res> {
       case path === "/api/gateway": {
         if (!roleOk()) return err("Login required.", 401);
         const a = String(body.action ?? "");
-        const r = a === "create" ? await gateway.createSession(sid!, body.kind === "withdraw" ? "withdraw" : "deposit", String(body.provider) as "jazzcash" | "easypaisa", Number(body.amount), String(body.accountNumber ?? "").replace(/\s|-/g, ""), body.pin ? String(body.pin) : undefined)
+        const r = a === "create" ? await gateway.createSession(sid!, body.kind === "withdraw" ? "withdraw" : "deposit", String(body.provider) as "jazzcash" | "easypaisa", Number(body.amount), String(body.accountNumber ?? "").replace(/\s|-/g, ""), body.pin ? String(body.pin) : undefined, body.holderName ? String(body.holderName) : "")
           : a === "sendOtp" ? await gateway.sendOtp(sid!, String(body.id)) : a === "verify" ? await gateway.verifyOtp(sid!, String(body.id), String(body.otp ?? "")) : a === "cancel" ? await gateway.cancelSession(sid!, String(body.id)) : { error: "Invalid action" };
         return out(r);
       }

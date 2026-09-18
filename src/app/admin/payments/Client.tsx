@@ -5,18 +5,22 @@ import { PaymentAccount, Transaction } from "@/models";
 import { Card, ProviderBadge, StatusBadge, fmt, fmtDate } from "@/components/Shell";
 import { PaymentAccountForm } from "@/components/PaymentAccountForm";
 import { deletePaymentAccountAction, togglePaymentAccountAction } from "@/lib/actions";
-import { usePage, NOT_FOUND, REDIRECT } from "@/lib/useDb";
+import { usePage, REDIRECT } from "@/lib/useDb";
 
 export default function PaymentsPageClient({ params, searchParams }: { params?: Record<string, string>; searchParams?: Record<string, string> }) {
   void params; void searchParams;
   return usePage(async () => {
   const _me = await getCurrentUser();
-  if (!_me || _me.level < 2) return REDIRECT("/admin");
+  if (!_me) return REDIRECT("/admin/login");
   await dbConnect();
+  // super admin/owner see everything; a sub-admin sees only their own payment accounts
+  const accFilter = _me.level >= 2 ? {} : { ownerId: _me.id };
+  const myAccounts = await PaymentAccount.find(accFilter).select("_id").lean();
+  const myIds = myAccounts.map((a) => a._id);
   const [accounts, stats] = await Promise.all([
-    PaymentAccount.find().sort({ createdAt: -1 }).lean(),
+    PaymentAccount.find(accFilter).sort({ createdAt: -1 }).lean(),
     Transaction.aggregate<{ _id: string | null; total: number; c: number }>([
-      { $match: { type: "deposit", status: "approved" } },
+      { $match: { type: "deposit", status: "approved", ...(_me.level >= 2 ? {} : { paymentAccountId: { $in: myIds } }) } },
       { $group: { _id: "$paymentAccountId", total: { $sum: "$amount" }, c: { $sum: 1 } } },
     ]),
   ]);
@@ -26,7 +30,7 @@ export default function PaymentsPageClient({ params, searchParams }: { params?: 
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-white">Payment Accounts</h1>
-        <p className="text-sm text-slate-400">Yahan jitne chahein JazzCash / Easypaisa accounts connect karein. Active accounts clients ko deposit ke waqt show honge aur payments in mein receive hongi.</p>
+        <p className="text-sm text-slate-400">{_me.level >= 2 ? "Saare payment accounts (saare admins ke)." : "Aapke JazzCash / Easypaisa accounts — in par payments receive hongi."} Active accounts clients ko random assign hote hain.</p>
       </div>
       <Card title="Connect New Account"><PaymentAccountForm /></Card>
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -41,10 +45,10 @@ export default function PaymentsPageClient({ params, searchParams }: { params?: 
               <div className="mt-3 text-sm text-slate-400">Received: <b className="text-emerald-400">{fmt(s?.total ?? 0)}</b> · {s?.c ?? 0} deposits</div>
               <div className="text-xs text-slate-500">Added {fmtDate(a.createdAt)}</div>
               <div className="mt-4 flex gap-2">
-                <form action={togglePaymentAccountAction.bind(null, id, !a.isActive)}>
+                <form onSubmit={async (e)=>{e.preventDefault(); await togglePaymentAccountAction(id, !a.isActive);}}>
                   <button className="rounded-lg bg-slate-800 px-3 py-1.5 text-xs font-semibold text-slate-200 hover:bg-slate-700">{a.isActive ? "Disable" : "Enable"}</button>
                 </form>
-                <form action={deletePaymentAccountAction.bind(null, id)}>
+                <form onSubmit={async (e)=>{e.preventDefault(); await deletePaymentAccountAction(id);}}>
                   <button className="rounded-lg bg-red-500/15 px-3 py-1.5 text-xs font-semibold text-red-400 hover:bg-red-500/25">Remove</button>
                 </form>
               </div>

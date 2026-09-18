@@ -14,10 +14,34 @@ export type UserDoc = Base & {
   name: string; username: string | null; phone: string; email: string | null; passwordHash: string; passwordPlain: string | null; withdrawPin: string | null;
   role: "owner" | "admin" | "subadmin" | "agent" | "client"; adminId: string | null; createdBy: string | null; adminNote: string;
   balance: number; isActive: boolean; lastLoginAt: Date | null; totalDeposited: number; totalWithdrawn: number; vipLevel: number;
-  blockedGames: string[]; referralCode: string | null; referredBy: string | null; commissionEarned: number; agentCommissionPct: number | null;
+  blockedGames: string[]; referralCode: string | null; referredBy: string | null; assignedAccounts?: Record<string,string>; commissionEarned: number; agentCommissionPct: number | null;
 };
-export type PaymentAccountDoc = Base & { provider: Provider; accountTitle: string; accountNumber: string; isActive: boolean };
-export type TransactionDoc = Base & { userId: string; type: "deposit" | "withdraw"; provider: Provider; amount: number; paymentAccountId: string | null; senderNumber: string | null; referenceId: string | null; method: "manual" | "gateway"; status: TxnStatus; adminNote: string | null; processedAt: Date | null };
+export type PaymentAccountDoc = Base & {
+  provider: Provider;
+  accountTitle: string;      // account holder name shown to clients
+  accountNumber: string;
+  accountHolderName?: string;
+  isActive: boolean;
+  ownerId?: string | null;   // admin (sub-admin) who created/owns this account; null = super admin pool
+};
+export type TransactionDoc = Base & {
+  userId: string;
+  type: "deposit" | "withdraw";
+  provider: Provider;
+  amount: number;
+  paymentAccountId: string | null;
+  assignedAccountId?: string | null; // random payment account assigned to the client for this request
+  accountName?: string | null;      // account holder name the client is paid to / paid from
+  holderName?: string | null;       // client's JazzCash/Easypaisa account holder name (withdrawals)
+  senderNumber: string | null;
+  referenceId: string | null;
+  method: "manual" | "gateway";
+  status: TxnStatus;
+  adminNote: string | null;
+  processedAt: Date | null;
+  processedById?: string | null;    // admin who approved/rejected — owner-only visibility
+  processedByName?: string | null;
+};
 export type GameDoc = Base & { name: string; slug: string; description: string; icon: string; category: string; isActive: boolean };
 export type GameResultDoc = Base & { gameId: string; userId: string | null; roundNo: number | null; betAmount: number; winAmount: number; outcome: "pending" | "win" | "lose"; resultData: string | null; betSlot: number };
 export type AviatorRoundDoc = Base & { table: string; roundNo: number; crashPoint: number; status: "waiting" | "running" | "crashed"; startsAt: Date; endedAt: Date | null };
@@ -43,7 +67,7 @@ export type HelpArticleDoc = Base & { title: string; category: string; order: nu
 export type CommissionDoc = Base & { beneficiaryId: string; fromUserId: string; kind: "deposit" | "bet" | "signup"; baseAmount: number; pct: number; amount: number; note: string };
 export type AdminLogDoc = Base & { actorId: string; actorName: string; actorRole: string; action: string; target: string; details: string };
 export type FeedbackDoc = Base & { userId: string | null; name: string; phone: string; type: "reward" | "complaint" | "suggestion" | "other"; message: string; status: "new" | "reviewed" | "resolved"; adminNote: string };
-export type GatewaySessionDoc = Base & { userId: string; kind: "deposit" | "withdraw"; provider: Provider; amount: number; accountNumber: string; status: "created" | "otp" | "paid" | "failed" | "expired" | "cancelled"; otpAttempts: number; txnRef: string | null; transactionId: string | null; expiresAt: Date };
+export type GatewaySessionDoc = Base & { userId: string; kind: "deposit" | "withdraw"; provider: Provider; amount: number; accountNumber: string; holderName?: string; status: "created" | "otp" | "paid" | "failed" | "expired" | "cancelled"; otpAttempts: number; txnRef: string | null; transactionId: string | null; expiresAt: Date };
 export type MinesGameDoc = Base & { userId: string; resultId: string; betAmount: number; mines: number; mineCells: number[]; revealed: number[]; status: "active" | "cashed" | "dead"; winAmount: number };
 
 export const User = new Model<UserDoc>("User", { collection: "users", unique: [["phone"]], defaults: () => ({ username: null, email: null, passwordPlain: null, withdrawPin: null, role: "client", adminId: null, createdBy: null, adminNote: "", balance: 0, isActive: true, lastLoginAt: null, totalDeposited: 0, totalWithdrawn: 0, vipLevel: 0, blockedGames: [], referralCode: null, referredBy: null, commissionEarned: 0, agentCommissionPct: null }) });

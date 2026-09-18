@@ -15,6 +15,7 @@ export function InstantPayForm({ kind, min, max, label, hasPin }: { kind: "depos
   const [provider, setProvider] = useState<"jazzcash" | "easypaisa">("jazzcash");
   const [amount, setAmount] = useState(kind === "deposit" ? 1000 : 500);
   const [acc, setAcc] = useState("");
+  const [holder, setHolder] = useState("");
   const [pin, setPin] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -42,6 +43,7 @@ export function InstantPayForm({ kind, min, max, label, hasPin }: { kind: "depos
       </div>
       <label className="block"><span className="mb-1 block text-sm font-medium text-slate-300">{isUr ? "رقم (روپے)" : "Amount (Rs.)"} — {min.toLocaleString()} to {max.toLocaleString()}</span><input type="number" min={min} max={max} value={amount} onChange={(e) => setAmount(Number(e.target.value))} className={input} /></label>
       <div className="grid grid-cols-4 gap-1.5">{[500, 1000, 5000, 10000].map((v) => <button key={v} type="button" onClick={() => setAmount(v)} className={`rounded-lg py-1.5 text-xs font-bold ${amount === v ? "btn-gold" : "bg-black/30 text-[#e9ddff] ring-1 ring-[#3a2470]"}`}>{v.toLocaleString()}</button>)}</div>
+      {kind === "withdraw" && <label className="block"><span className="mb-1 block text-sm font-medium text-slate-300">Account holder name</span><input value={holder} onChange={(e) => setHolder(e.target.value)} placeholder="e.g. Ahmed Ali" className={input} /></label>}
       <label className="block"><span className="mb-1 block text-sm font-medium text-slate-300">{kind === "deposit" ? (isUr ? "آپ کا JazzCash/Easypaisa نمبر" : "Your JazzCash / Easypaisa number") : (isUr ? "رقم وصول کرنے والا نمبر" : "Receiving account number")}</span><input value={acc} onChange={(e) => setAcc(e.target.value)} placeholder="03XXXXXXXXX" className={input} /></label>
       {kind === "withdraw" && (hasPin ? <label className="block"><span className="mb-1 block text-sm font-medium text-slate-300">Withdrawal PIN</span><input value={pin} onChange={(e) => setPin(e.target.value)} inputMode="numeric" maxLength={4} placeholder="••••" className={input} /></label> : <p className="rounded-xl bg-[#ffb800]/10 p-3 text-xs text-[#ffe0a3]">Pehle <a href="/client/profile" className="font-bold underline">Profile</a> se Withdrawal PIN set karein.</p>)}
       {err && <p className="rounded-lg bg-red-500/15 px-3 py-2 text-sm text-red-300">{err}</p>}
