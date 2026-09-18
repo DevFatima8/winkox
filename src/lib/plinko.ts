@@ -100,15 +100,26 @@ export async function drop(userId: string, amount: number, risk: string, rows: n
   const upd = await User.updateOne({ _id: uid, balance: { $gte: amount } }, { $inc: { balance: -amount } });
   if (!upd.modifiedCount) return { error: "Insufficient balance. Pehle deposit karein." };
 
-  // Fair RNG: each row an independent 50/50 bounce (binomial distribution = real Plinko)
+  // ~35% of drops land in winning (outer ≥1.5x) buckets, 65% in low centre buckets
+  const table = multipliersFor(risk, rows);
+  const mid = Math.floor(rows / 2);
+  const winB = table.map((m: number, i: number) => ({ m, i })).filter((x) => x.m >= 1.5).map((x) => x.i);
+  const lossB = table.map((m: number, i: number) => ({ m, i })).filter((x) => x.m < 1.5).map((x) => x.i);
+  let bucket: number;
+  if (Math.random() < 0.35 && winB.length) {
+    const weighted = winB.flatMap((i) => { const d = Math.abs(i - mid); return new Array(Math.max(1, Math.round(12 / (d + 1)))).fill(i); });
+    bucket = weighted[Math.floor(Math.random() * weighted.length)];
+  } else bucket = lossB.length ? lossB[Math.floor(Math.random() * lossB.length)] : mid;
+  // plausible bounce path for the chosen bucket (count of right bounces = bucket)
   const path: number[] = [];
-  let bucket = 0;
+  let rights = bucket;
   for (let i = 0; i < rows; i++) {
-    const dir = Math.random() < 0.5 ? 0 : 1;
+    const pRight = rights / (rows - i);
+    const dir = Math.random() < pRight ? 1 : 0;
+    if (dir) rights--;
     path.push(dir);
-    bucket += dir;
   }
-  const multiplier = multipliersFor(risk, rows)[bucket];
+  const multiplier = table[bucket];
   const payout = Math.min(MAX_WIN, r2(amount * multiplier));
 
   if (payout > 0) await User.updateOne({ _id: uid }, { $inc: { balance: payout } });

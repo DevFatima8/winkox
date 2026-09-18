@@ -59,13 +59,10 @@ export const ladderFor = (l: Level) => BUILT[l].ladder;
 export const multiplierAt = (l: Level, k: number) => (k <= 0 ? 1 : BUILT[l].ladder[Math.min(k, LEVELS[l].steps) - 1]);
 
 function rollCrashLane(l: Level) {
-  const { surv } = BUILT[l];
   const steps = LEVELS[l].steps;
-  for (let k = 1; k <= steps; k++) {
-    const pk = surv[k] / surv[k - 1];
-    if (Math.random() >= pk) return k;
-  }
-  return steps + 1;
+  // 35% of runs are clean runs (player can cross / cash out); 65% end in a crash at a random tile
+  if (Math.random() < 0.35) return steps + 1;
+  return 1 + Math.floor(Math.random() * steps);
 }
 
 const rnd = (a: number, b: number) => a + Math.random() * (b - a);

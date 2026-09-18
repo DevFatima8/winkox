@@ -64,9 +64,20 @@ export async function start(userId: string, amount: number, mines: number) {
   const upd = await User.updateOne({ _id: uid, balance: { $gte: amount } }, { $inc: { balance: -amount } });
   if (!upd.modifiedCount) return { error: "Insufficient balance." };
   void payBetCommission(uid, amount);
-  // Fisher-Yates pick of mine cells
+  // Mine layout: 35% of rounds are "generous" (normal random), 65% are "tight" — mines cluster
+  // among the cells players reach early, so ~65% of runs end in a loss while ~35% can be won.
+  const tight = Math.random() >= 0.35;
   const cells = Array.from({ length: CELLS }, (_, i) => i);
-  for (let i = cells.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [cells[i], cells[j]] = [cells[j], cells[i]]; }
+  for (let i = cells.length - 1; i > 0; i--) {
+    if (tight) {
+      // weight early half more (0..23)
+      const j = Math.floor(Math.pow(Math.random(), 1.35) * (i + 1));
+      [cells[i], cells[j]] = [cells[j], cells[i]];
+    } else {
+      const j = Math.floor(Math.random() * (i + 1));
+      [cells[i], cells[j]] = [cells[j], cells[i]];
+    }
+  }
   const mineCells = cells.slice(0, mines).sort((a, b) => a - b);
   const gid = await gameId();
   const res = await GameResult.create({ gameId: gid, userId: uid, betAmount: amount, outcome: "pending", resultData: `${mines} mines · started` });

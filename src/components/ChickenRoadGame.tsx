@@ -541,7 +541,7 @@ export function ChickenRoadGame() {
               <button onClick={() => setAmount(Math.max(min, Math.min(max, Math.floor(balance))))} className="rounded-md px-2 py-1 text-[10px] font-bold text-slate-400 hover:text-white">MAX</button>
             </div>
             <div className="mt-1 grid grid-cols-4 gap-1.5">
-              {[50, 100, 500, 1000].map((v) => (
+              {[100, 300, 500, 1000].map((v) => (
                 <button key={v} onClick={() => setAmount(v)} className={`rounded-md py-1 text-[11px] font-bold ${amount === v ? "bg-[#3ecf5a] text-slate-950" : "bg-[#2b3136] text-slate-200 hover:bg-[#363d43]"}`}>{v}</button>
               ))}
             </div>

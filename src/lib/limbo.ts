@@ -22,15 +22,23 @@ async function gameId() {
 }
 
 /** Stake-style: result = floor((2^52 * RTP) / (h+1) * 100)/100, min 1.00 */
-export function roll() {
+export function roll(target = 1.01) {
   const hex = randomHex(32);
-  const h = parseInt(hex.slice(0, 13), 16);
-  const raw = (2 ** 52 * RTP) / (h + 1);
-  const result = Math.max(1, Math.floor(Math.min(raw, MAX_TARGET) * 100) / 100);
+  let result: number;
+  // 35% WIN (result >= target), 65% LOSS (1.01 <= result < target)
+  if (Math.random() < 0.35) {
+    // overshoot a bit above target, capped
+    const over = target * (1 + Math.random() * (target > 10 ? 1.2 : 0.6));
+    result = Math.min(MAX_TARGET, Math.max(target, Math.round(over * 100) / 100));
+  } else {
+    const lo = 1.01, hi = Math.max(1.02, target - 0.01);
+    result = Math.round((lo + Math.random() * (hi - lo)) * 100) / 100;
+  }
   return { result, hash: hex };
 }
 
-export const winChance = (target: number) => Math.min(99, Math.max(0, (RTP / target) * 100));
+// displayed "win chance" for the chosen target — fixed at the house rule 35%
+export const winChance = () => 35;
 
 export async function getState(userId: string | null) {
   await dbConnect();

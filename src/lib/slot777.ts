@@ -81,8 +81,29 @@ export async function spin(userId: string, amount: number) {
   const upd = await User.updateOne({ _id: uid, balance: { $gte: amount } }, { $inc: { balance: -amount } });
   if (!upd.modifiedCount) return { error: "Insufficient balance." };
   void payBetCommission(uid, amount);
-  const reels: Sym[] = [spinReel(0), spinReel(1), spinReel(2)];
-  const hit = evaluate(reels);
+  // decide win/loss first: ~35% winning spins
+  const wantWin = Math.random() < 0.35;
+  let reels: Sym[] = [spinReel(0), spinReel(1), spinReel(2)];
+  let hit = evaluate(reels);
+  if (wantWin) {
+    if (!hit || hit.mult < 1.5) {
+      // build a guaranteed small/medium win combo (cherry x3, lemon x3, orange x3, bell x3 weighted)
+      const winPool: { sym: Sym; mult: number }[] = [
+        { sym: "cherry", mult: 6 }, { sym: "cherry", mult: 6 }, { sym: "lemon", mult: 8 },
+        { sym: "orange", mult: 10 }, { sym: "plum", mult: 12 }, { sym: "bell", mult: 20 },
+      ];
+      const pick = winPool[Math.floor(Math.random() * winPool.length)];
+      reels = [pick.sym, pick.sym, pick.sym];
+      hit = evaluate(reels);
+      // rare jackpot
+      if (Math.random() < 0.02) { reels = ["seven", "seven", "seven"]; hit = evaluate(reels); }
+    }
+  } else if (hit && hit.mult >= 1.5) {
+    // force a losing spin (re-spin until no triple win; keep cherry singles allowed)
+    for (let i = 0; i < 12; i++) { reels = [spinReel(0), spinReel(1), spinReel(2)]; const e = evaluate(reels);
+      if (!e || e.mult < 1.5) { hit = e; break; } hit = e;
+    }
+  }
   const payout = hit ? Math.min(MAX_WIN, amount * hit.mult) : 0;
   if (payout > 0) await User.updateOne({ _id: uid }, { $inc: { balance: payout } });
   const gid = await gameId();

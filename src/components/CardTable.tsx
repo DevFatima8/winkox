@@ -26,7 +26,7 @@ type State = {
 
 const RANKS = ["", "A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
 const SUITS = ["♠", "♥", "♦", "♣"];
-const CHIPS = [10, 50, 100, 500, 1000, 5000];
+const CHIPS = [100, 300, 500, 1000];
 const money = (n: number) => "Rs. " + n.toLocaleString("en-PK", { maximumFractionDigits: 2 });
 
 const ZONE: Record<string, { bg: string; ring: string; text: string; bead: string; short: string }> = {

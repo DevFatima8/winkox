@@ -34,11 +34,9 @@ export const multiplierTable = (d: Difficulty) => Array.from({ length: lanesFor(
 /** Decide (secretly, at game start) on which lane the chicken gets hit. lanes+1 = never. */
 function rollCrashLane(d: Difficulty) {
   const lanes = lanesFor(d);
-  for (let k = 0; k < lanes; k++) {
-    const survive = (lanes - k) / (CELLS - k);
-    if (Math.random() >= survive) return k + 1;
-  }
-  return lanes + 1;
+  // 35% clean runs (player can cross / cash out); 65% end in a crash at a random lane
+  if (Math.random() < 0.35) return lanes + 1;
+  return 1 + Math.floor(Math.random() * lanes);
 }
 
 let cachedGameId: ObjectId | null = null;

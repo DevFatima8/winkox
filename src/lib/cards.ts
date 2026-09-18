@@ -125,9 +125,27 @@ async function createRound(table: Table, prevNo: number) {
 }
 
 async function settle(table: Table, r: CardRoundDoc) {
-  const result = JSON.parse(r.result) as Result;
+  let result = JSON.parse(r.result) as Result;
   const bets = await CardBet.find({ table, roundNo: r.roundNo, status: "pending" }).lean();
   if (!bets.length) return;
+  // House rule: ~35% of rounds are won by the player. Adjust the (hidden) result per player option before payout.
+  const mainBet = bets[0];
+  const playerWins = Math.random() < 0.35;
+  if (table === "dragon-tiger") {
+    const dt = result as DTResult;
+    if (mainBet.option === "tie") {
+      dt.winner = playerWins ? "tie" : (Math.random() < 0.5 ? "dragon" : "tiger");
+      if (playerWins) dt.winner = "tie";
+    } else if (mainBet.option === "dragon" || mainBet.option === "tiger") {
+      if (playerWins) dt.winner = mainBet.option as "dragon" | "tiger";
+      else { const other = mainBet.option === "dragon" ? "tiger" : "dragon"; dt.winner = (Math.random() < 0.08 ? "tie" : other) as never; }
+    }
+  } else {
+    const ab = result as ABResult;
+    if (mainBet.option === "andar" || mainBet.option === "bahar") {
+      ab.winner = playerWins ? (mainBet.option as "andar" | "bahar") : (mainBet.option === "andar" ? "bahar" : "andar");
+    }
+  }
   const perUser = new Map<string, { bet: number; payout: number; desc: string[] }>();
   const ops = bets.map((b) => {
     const payout = r2(payoutFor(result, b.option, b.amount));
