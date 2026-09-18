@@ -91,3 +91,9 @@ export const TicketIcon = ({ size, ...p }: P) => (<svg {...stroke(size, p)}><pat
 export const MedalIcon = ({ size, ...p }: P) => (<svg {...stroke(size, p)}><path d="M7.21 15 2.66 7.14a2 2 0 0 1 .13-2.2L4.4 2.8A2 2 0 0 1 6 2h12a2 2 0 0 1 1.6.8l1.6 2.14a2 2 0 0 1 .14 2.2L16.79 15" /><path d="M11 12 5.12 2.2M13 12l5.88-9.8M8 7h8" /><circle cx="12" cy="17" r="5" /><path d="M12 18v-2h-.5" /></svg>);
 export const CricketIcon = ({ size, ...p }: P) => (<svg {...stroke(size, p)}><path d="m5.5 19-2.5-2.5 9.5-9.5 2.5 2.5z" /><path d="m13.5 6.5 2-2a1.4 1.4 0 0 1 2 0l2 2a1.4 1.4 0 0 1 0 2l-2 2" /><circle cx="6" cy="6" r="2" /></svg>);
 export const SlotIcon = ({ size, ...p }: P) => (<svg {...stroke(size, p)}><rect x="3" y="5" width="16" height="14" rx="2" /><path d="M7 9v6M11 9v6M15 9v6M22 8v3" /><circle cx="22" cy="6" r="1.5" /></svg>);
+
+export const AndroidIcon = ({ size = 20, ...p }: P) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" {...p}><path d="M17.6 9.5 19.4 6.4a.55.55 0 1 0-.95-.55L16.6 9.05A8.9 8.9 0 0 0 12 8a8.9 8.9 0 0 0-4.6 1.05L5.55 5.85a.55.55 0 1 0-.95.55L6.4 9.5A8.7 8.7 0 0 0 3 16.5h18a8.7 8.7 0 0 0-3.4-7zm-9.1 4.4a.85.85 0 1 1 0-1.7.85.85 0 0 1 0 1.7zm7 0a.85.85 0 1 1 0-1.7.85.85 0 0 1 0 1.7z"/></svg>
+);
+export const LaptopIcon = ({ size, ...p }: P) => (<svg {...stroke(size, p)}><rect x="3" y="4" width="18" height="12" rx="1.5" /><path d="M2 20h20" /></svg>);
+export const TabletIcon = ({ size, ...p }: P) => (<svg {...stroke(size, p)}><rect x="5" y="2" width="14" height="20" rx="2" /><path d="M11 18h2" /></svg>);

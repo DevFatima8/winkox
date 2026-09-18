@@ -89,7 +89,7 @@ export function CardTable({ table }: { table: Table }) {
       stRef.current = s;
       setSt(s);
       if (s.myBets.length && s.round.status === "betting") lastBetsRef.current = s.myBets.map((b) => ({ option: b.option, amount: b.amount }));
-    } catch { }
+    } catch {}
   }, [table]);
 
   useEffect(() => {
@@ -189,136 +189,136 @@ export function CardTable({ table }: { table: Table }) {
       </div>
 
       <div className="space-y-3 lg:grid lg:grid-cols-12 lg:items-start lg:gap-4 lg:space-y-0">
-        <div className="lg:col-span-8">
-          {/* felt */}
-          <div className={`relative overflow-hidden rounded-[28px] border-[6px] shadow-2xl ${table === "dragon-tiger" ? "border-[#7a5a1e] bg-[#120809]" : "border-[#5b3a1a] bg-[radial-gradient(ellipse_at_center,#1e4fa3_0%,#12336f_60%,#0b2350_100%)]"}`}>
-            {table === "dragon-tiger" && (
-              <>
-                <div className="pointer-events-none absolute inset-y-0 left-0 w-1/2 bg-[url('/games/dragon-tiger.jpg')] bg-cover bg-[center_30%] opacity-90" />
-                <div className="pointer-events-none absolute inset-y-0 right-0 w-1/2 bg-[url('/games/tiger.jpg')] bg-cover bg-[center_30%] opacity-90" />
-                <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(60,8,12,.55)_0%,rgba(20,6,8,.85)_50%,rgba(60,30,5,.55)_100%)]" />
-                <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,.55)_0%,rgba(0,0,0,0)_35%,rgba(0,0,0,0)_60%,rgba(0,0,0,.6)_100%)]" />
-              </>
-            )}
-            <div className="pointer-events-none absolute inset-2 rounded-[22px] border border-yellow-200/20" />
+      <div className="lg:col-span-8">
+      {/* felt */}
+      <div className={`relative overflow-hidden rounded-[28px] border-[6px] shadow-2xl ${table === "dragon-tiger" ? "border-[#7a5a1e] bg-[#120809]" : "border-[#5b3a1a] bg-[radial-gradient(ellipse_at_center,#1e4fa3_0%,#12336f_60%,#0b2350_100%)]"}`}>
+        {table === "dragon-tiger" && (
+          <>
+            <div className="pointer-events-none absolute inset-y-0 left-0 w-1/2 bg-[url('/games/dragon.jpg')] bg-cover bg-[center_30%] opacity-90" />
+            <div className="pointer-events-none absolute inset-y-0 right-0 w-1/2 bg-[url('/games/tiger.jpg')] bg-cover bg-[center_30%] opacity-90" />
+            <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(60,8,12,.55)_0%,rgba(20,6,8,.85)_50%,rgba(60,30,5,.55)_100%)]" />
+            <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,.55)_0%,rgba(0,0,0,0)_35%,rgba(0,0,0,0)_60%,rgba(0,0,0,.6)_100%)]" />
+          </>
+        )}
+        <div className="pointer-events-none absolute inset-2 rounded-[22px] border border-yellow-200/20" />
 
-            {/* history road */}
-            <div className="flex items-center gap-1 overflow-x-auto px-4 pt-3">
-              <span className="mr-1 shrink-0 text-[10px] font-bold uppercase tracking-wider text-white/60">Last {st.history.length}</span>
-              {st.history.map((h) => (
-                <span key={h.roundNo} title={`#${h.roundNo}`} className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-black text-white ${ZONE[h.winner]?.bead ?? "bg-slate-500"}`}>
-                  {h.winner === "tie" ? "=" : ZONE[h.winner]?.short}
-                </span>
-              ))}
-              {st.history.length === 0 && <span className="text-[10px] text-white/50">Pehla round…</span>}
-            </div>
-
-            {/* timer / status */}
-            <div className="flex justify-center pt-3">
-              {inBetting ? (
-                <div className="relative flex h-16 w-16 items-center justify-center">
-                  <svg className="absolute inset-0 -rotate-90" viewBox="0 0 64 64">
-                    <circle cx="32" cy="32" r="28" fill="rgba(0,0,0,.35)" stroke="rgba(255,255,255,.15)" strokeWidth="5" />
-                    <circle cx="32" cy="32" r="28" fill="none" stroke={remaining < 5 ? "#ef4444" : "#ffb800"} strokeWidth="5" strokeLinecap="round" strokeDasharray={`${2 * Math.PI * 28}`} strokeDashoffset={`${2 * Math.PI * 28 * (1 - remaining / (st.config.betMs / 1000))}`} />
-                  </svg>
-                  <div className="text-center"><div className="text-xl font-black leading-none text-white">{Math.ceil(remaining)}</div><div className="text-[9px] uppercase text-white/70">bet now</div></div>
-                </div>
-              ) : (
-                <div className="rounded-full bg-black/40 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-white">
-                  {winner ? "Result" : "No more bets — dealing…"}
-                </div>
-              )}
-            </div>
-
-            {/* cards area */}
-            <div className="px-4 pb-5 pt-3 lg:px-8 lg:pb-8 lg:pt-5">
-              {table === "dragon-tiger" ? (
-                <DragonTigerStage result={result as DTResult | null} revealT={revealT} winner={winner} />
-              ) : (
-                <AndarBaharStage result={result as ABResult | null} revealT={revealT} winner={winner} />
-              )}
-            </div>
-
-            {/* winner banner */}
-            {winner && (
-              <div className="pointer-events-none absolute inset-x-0 top-1/2 flex -translate-y-1/2 justify-center">
-                <div className={`animate-[pop_.4s_ease-out] rounded-2xl bg-gradient-to-r px-8 py-3 text-2xl font-black uppercase tracking-wider text-white shadow-2xl ${ZONE[winner].bg}`}>
-                  {winner === "tie" ? "TIE!" : `${st.config.options[winner].label} wins!`}
-                </div>
-              </div>
-            )}
-            {toast && (
-              <div className="pointer-events-none absolute inset-x-0 bottom-3 flex justify-center px-3">
-                <div className={`rounded-xl px-4 py-2 text-sm font-black shadow-xl ${toast.win ? "bg-yellow-400 text-slate-950" : "bg-slate-900/90 text-white"}`}>{toast.text}</div>
-              </div>
-            )}
-            <style>{`@keyframes pop{0%{transform:scale(.6);opacity:0}100%{transform:scale(1);opacity:1}}`}</style>
-          </div>
+        {/* history road */}
+        <div className="flex items-center gap-1 overflow-x-auto px-4 pt-3">
+          <span className="mr-1 shrink-0 text-[10px] font-bold uppercase tracking-wider text-white/60">Last {st.history.length}</span>
+          {st.history.map((h) => (
+            <span key={h.roundNo} title={`#${h.roundNo}`} className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-black text-white ${ZONE[h.winner]?.bead ?? "bg-slate-500"}`}>
+              {h.winner === "tie" ? "=" : ZONE[h.winner]?.short}
+            </span>
+          ))}
+          {st.history.length === 0 && <span className="text-[10px] text-white/50">Pehla round…</span>}
         </div>
 
-        <div className="space-y-3 lg:col-span-4">
-          {/* bet zones */}
-          <div className={`grid gap-2 ${opts.length === 3 ? "grid-cols-3" : "grid-cols-2"}`}>
-            {opts.map((o) => {
-              const z = ZONE[o]; const cfg = st.config.options[o]; const tot = st.totals[o]; const mine = myBy(o);
-              const isWin = winner === o;
-              return (
-                <button
-                  key={o}
-                  disabled={!inBetting || busy}
-                  onClick={() => bet(o)}
-                  className={`relative overflow-hidden rounded-2xl bg-gradient-to-b p-3 text-left text-white shadow-lg transition ${z.bg} ${inBetting ? "hover:brightness-110 active:scale-[.98]" : "opacity-90"} ${isWin ? `ring-4 ${z.ring}` : ""} ${winner && !isWin ? "opacity-50" : ""} disabled:cursor-not-allowed`}
-                >
-                  <div className="flex items-baseline justify-between">
-                    <span className="text-lg font-black uppercase">{cfg.label}</span>
-                    <span className="rounded-md bg-black/30 px-1.5 py-0.5 text-[11px] font-bold">{cfg.pays}</span>
-                  </div>
-                  <div className="mt-2 text-[11px] text-white/80">Pool {money(tot?.total ?? 0)} · {tot?.players ?? 0} </div>
-                  <div className="mt-1 flex h-7 items-center gap-1">
-                    {mine > 0 ? (
-                      <>
-                        <span className="flex h-7 w-7 items-center justify-center rounded-full border-[3px] border-dashed border-white bg-yellow-400 text-[9px] font-black text-slate-950">{mine >= 1000 ? `${Math.floor(mine / 1000)}K` : mine}</span>
-                        <span className="text-xs font-bold">{money(mine)}</span>
-                      </>
-                    ) : (
-                      <span className="text-[11px] text-white/60">{inBetting ? `Tap: +${money(chip)}` : "—"}</span>
-                    )}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* chips + actions */}
-          <div className="rounded-2xl border border-[#3a2470] bg-[#1b1038] p-3">
-            <div className="flex flex-wrap items-center gap-2">
-              {CHIPS.map((c) => (
-                <button key={c} onClick={() => setChip(c)} className={`flex h-11 w-11 items-center justify-center rounded-full border-[3px] border-dashed text-xs font-black transition ${chip === c ? "scale-110 border-white bg-[#ffb800] text-slate-950 shadow-lg shadow-yellow-500/40" : "border-white/40 bg-[#0b0716] text-white hover:border-white"}`}>
-                  {c >= 1000 ? `${c / 1000}K` : c}
-                </button>
-              ))}
-              <div className="ml-auto flex gap-2">
-                <button disabled={!inBetting || busy || !lastBetsRef.current.length || st.myTotal > 0} onClick={rebet} className="rounded-xl bg-[#8b5cf6] px-3 py-2 text-xs font-bold text-white disabled:opacity-40">Rebet</button>
-                <button disabled={!inBetting || busy || st.myTotal === 0} onClick={cancel} className="rounded-xl bg-red-500/20 px-3 py-2 text-xs font-bold text-red-300 disabled:opacity-40">Cancel</button>
-              </div>
+        {/* timer / status */}
+        <div className="flex justify-center pt-3">
+          {inBetting ? (
+            <div className="relative flex h-16 w-16 items-center justify-center">
+              <svg className="absolute inset-0 -rotate-90" viewBox="0 0 64 64">
+                <circle cx="32" cy="32" r="28" fill="rgba(0,0,0,.35)" stroke="rgba(255,255,255,.15)" strokeWidth="5" />
+                <circle cx="32" cy="32" r="28" fill="none" stroke={remaining < 5 ? "#ef4444" : "#ffb800"} strokeWidth="5" strokeLinecap="round" strokeDasharray={`${2 * Math.PI * 28}`} strokeDashoffset={`${2 * Math.PI * 28 * (1 - remaining / (st.config.betMs / 1000))}`} />
+              </svg>
+              <div className="text-center"><div className="text-xl font-black leading-none text-white">{Math.ceil(remaining)}</div><div className="text-[9px] uppercase text-white/70">bet now</div></div>
             </div>
-            <div className="mt-2 flex items-center justify-between text-xs text-[#b8a7e6]">
-              <span>Is round: <b className="text-white">{money(st.myTotal)}</b>{result && st.myTotal > 0 && revealDone ? <> → <b className={st.myExpected > 0 ? "text-emerald-400" : "text-red-400"}>{money(st.myExpected)}</b></> : null}</span>
-              <span>Min {st.config.min} · Max {st.config.max.toLocaleString()}</span>
+          ) : (
+            <div className="rounded-full bg-black/40 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-white">
+              {winner ? "Result" : "No more bets — dealing…"}
             </div>
-            {msg && <p className={`mt-2 rounded-lg px-3 py-1.5 text-xs ${msg.t === "err" ? "bg-red-500/15 text-red-300" : "bg-sky-500/15 text-sky-300"}`}>{msg.m}</p>}
-          </div>
+          )}
+        </div>
 
-          {/* stats */}
-          <div className="grid grid-cols-3 gap-2 text-center text-xs">
-            {opts.map((o) => (
-              <div key={o} className="rounded-xl bg-[#1b1038] px-2 py-2">
-                <div className={`font-black uppercase ${ZONE[o].text}`}>{st.config.options[o].label}</div>
-                <div className="text-white">{Math.round(((st.stats[o] ?? 0) / histTotal) * 100)}% <span className="text-[#6f5fa3]">({st.stats[o] ?? 0})</span></div>
+        {/* cards area */}
+        <div className="px-4 pb-5 pt-3 lg:px-8 lg:pb-8 lg:pt-5">
+          {table === "dragon-tiger" ? (
+            <DragonTigerStage result={result as DTResult | null} revealT={revealT} winner={winner} />
+          ) : (
+            <AndarBaharStage result={result as ABResult | null} revealT={revealT} winner={winner} />
+          )}
+        </div>
+
+        {/* winner banner */}
+        {winner && (
+          <div className="pointer-events-none absolute inset-x-0 top-1/2 flex -translate-y-1/2 justify-center">
+            <div className={`animate-[pop_.4s_ease-out] rounded-2xl bg-gradient-to-r px-8 py-3 text-2xl font-black uppercase tracking-wider text-white shadow-2xl ${ZONE[winner].bg}`}>
+              {winner === "tie" ? "TIE!" : `${st.config.options[winner].label} wins!`}
+            </div>
+          </div>
+        )}
+        {toast && (
+          <div className="pointer-events-none absolute inset-x-0 bottom-3 flex justify-center px-3">
+            <div className={`rounded-xl px-4 py-2 text-sm font-black shadow-xl ${toast.win ? "bg-yellow-400 text-slate-950" : "bg-slate-900/90 text-white"}`}>{toast.text}</div>
+          </div>
+        )}
+        <style>{`@keyframes pop{0%{transform:scale(.6);opacity:0}100%{transform:scale(1);opacity:1}}`}</style>
+      </div>
+      </div>
+
+      <div className="space-y-3 lg:col-span-4">
+      {/* bet zones */}
+      <div className={`grid gap-2 ${opts.length === 3 ? "grid-cols-3" : "grid-cols-2"}`}>
+        {opts.map((o) => {
+          const z = ZONE[o]; const cfg = st.config.options[o]; const tot = st.totals[o]; const mine = myBy(o);
+          const isWin = winner === o;
+          return (
+            <button
+              key={o}
+              disabled={!inBetting || busy}
+              onClick={() => bet(o)}
+              className={`relative overflow-hidden rounded-2xl bg-gradient-to-b p-3 text-left text-white shadow-lg transition ${z.bg} ${inBetting ? "hover:brightness-110 active:scale-[.98]" : "opacity-90"} ${isWin ? `ring-4 ${z.ring}` : ""} ${winner && !isWin ? "opacity-50" : ""} disabled:cursor-not-allowed`}
+            >
+              <div className="flex items-baseline justify-between">
+                <span className="text-lg font-black uppercase">{cfg.label}</span>
+                <span className="rounded-md bg-black/30 px-1.5 py-0.5 text-[11px] font-bold">{cfg.pays}</span>
               </div>
-            ))}
+              <div className="mt-2 text-[11px] text-white/80">Pool {money(tot?.total ?? 0)} · {tot?.players ?? 0} </div>
+              <div className="mt-1 flex h-7 items-center gap-1">
+                {mine > 0 ? (
+                  <>
+                    <span className="flex h-7 w-7 items-center justify-center rounded-full border-[3px] border-dashed border-white bg-yellow-400 text-[9px] font-black text-slate-950">{mine >= 1000 ? `${Math.floor(mine / 1000)}K` : mine}</span>
+                    <span className="text-xs font-bold">{money(mine)}</span>
+                  </>
+                ) : (
+                  <span className="text-[11px] text-white/60">{inBetting ? `Tap: +${money(chip)}` : "—"}</span>
+                )}
+              </div>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* chips + actions */}
+      <div className="rounded-2xl border border-[#3a2470] bg-[#1b1038] p-3">
+        <div className="flex flex-wrap items-center gap-2">
+          {CHIPS.map((c) => (
+            <button key={c} onClick={() => setChip(c)} className={`flex h-11 w-11 items-center justify-center rounded-full border-[3px] border-dashed text-xs font-black transition ${chip === c ? "scale-110 border-white bg-[#ffb800] text-slate-950 shadow-lg shadow-yellow-500/40" : "border-white/40 bg-[#0b0716] text-white hover:border-white"}`}>
+              {c >= 1000 ? `${c / 1000}K` : c}
+            </button>
+          ))}
+          <div className="ml-auto flex gap-2">
+            <button disabled={!inBetting || busy || !lastBetsRef.current.length || st.myTotal > 0} onClick={rebet} className="rounded-xl bg-[#8b5cf6] px-3 py-2 text-xs font-bold text-white disabled:opacity-40">Rebet</button>
+            <button disabled={!inBetting || busy || st.myTotal === 0} onClick={cancel} className="rounded-xl bg-red-500/20 px-3 py-2 text-xs font-bold text-red-300 disabled:opacity-40">Cancel</button>
           </div>
         </div>
+        <div className="mt-2 flex items-center justify-between text-xs text-[#b8a7e6]">
+          <span>Is round: <b className="text-white">{money(st.myTotal)}</b>{result && st.myTotal > 0 && revealDone ? <> → <b className={st.myExpected > 0 ? "text-emerald-400" : "text-red-400"}>{money(st.myExpected)}</b></> : null}</span>
+          <span>Min {st.config.min} · Max {st.config.max.toLocaleString()}</span>
+        </div>
+        {msg && <p className={`mt-2 rounded-lg px-3 py-1.5 text-xs ${msg.t === "err" ? "bg-red-500/15 text-red-300" : "bg-sky-500/15 text-sky-300"}`}>{msg.m}</p>}
+      </div>
+
+      {/* stats */}
+      <div className="grid grid-cols-3 gap-2 text-center text-xs">
+        {opts.map((o) => (
+          <div key={o} className="rounded-xl bg-[#1b1038] px-2 py-2">
+            <div className={`font-black uppercase ${ZONE[o].text}`}>{st.config.options[o].label}</div>
+            <div className="text-white">{Math.round(((st.stats[o] ?? 0) / histTotal) * 100)}% <span className="text-[#6f5fa3]">({st.stats[o] ?? 0})</span></div>
+          </div>
+        ))}
+      </div>
+      </div>
       </div>
     </div>
   );

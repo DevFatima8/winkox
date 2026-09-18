@@ -5,6 +5,7 @@ import { BannerCarousel, Drawer, JackpotCounter, LeaderboardTable, Marquee, TopB
 import { NotificationBell } from "@/components/NotificationBell";
 import { SupportWidget } from "@/components/SupportWidget";
 import { PwaRegister } from "@/components/PwaRegister";
+import { InstallPrompt } from "@/components/InstallPrompt";
 import { InstallApp } from "@/components/InstallApp";
 import { OpenSupportButton } from "@/components/OpenSupport";
 import { LanguageSwitch } from "@/components/LanguageSwitch";
@@ -37,12 +38,12 @@ const PROVIDER_STYLE: Record<string, string> = { SPRIBE: "text-[#ff5c5c] trackin
 const BADGE_STYLE: Record<string, string> = { "777x": "bg-gradient-to-r from-[#ef4444] to-[#b91c1c]", "1M x": "bg-gradient-to-r from-[#0ea5e9] to-[#6366f1]", HOT: "bg-gradient-to-r from-[#ff3b5c] to-[#ff8a00]", NEW: "bg-gradient-to-r from-[#22c55e] to-[#16a34a]", LIVE: "bg-gradient-to-r from-[#d946ef] to-[#8b5cf6]", "1000x": "bg-gradient-to-r from-[#ffb800] to-[#ff8a00] text-slate-950" };
 
 export const MARQUEE = [
-  "WinX555 mein khush aamdeed! Register karein aur PKR 1500 welcome bonus hasil karein",
-  "Har deposit par 7% bonus — PKR 60,000 tak! JazzCash & Easypaisa instant",
-  "1 dost invite karein jo top-up kare — 588 PKR bonus + 1.5% betting commission + 4% top-up commission",
+"WinX555 mein khush aamdeed! Register karein aur PKR 1500 welcome bonus hasil karein",
+"Har deposit par 7% bonus — PKR 60,000 tak! JazzCash & Easypaisa instant",
+"1 dost invite karein jo top-up kare — 588 PKR bonus + 1.5% betting commission + 4% top-up commission",
   "💵 Har bet par cashback — agle din 00:00 ke baad claim karein 📅",
-  "🆘 Har hafte PKR 100,000 tak rescue fund!",
-  "Rozana 3 random red packets — PKR 888,888 tak jeetne ka mauqa",
+"🆘 Har hafte PKR 100,000 tak rescue fund!",
+"Rozana 3 random red packets — PKR 888,888 tak jeetne ka mauqa",
 ];
 
 const SLIDES: Slide[] = [
@@ -156,7 +157,7 @@ export function GameCard({ slug, href }: { slug: string; href: string }) {
         {m.badge && <span className={`absolute right-1.5 top-1.5 rounded-md px-1.5 py-0.5 text-[9px] font-black text-white shadow ${BADGE_STYLE[m.badge]}`}>{m.badge}</span>}
         <span className="btn-gold absolute bottom-2 left-1/2 flex -translate-x-1/2 items-center gap-1 rounded-full px-3.5 py-1 text-[10px] font-black opacity-0 transition group-hover:opacity-100"><PlayIcon size={10} /> PLAY</span>
       </div>
-    </span>
+      </span>
       <div className="flex items-center justify-between bg-[#140c2a] px-2 py-1.5">
         <span className="truncate text-xs font-bold text-white">{m.label}</span>
         <span className="text-[#ffb800]"><CrownIcon size={12} /></span>
@@ -257,13 +258,13 @@ export function Lobby({ viewer, cat, links = {} }: { viewer: Viewer; cat: string
                 <span className="absolute bottom-2 left-2 flex items-center gap-1.5 text-sm font-black drop-shadow rtl:left-auto rtl:right-2"><span className="flex h-6 w-6 items-center justify-center rounded-md bg-black/50 text-white">{CAT_ICONS[c.key] ?? c.icon}</span>{catLabel[c.key] ?? c.label}</span>
               </Link>
             ))}
-            <Link href="/#games" className="hidden h-[96px] items-center justify-center gap-2 rounded-2xl border border-dashed border-[#8b5cf6]/60 text-sm font-bold text-[#c4b5fd] hover:bg-[#8b5cf6]/10 md:flex lg:h-[110px]"><FlameIcon size={16} /> {t("allHotGames")}</Link>
+            <Link href="/games-all" className="hidden h-[96px] items-center justify-center gap-2 rounded-2xl border border-dashed border-[#8b5cf6]/60 text-sm font-bold text-[#c4b5fd] hover:bg-[#8b5cf6]/10 md:flex lg:h-[110px]"><FlameIcon size={16} /> {t("allHotGames")}</Link>
           </section>
         </div>
 
         {/* games grid */}
         <section id="games" className="wx-card scroll-mt-16 space-y-3 rounded-2xl p-3 md:p-4">
-          <SectionTitle icon="🔥" title={`${tabLabel[activeTab] ?? activeTab} ${t("games")}`} right={<Link href="/#games" className="text-xs font-bold text-[#c4b5fd]">{t("viewAll")} ›</Link>} />
+          <SectionTitle icon="🔥" title={`${tabLabel[activeTab] ?? activeTab} ${t("games")}`} right={<Link href="/games-all" className="rounded-full bg-[#8b5cf6]/20 px-3 py-1 text-xs font-bold text-[#c4b5fd] ring-1 ring-[#8b5cf6]/40 hover:bg-[#8b5cf6]/30">{t("viewAll")} ›</Link>} />
           <GameTabs tabs={tabs} active={activeTab} labels={tabLabel} />
           {comingSoon ? (
             <div className="rounded-xl border border-dashed border-[#3a2470] p-8 text-center text-sm text-[#b8a7e6]">{t("comingSoon", { cat: tabLabel[activeTab] ?? activeTab })}</div>
@@ -286,18 +287,60 @@ export function Lobby({ viewer, cat, links = {} }: { viewer: Viewer; cat: string
 
         {/* leaderboard + app */}
         <div className="space-y-3 lg:grid lg:grid-cols-12 lg:gap-4 lg:space-y-0">
-          <section className="wx-card rounded-2xl p-3 md:p-4 lg:col-span-7">
-            <div className="on-image mx-auto flex w-max items-center gap-2 rounded-full bg-gradient-to-r from-[#8b5cf6] via-[#d946ef] to-[#8b5cf6] px-5 py-1 text-xs font-black uppercase tracking-wide text-white"><TrophyIcon size={14} />{t("topWinners").replace("🏆 ", "")}</div>
-            <div className="mt-4 grid grid-cols-3 items-end gap-2 text-center">
-              {[{ p: 2, n: "fs***429", a: 32_741_392, c: "from-slate-200 to-slate-500", h: "h-24" }, { p: 1, n: "gn***850", a: 34_093_974, c: "from-[#ffd45a] to-[#ff8a00]", h: "h-28" }, { p: 3, n: "pr***399", a: 19_749_864, c: "from-[#e8a86b] to-[#8a4a12]", h: "h-24" }].map((x) => (
-                <div key={x.p} className={`flex ${x.h} flex-col items-center justify-end rounded-xl bg-gradient-to-b ${x.c} p-2 text-slate-950 shadow-lg`}>
-                  <span className="mb-1 flex h-9 w-9 items-center justify-center rounded-full border-2 border-white/70 bg-white/30 text-base font-black">{x.p === 1 ? <CrownIcon size={18} /> : x.p}</span>
-                  <span className="text-xs font-bold">{x.n}</span>
-                  <span className="text-[11px] font-black">Rs. {x.a.toLocaleString("en-US")}</span>
-                </div>
-              ))}
+          <section className="relative overflow-hidden rounded-3xl border border-[#3a2470] bg-gradient-to-b from-[#160d33] to-[#0b0720] p-4 md:p-6 lg:col-span-7">
+            {/* glow background */}
+            <div className="pointer-events-none absolute -top-24 left-1/2 h-56 w-56 -translate-x-1/2 rounded-full bg-[#ffb800]/20 blur-3xl" />
+            <div className="relative flex items-center justify-center gap-2">
+              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-[#ffd45a] to-[#ff8a00] text-[#2a1500] shadow-lg shadow-amber-500/30"><TrophyIcon size={18} /></span>
+              <div className="text-center">
+                <div className="text-sm font-black uppercase tracking-[0.18em] text-white sm:text-base">{t("topWinners").replace("🏆 ", "")}</div>
+                <div className="text-[10px] font-semibold uppercase tracking-widest text-amber-300/70">Weekly championship</div>
+              </div>
             </div>
-            <div className="mt-3"><LeaderboardTable rows={LEADERS} labels={[t("rank"), t("username"), t("winnings")]} /></div>
+            {/* podium */}
+            <div className="relative mt-6 grid grid-cols-3 items-end gap-2 sm:gap-4">
+              {(() => {
+                const top = [
+                  { rank: 2, n: "fs***429", a: 32741392, from: "from-[#cbd5e1] to-[#64748b]", h: "h-24 sm:h-28", ring: "ring-slate-300", med: "🥈", glow: "shadow-slate-500/30" },
+                  { rank: 1, n: "gn***850", a: 34093974, from: "from-[#ffe08a] to-[#ff8a00]", h: "h-32 sm:h-36", ring: "ring-amber-300", med: "🥇", glow: "shadow-amber-500/50" },
+                  { rank: 3, n: "pr***399", a: 19749864, from: "from-[#f0b98a] to-[#8a4a12]", h: "h-20 sm:h-24", ring: "ring-orange-700", med: "🥉", glow: "shadow-orange-800/30" },
+                ];
+                return top.map((x) => (
+                  <div key={x.rank} className="relative flex flex-col items-center">
+                    <div className="relative mb-2">
+                      <span className={`flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br ${x.from} text-lg shadow-lg ${x.glow} ring-4 ${x.ring}/40 sm:h-14 sm:w-14`}>{x.rank === 1 ? <CrownIcon size={22} /> : <span className="text-base font-black text-slate-900">{x.rank}</span>}</span>
+                      {x.rank === 1 && <span className="absolute -right-2 -top-2 animate-bounce text-xl">{x.med}</span>}
+                    </div>
+                    <div className="mb-1 max-w-full truncate rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-bold text-white sm:text-xs">{x.n}</div>
+                    <div className={`w-full ${x.h} rounded-t-2xl bg-gradient-to-b ${x.from} p-2 text-center shadow-inner`}>
+                      <div className="flex h-full flex-col items-center justify-end gap-0.5">
+                        <span className="text-[9px] font-black text-slate-900/80 sm:text-[10px]">#{x.rank}</span>
+                        <span className="text-[10px] font-black leading-tight text-slate-900 sm:text-xs">Rs. {(x.a / 1000000).toFixed(2)}M</span>
+                      </div>
+                    </div>
+                  </div>
+                ));
+              })()}
+            </div>
+            {/* rows */}
+            <div className="mt-5">
+              <div className="on-image mb-1 grid grid-cols-[44px_1fr_auto] gap-2 px-3 pb-1 text-[10px] font-black uppercase tracking-widest text-[#b8a7e6] sm:text-xs"><span>{t("rank")}</span><span>{t("username")}</span><span className="text-right">{t("winnings")}</span></div>
+              <div className="space-y-1">
+                {LEADERS.map((r, i) => (
+                  <div key={i} className="grid grid-cols-[44px_1fr_auto] items-center gap-2 rounded-xl px-3 py-1.5 text-xs transition hover:bg-white/5" style={{ background: i % 2 ? "rgba(255,255,255,.03)" : "transparent" }}>
+                    <span className="flex items-center gap-1 font-black text-white/90">
+                      <span className={`flex h-6 w-6 items-center justify-center rounded-lg text-[10px] ${i < 3 ? "bg-gradient-to-br from-[#ffd45a] to-[#ff8a00] text-[#2a1500]" : "bg-white/10 text-slate-300"}`}>{r.rank}</span>
+                      <span className={`text-[9px] ${r.up ? "text-emerald-400" : "text-rose-400"}`}>{r.up ? "▲" : "▼"}</span>
+                    </span>
+                    <span className="flex items-center gap-2 truncate font-semibold text-slate-200">
+                      <span className="h-5 w-5 shrink-0 rounded-full" style={{ background: `hsl(${(r.rank * 47) % 360} 70% 55%)` }} />
+                      <span className="truncate">{r.name}</span>
+                    </span>
+                    <span className="text-right font-black text-amber-300">Rs. {r.amount.toLocaleString("en-US")}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </section>
 
           <section className="space-y-2 lg:col-span-5">
@@ -346,8 +389,6 @@ export function Lobby({ viewer, cat, links = {} }: { viewer: Viewer; cat: string
               </div>
               {(links.whatsappChannel || links.telegramChannel) && (
                 <div className="mt-3 flex flex-wrap justify-center gap-2 text-xs">
-                  {links.whatsappChannel && <a href={links.whatsappChannel} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-full bg-[#25d366]/20 px-3 py-1 font-bold text-[#7ee2a0]"><WhatsAppIcon size={14} /> {t("whatsappChannel")}</a>}
-                  {links.telegramChannel && <a href={links.telegramChannel} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-full bg-[#29a9ea]/20 px-3 py-1 font-bold text-[#8fd3ff]"><TelegramIcon size={14} /> {t("telegramChannel")}</a>}
                 </div>
               )}
             </div>
@@ -358,6 +399,7 @@ export function Lobby({ viewer, cat, links = {} }: { viewer: Viewer; cat: string
       <TopButton />
       <SupportWidget userName={viewer.name} />
       <PwaRegister />
+      <InstallPrompt />
       <BottomNav viewer={viewer} active="home" />
       {locale === "ur" && <span className="hidden" />}
     </div>

@@ -4,6 +4,7 @@ import { destroySession } from "@/lib/auth";
 import { SupportWidget } from "./SupportWidget";
 import { NotificationBell } from "./NotificationBell";
 import { PwaRegister } from "./PwaRegister";
+import { InstallPrompt } from "./InstallPrompt";
 import { LanguageSwitch } from "./LanguageSwitch";
 import { ThemeToggle } from "./ThemeToggle";
 import { BrandLogo } from "./BrandLogo";
@@ -89,6 +90,7 @@ export function Shell({ title, nav, userName, badge, children, support = true }:
       </main>
       {support && <SupportWidget userName={userName} />}
       <PwaRegister />
+      <InstallPrompt />
 
       {/* ===== Mobile bottom tabs (4 + More) ===== */}
       <nav className="fixed inset-x-0 bottom-0 z-40 flex border-t border-[#3a2470] bg-[#140c2a]/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
