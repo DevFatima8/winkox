@@ -322,23 +322,28 @@ export function Lobby({ viewer, cat, links = {} }: { viewer: Viewer; cat: string
                 ));
               })()}
             </div>
-            {/* rows */}
+            {/* rows — continuously scrolling top → bottom */}
             <div className="mt-5">
               <div className="on-image mb-1 grid grid-cols-[44px_1fr_auto] gap-2 px-3 pb-1 text-[10px] font-black uppercase tracking-widest text-[#b8a7e6] sm:text-xs"><span>{t("rank")}</span><span>{t("username")}</span><span className="text-right">{t("winnings")}</span></div>
-              <div className="space-y-1">
-                {LEADERS.map((r, i) => (
-                  <div key={i} className="grid grid-cols-[44px_1fr_auto] items-center gap-2 rounded-xl px-3 py-1.5 text-xs transition hover:bg-white/5" style={{ background: i % 2 ? "rgba(255,255,255,.03)" : "transparent" }}>
-                    <span className="flex items-center gap-1 font-black text-white/90">
-                      <span className={`flex h-6 w-6 items-center justify-center rounded-lg text-[10px] ${i < 3 ? "bg-gradient-to-br from-[#ffd45a] to-[#ff8a00] text-[#2a1500]" : "bg-white/10 text-slate-300"}`}>{r.rank}</span>
-                      <span className={`text-[9px] ${r.up ? "text-emerald-400" : "text-rose-400"}`}>{r.up ? "▲" : "▼"}</span>
-                    </span>
-                    <span className="flex items-center gap-2 truncate font-semibold text-slate-200">
-                      <span className="h-5 w-5 shrink-0 rounded-full" style={{ background: `hsl(${(r.rank * 47) % 360} 70% 55%)` }} />
-                      <span className="truncate">{r.name}</span>
-                    </span>
-                    <span className="text-right font-black text-amber-300">Rs. {r.amount.toLocaleString("en-US")}</span>
-                  </div>
-                ))}
+              <div className="wx-winners-clip relative h-44 overflow-hidden rounded-xl sm:h-52">
+                <div className="wx-winners absolute inset-x-0">
+                  {[...LEADERS, ...LEADERS].map((r, i) => (
+                    <div key={i} className="grid grid-cols-[44px_1fr_auto] items-center gap-2 px-3 py-[7px] text-xs" style={{ background: i % 2 ? "rgba(255,255,255,.03)" : "transparent" }}>
+                      <span className="flex items-center gap-1 font-black text-white/90">
+                        <span className={`flex h-6 w-6 items-center justify-center rounded-lg text-[10px] ${r.rank <= 3 ? "bg-gradient-to-br from-[#ffd45a] to-[#ff8a00] text-[#2a1500]" : "bg-white/10 text-slate-300"}`}>{r.rank}</span>
+                        <span className={`text-[9px] ${r.up ? "text-emerald-400" : "text-rose-400"}`}>{r.up ? "▲" : "▼"}</span>
+                      </span>
+                      <span className="flex items-center gap-2 truncate font-semibold text-slate-200">
+                        <span className="h-5 w-5 shrink-0 rounded-full" style={{ background: `hsl(${(r.rank * 47) % 360} 70% 55%)` }} />
+                        <span className="truncate">{r.name}</span>
+                      </span>
+                      <span className="text-right font-black text-amber-300">Rs. {r.amount.toLocaleString("en-US")}</span>
+                    </div>
+                  ))}
+                </div>
+                {/* fade edges */}
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-4 bg-gradient-to-b from-[#160d33] to-transparent" />
+                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-4 bg-gradient-to-t from-[#0b0720] to-transparent" />
               </div>
             </div>
           </section>

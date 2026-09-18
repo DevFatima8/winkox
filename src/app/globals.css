@@ -426,3 +426,18 @@ html.light .hover\:wx-row:hover { background-color: #ede9fe !important; }
 html.light .wx-drawer-border { border-color: #d5dde6 !important; }
 /* lobby drawer language/theme chips */
 html.light .wx-drawer-panel .wx-chip { background-color: #eef2f7 !important; color: #334155 !important; }
+
+/* Top Winners — seamless top→bottom marquee (content duplicated; scrolls exactly one list height) */
+@keyframes wxWinners {
+  0% { transform: translateY(-50%); }
+  100% { transform: translateY(0%); }
+}
+.wx-winners-clip { contain: layout paint; }
+.wx-winners {
+  animation: wxWinners 22s linear infinite;
+  will-change: transform;
+}
+.wx-winners:hover { animation-play-state: paused; }
+@media (prefers-reduced-motion: reduce) {
+  .wx-winners { animation: none; }
+}
