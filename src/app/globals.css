@@ -441,3 +441,19 @@ html.light .wx-drawer-panel .wx-chip { background-color: #eef2f7 !important; col
 @media (prefers-reduced-motion: reduce) {
   .wx-winners { animation: none; }
 }
+
+/* Top Winners card stays dark even in light mode so usernames remain readable/white */
+html.light .wx-winners-card {
+  background: linear-gradient(180deg, #160d33 0%, #0b0720 100%) !important;
+  border-color: #3a2470 !important;
+  color: #fff !important;
+}
+html.light .wx-winners-card .text-white,
+html.light .wx-winners-card .text-white\/90,
+html.light .wx-winners-card .text-slate-200,
+html.light .wx-winners-card [class*="text-slate-200"],
+html.light .wx-winners-card [class*="text-white"] { color: #fff !important; }
+html.light .wx-winners-card .text-\[#b8a7e6\],
+html.light .wx-winners-card [class*="text-\[#b8a7e6\]"] { color: #c4b5fd !important; }
+html.light .wx-winners-card .text-amber-300 { color: #fcd34d !important; }
+html.light .wx-winners-card [style*="rgba(255,255,255,.03)"] { background: rgba(255,255,255,.04) !important; }

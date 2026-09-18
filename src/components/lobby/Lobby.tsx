@@ -287,7 +287,7 @@ export function Lobby({ viewer, cat, links = {} }: { viewer: Viewer; cat: string
 
         {/* leaderboard + app */}
         <div className="space-y-3 lg:grid lg:grid-cols-12 lg:gap-4 lg:space-y-0">
-          <section className="relative overflow-hidden rounded-3xl border border-[#3a2470] bg-gradient-to-b from-[#160d33] to-[#0b0720] p-4 md:p-6 lg:col-span-7">
+          <section className="wx-winners-card relative overflow-hidden rounded-3xl border border-[#3a2470] bg-gradient-to-b from-[#160d33] to-[#0b0720] p-4 text-white md:p-6 lg:col-span-7">
             {/* glow background */}
             <div className="pointer-events-none absolute -top-24 left-1/2 h-56 w-56 -translate-x-1/2 rounded-full bg-[#ffb800]/20 blur-3xl" />
             <div className="relative flex items-center justify-center gap-2">
