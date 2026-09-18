@@ -358,7 +358,7 @@ export function ChickenRoadGame() {
       canvas.style.height = cssH + "px";
       viewRef.current = { w: cssW / scale, h: H, scale, dpr };
     });
-    ro.observe(wrap);
+    if (typeof requestAnimationFrame!=="undefined") requestAnimationFrame(()=>{ try{(window as unknown as Window).dispatchEvent(new Event("resize"));}catch{} }); ro.observe(wrap);
     return () => ro.disconnect();
   }, []);
 

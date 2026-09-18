@@ -51,7 +51,7 @@ export function AviatorGame({ table = "aviator" }: { table?: Table }) {
   const panelsRef = useRef(panels); panelsRef.current = panels;
   const autoCashFired = useRef<Record<number, number>>({});
   const autoBetDone = useRef<Record<number, number>>({});
-  const sizeRef = useRef({ w: 900, h: 460, dpr: 1 });
+  const sizeRef = useRef({ w: 640, h: 380, dpr: 1 });
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastCrashShown = useRef(0);
 
@@ -102,11 +102,22 @@ export function AviatorGame({ table = "aviator" }: { table?: Table }) {
     await refresh();
   }, [api, table, refresh, setPanel, showToast]);
 
-  useEffect(() => {
+  const sizeCanvas = useCallback(() => {
     const wrap = wrapRef.current, canvas = canvasRef.current; if (!wrap || !canvas) return;
-    const ro = new ResizeObserver(() => { const w = wrap.clientWidth, h = wrap.clientHeight, dpr = window.devicePixelRatio || 1; canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr); sizeRef.current = { w, h, dpr }; });
-    ro.observe(wrap); return () => ro.disconnect();
+    const w = wrap.clientWidth, h = wrap.clientHeight, dpr = Math.min(window.devicePixelRatio || 1, 2);
+    if (w < 10 || h < 10) return;
+    canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
+    canvas.style.width = w + "px"; canvas.style.height = h + "px";
+    sizeRef.current = { w, h, dpr };
   }, []);
+  useEffect(() => {
+    sizeCanvas();
+    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(sizeCanvas) : null;
+    if (wrapRef.current && ro) ro.observe(wrapRef.current);
+    window.addEventListener("resize", sizeCanvas);
+    const id = window.setInterval(sizeCanvas, 500); // safety net for layouts that settle late
+    return () => { ro?.disconnect(); window.removeEventListener("resize", sizeCanvas); window.clearInterval(id); };
+  }, [sizeCanvas]);
 
   useEffect(() => {
     let raf = 0;
@@ -172,7 +183,7 @@ export function AviatorGame({ table = "aviator" }: { table?: Table }) {
         </div>
       )}
 
-      <div className="grid lg:grid-cols-[300px_1fr]">
+      <div className="grid lg:grid-cols-[260px_1fr] xl:grid-cols-[300px_1fr]">
         {/* LEFT: bets */}
         <aside className="order-2 flex flex-col lg:order-1" style={{ background: T.panel2, borderRight: `1px solid ${T.line}` }}>
           <div className="flex gap-1 p-2">
@@ -183,7 +194,7 @@ export function AviatorGame({ table = "aviator" }: { table?: Table }) {
               <div className="flex items-center justify-between px-3 pb-1"><div><div className="text-[10px] uppercase text-slate-500">All bets</div><div className="text-sm font-bold text-white">{state.totals.count}</div></div><button onClick={() => setShowHist(true)} className="rounded-full px-2.5 py-1 text-[10px] font-semibold text-slate-300" style={{ background: T.panel, border: `1px solid ${T.line}` }}>Previous hand</button></div>
               <div className="px-3 pb-1"><div className="h-1 overflow-hidden rounded-full" style={{ background: T.line }}><div className="h-full bg-[#28a909]" style={{ width: `${state.totals.count ? (state.totals.cashed / state.totals.count) * 100 : 0}%` }} /></div></div>
               <div className="grid grid-cols-[1fr_auto_auto_auto] gap-x-2 px-3 py-1 text-[10px] uppercase text-slate-500"><span>User</span><span className="text-right">Bet PKR</span><span className="text-right">X</span><span className="text-right">Cash out</span></div>
-              <ul className="max-h-[300px] flex-1 space-y-[2px] overflow-y-auto px-2 pb-2 lg:max-h-[520px]">
+              <ul className="max-h-[26vh] flex-1 space-y-[2px] overflow-y-auto px-2 pb-2 lg:max-h-[520px]">
                 {state.bets.map((b) => (
                   <li key={b.id} className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-x-2 rounded px-2 py-1 text-xs" style={{ background: b.outcome === "win" ? "rgba(18,55,23,.7)" : T.panel, border: b.outcome === "win" ? "1px solid #427f00" : "1px solid transparent" }}>
                     <span className="flex items-center gap-1.5 truncate"><span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[9px] font-bold text-white" style={{ background: AV[(b.name.charCodeAt(0) + b.name.length) % AV.length] }}>{b.name.slice(0, 1)}</span><span className="truncate text-slate-300">{b.name}</span></span>
@@ -220,7 +231,7 @@ export function AviatorGame({ table = "aviator" }: { table?: Table }) {
             {showHist && <div className="absolute right-2 top-9 z-30 w-[min(92vw,520px)] rounded-lg p-3 shadow-2xl" style={{ background: T.panel, border: `1px solid ${T.line}` }}><div className="mb-2 flex items-center justify-between text-xs"><span className="font-bold text-white">Round History</span><button onClick={() => setShowHist(false)} className="text-slate-400">✕</button></div><div className="flex flex-wrap gap-1">{state.history.map((h) => <span key={h.id} className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${cpClass(h.crashPoint)}`}>{fmt2(h.crashPoint)}x</span>)}</div></div>}
           </div>
 
-          <div ref={wrapRef} className="relative h-[230px] w-full sm:h-[300px] md:h-[340px] lg:h-[380px]" style={{ background: T.bg }}>
+          <div ref={wrapRef} className="relative h-[42dvh] min-h-[220px] w-full sm:h-[300px] md:h-[340px] lg:h-[380px] xl:h-[420px]" style={{ background: T.bg }}>
             <canvas ref={canvasRef} className="block h-full w-full" />
             <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
               {phase === "waiting" ? (
@@ -319,35 +330,57 @@ function draw(canvas: HTMLCanvasElement, size: { w: number; h: number; dpr: numb
   const { w: W, h: H, dpr } = size;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
   const t = phase === "waiting" ? 0 : Math.max(0, (now - s.round.startsAt) / 1000);
-  const cx = 30, cy = H - 26;
-  // rays
+  const pad = 34; // origin point bottom-left
+  const cx = pad, cy = H - pad;
+  // rays from origin
   ctx.save(); ctx.translate(cx, cy); ctx.rotate((now / 14000) % (Math.PI * 2));
   for (let i = 0; i < 24; i++) { ctx.rotate(Math.PI / 12); if (i % 2) { ctx.fillStyle = T.rays; ctx.beginPath(); ctx.moveTo(0, 0); ctx.arc(0, 0, Math.max(W, H) * 2, 0, Math.PI / 12); ctx.closePath(); ctx.fill(); } }
   ctx.restore();
   if (phase === "crashed") { const g = ctx.createRadialGradient(cx, cy, 10, cx, cy, W); g.addColorStop(0, `${T.accent}26`); g.addColorStop(1, "transparent"); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); }
   // axes dots
-  const pad = 26; const scroll = (t * 40) % 40;
+  const scroll = (t * 40) % 40;
   ctx.fillStyle = "rgba(255,255,255,.35)";
-  for (let x = pad + 40 - scroll; x < W; x += 40) { ctx.beginPath(); ctx.arc(x, H - pad + 8, 2, 0, Math.PI * 2); ctx.fill(); }
-  for (let y = H - pad - 40 + (scroll % 40); y > 0; y -= 40) { ctx.beginPath(); ctx.arc(pad - 8, y, 2, 0, Math.PI * 2); ctx.fill(); }
-  ctx.strokeStyle = "rgba(255,255,255,.12)"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(pad, 0); ctx.lineTo(pad, H - pad); ctx.lineTo(W, H - pad); ctx.stroke();
-  // curve
-  const span = W - pad * 2 - 30;
-  const prog = Math.min(1, t / 9);
-  const px = pad + prog * span;
-  const rise = Math.min(1, 0.3 + t / 12);
-  const curveY = (x: number) => { const p = Math.max(0, (x - pad) / span); return H - pad - Math.pow(p, 1.65) * (H - pad * 2 - 16) * rise; };
-  const hover = phase === "running" && t > 9 ? Math.sin(now / 380) * 12 : 0;
-  const py = curveY(px) + hover;
+  for (let x = pad + 40 - scroll; x < W - 8; x += 40) { ctx.beginPath(); ctx.arc(x, H - pad + 10, 2, 0, Math.PI * 2); ctx.fill(); }
+  for (let y = H - pad - 40 + (scroll % 40); y > 6; y -= 40) { ctx.beginPath(); ctx.arc(pad - 10, y, 2, 0, Math.PI * 2); ctx.fill(); }
+  ctx.strokeStyle = "rgba(255,255,255,.12)"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(pad, 4); ctx.lineTo(pad, H - pad); ctx.lineTo(W - 6, H - pad); ctx.stroke();
+
+  // plane flies along a bezier-style parabola fully inside the box.
+  const boxW = Math.max(80, W - pad * 2 - 46); // keep ~46px right margin for the plane sprite
+  const boxH = Math.max(60, H - pad * 2 - 26); // top margin too
+  const travel = Math.min(1, t / 11);            // horizontal travel time
+  const climb = Math.min(1, 0.25 + t / 10);       // vertical height gain
+  const ex = cx + boxW;                            // far right
+  const ey = pad + 6;                              // top
+  // quadratic bezier P0=(cx,cy) ctrl=(ex*0.55, cy) P1=(ex,ey)
+  const qy = (tt: number) => { const u = 1 - tt; return u * u * cy + 2 * u * tt * cy + tt * tt * ey; };
+  const qx = (tt: number) => { const u = 1 - tt; return u * u * cx + 2 * u * tt * ex * 0.55 + tt * tt * ex; };
+  let px = cx, py = cy;
   if (phase !== "waiting") {
-    const yAt = (x: number) => curveY(x) + hover * (x - pad) / Math.max(1, px - pad);
-    ctx.beginPath(); ctx.moveTo(pad, H - pad); for (let x = pad; x <= px; x += 4) ctx.lineTo(x, yAt(x)); ctx.lineTo(px, H - pad); ctx.closePath(); ctx.fillStyle = T.fill; ctx.fill();
-    ctx.beginPath(); ctx.moveTo(pad, H - pad); for (let x = pad; x <= px; x += 4) ctx.lineTo(x, yAt(x)); ctx.strokeStyle = T.curve; ctx.lineWidth = 4; ctx.lineJoin = "round"; ctx.stroke();
+    px = qx(travel); py = qy(travel) - (1 - climb) * 0;
+    // clamp to box
+    px = Math.min(ex + 10, Math.max(cx, px)); py = Math.max(ey - 4, Math.min(cy, py));
+    const hover = phase === "running" && t > 8.5 ? Math.sin(now / 380) * 8 : 0;
+    py += hover;
+    // filled curve
+    const yAt = (x: number) => {
+      // inverse of travel by drawing through param samples up to current travel
+      const steps = 24, seg = Math.max(1, Math.floor(travel * steps));
+      for (let i = seg; i > 0; i--) { const tt = i / steps, tt2 = (i - 1) / steps; const x1 = qx(tt), x0 = qx(tt2); if (x >= x0 && x <= x1) { const f = (x - x0) / Math.max(1, x1 - x0); const y1 = qy(tt) + (t > 8.5 && phase === "running" ? Math.sin(now / 380) * 8 * tt : 0), y0 = qy(tt2); return y0 + (y1 - y0) * f; } }
+      return cy;
+    };
+    ctx.beginPath(); ctx.moveTo(cx, cy);
+    for (let i = 1; i <= 24; i++) { const tt = (i / 24) * travel; ctx.lineTo(qx(tt), qy(tt) + (t > 8.5 && phase === "running" ? Math.sin(now / 380) * 8 * tt : 0)); }
+    ctx.lineTo(px, cy); ctx.closePath(); ctx.fillStyle = T.fill; ctx.fill();
+    ctx.beginPath(); ctx.moveTo(cx, cy);
+    for (let i = 1; i <= 24; i++) { const tt = (i / 24) * travel; ctx.lineTo(qx(tt), qy(tt) + (t > 8.5 && phase === "running" ? Math.sin(now / 380) * 8 * tt : 0)); }
+    ctx.strokeStyle = T.curve; ctx.lineWidth = 4; ctx.lineJoin = "round"; ctx.stroke();
+    void yAt;
   }
-  let x = px, y = py;
-  if (phase === "waiting") { x = pad + 10; y = H - pad - 4; }
-  if (phase === "crashed") { const dt = s.round.endedAt ? (now - s.round.endedAt) / 1000 : 0; x = px + dt * 520; y = py - dt * 320; }
-  ctx.save(); ctx.translate(x, y); ctx.rotate(phase === "waiting" ? 0 : -0.35); drawPlane(ctx, now, phase === "crashed", T.plane); ctx.restore();
+  if (phase === "waiting") { px = cx + 6; py = cy - 6; }
+  if (phase === "crashed") { const dt = s.round.endedAt ? (now - s.round.endedAt) / 1000 : 0; px = px + dt * 460; py = py - dt * 280; }
+  // keep plane visible: scale down on very short canvases
+  const planeScale = Math.min(1.1, Math.max(0.62, Math.min(W / 430, H / 300)));
+  ctx.save(); ctx.translate(px, py); ctx.rotate(phase === "waiting" ? 0 : -0.32); ctx.scale(planeScale, planeScale); drawPlane(ctx, now, phase === "crashed", T.plane); ctx.restore();
 }
 function drawPlane(ctx: CanvasRenderingContext2D, now: number, crashed: boolean, color: string) {
   const red = color, dark = "#8b0a1a";

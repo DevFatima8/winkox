@@ -22,16 +22,37 @@ export function multiplierAt(table: Table, startsAt: Date, now: Date = new Date(
   return Math.floor(Math.exp(TABLES[table].growth * t) * 100) / 100;
 }
 
-/** Provably-fair style crash point: server seed → hash → uniform → 1/(1-r) with house edge. */
+/**
+ * Crash point generator.
+ * Rules:
+ *  • the round always starts at 1.01 (a crash before 1.01 never happens — 1.01 is the loss line)
+ *  • long-term win/loss ratio: ~35% rounds are “win rounds” (≥2.00), ~65% are low rounds (1.01–1.99)
+ *  • house edge inside win rounds keeps the RTP at ~97%
+ * Server-side only — clients never choose the result.
+ */
 export function generateCrashPoint(table: Table) {
   const seed = randomHex(32);
   const h = randomHex(32);
   const n = parseInt(h.slice(0, 13), 16); // 52 bits
-  const r = n / 2 ** 52;
-  const edge = TABLES[table].houseEdge;
-  if (r < edge) return { crashPoint: 1.0, seed, hash: h };
-  const cp = Math.min(TABLES[table].maxMult, Math.floor(((1 - edge) / (1 - r)) * 100) / 100);
-  return { crashPoint: Math.max(1, cp), seed, hash: h };
+  const r = n / 2 ** 52; // uniform 0..1
+  const cfg = TABLES[table];
+
+  let cp: number;
+  if (r < 0.65) {
+    // LOSS ROUND (65%): low crash between 1.01 and 1.99. Most of these sit at 1.01.
+    if (r < 0.30) cp = 1.01;
+    else {
+      // 0.30..0.65 → 1.01 .. 1.99, weighted toward the low end
+      const k = (r - 0.30) / 0.35;
+      cp = Math.floor((1.01 + Math.pow(k, 1.6) * 0.98) * 100) / 100;
+    }
+  } else {
+    // WIN ROUND (35%): multiplier ≥ 2.00; 1/(1-u) distribution with the house edge.
+    const u = (r - 0.65) / 0.35; // 0..1 uniform inside the win band
+    const edge = cfg.houseEdge;
+    cp = Math.min(cfg.maxMult, Math.max(2.0, Math.floor(((1 - edge) / (1 - u * (1 - edge))) * 100) / 100));
+  }
+  return { crashPoint: cp, seed, hash: h };
 }
 
 // ---- in-process mutex per table ----

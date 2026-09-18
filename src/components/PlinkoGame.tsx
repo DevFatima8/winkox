@@ -83,7 +83,7 @@ export function PlinkoGame() {
       canvas.style.height = Math.round(H * scale) + "px";
       scaleRef.current = { dpr, scale };
     });
-    ro.observe(wrap);
+    if (typeof requestAnimationFrame!=="undefined") requestAnimationFrame(()=>{ try{(window as unknown as Window).dispatchEvent(new Event("resize"));}catch{} }); ro.observe(wrap);
     return () => ro.disconnect();
   }, []);
 
