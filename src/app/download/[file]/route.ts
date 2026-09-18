@@ -2,52 +2,31 @@ import { NextRequest, NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
-const SITE = "https://winx555games.vercel.app";
+const SITE = () => "https://" + (process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_URL || "winx555games.vercel.app");
 
-function launcherHtml() {
-  // On Android the user can "Add to Home screen" from Chrome directly; this file re-opens the PWA
-  // in full-screen app mode and, when supported, triggers the native install prompt via the site itself.
-  return `<!doctype html>
-<html lang="en"><head><meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
-<meta name="apple-mobile-web-app-capable" content="yes"/>
-<meta name="mobile-web-app-capable" content="yes"/>
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<title>WinX555</title>
-<link rel="manifest" href="${SITE}/manifest.webmanifest"/>
-<link rel="apple-touch-icon" href="${SITE}/apple-icon.png"/>
-<style>
-html,body{margin:0;height:100%;background:#0b0716;color:#fff;font-family:Arial,sans-serif;display:flex;align-items:center;justify-content:center;text-align:center}
-.w{padding:28px;max-width:340px}
-.logo{width:88px;height:88px;margin:0 auto 18px;border-radius:22px;background:linear-gradient(135deg,#ffd45a,#ff8a00);display:flex;align-items:center;justify-content:center;font:900 44px Arial;color:#2a1500;box-shadow:0 10px 30px rgba(255,138,0,.4)}
-h1{font-size:20px;margin:8px 0}
-p{color:#b8a7e6;font-size:13px;line-height:1.5}
-button{margin-top:18px;border:0;border-radius:14px;padding:14px 26px;font:900 15px Arial;background:linear-gradient(90deg,#8b5cf6,#d946ef);color:#fff;box-shadow:0 8px 24px rgba(217,70,239,.35)}
-</style></head>
-<body><div class="w">
-<div class="logo">W</div>
-<h1>WinX555</h1>
-<p>Opening the app…</p>
-<button onclick="go()">Open WinX555</button>
-<script>
-function go(){
-  var u = ${JSON.stringify(SITE)} + "/";
-  window.location.replace(u);
-}
-setTimeout(go, 400);
-</script></div></body></html>`;
-}
-
+/** Windows / Mac / Linux desktop shortcut (.url / .webloc / .desktop) */
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ file: string }> }) {
   const { file } = await params;
+  const host = SITE();
+  const url = /^https?:\/\//.test(host) ? `${host.replace(/\/$/,"")}/` : `https://${host}/`;
+
+  // Windows shortcut
+  if (file === "WinX555.url" || file === "winx555.url") {
+    const body = `[InternetShortcut]\r\nURL=${url}\r\nIconIndex=0\r\n`;
+    return new NextResponse(body, { headers: { "Content-Type": "application/internet-shortcut", "Content-Disposition": 'attachment; filename="WinX555.url"', "Cache-Control": "no-store" } });
+  }
+  // Mac / Linux
+  if (file === "WinX555.webloc") {
+    const body = `<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n<plist version="1.0"><dict><key>URL</key><string>${url}</string></dict></plist>`;
+    return new NextResponse(body, { headers: { "Content-Type": "application/x-web-location", "Content-Disposition": 'attachment; filename="WinX555.webloc"' } });
+  }
+  // HTML launcher (Android in-app browsers / desktop fallback)
   if (file === "winx555.webmanifest" || file === "winx555-install.html") {
-    return new NextResponse(launcherHtml(), {
-      headers: {
-        "Content-Type": "text/html; charset=utf-8",
-        "Content-Disposition": 'attachment; filename="WinX555-Install.html"',
-        "Cache-Control": "no-store",
-      },
-    });
+    const html = `<!doctype html><html><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>WinX555</title><link rel="manifest" href="${url}manifest.webmanifest"/><link rel="apple-touch-icon" href="${url}apple-icon.png"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/><meta name="mobile-web-app-capable" content="yes"/>
+<meta http-equiv="refresh" content="0; url=${url}"/></head><body style="margin:0;background:#0b0716;color:#fff;font-family:Arial;text-align:center;padding-top:80px">Opening WinX555…<script>setTimeout(()=>location.replace(${JSON.stringify(url)}),300)</script></body></html>`;
+    return new NextResponse(html, { headers: { "Content-Type": "text/html", "Cache-Control": "no-store" } });
   }
   return NextResponse.json({ error: "Not found" }, { status: 404 });
 }
