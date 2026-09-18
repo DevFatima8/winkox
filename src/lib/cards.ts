@@ -271,5 +271,3 @@ export async function cancelBets(userId: string, table: Table) {
     return { ok: true, refunded: total };
   });
 }
-
-//testing
