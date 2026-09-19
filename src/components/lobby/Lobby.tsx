@@ -205,7 +205,7 @@ export function Lobby({ viewer, cat, links = {} }: { viewer: Viewer; cat: string
   const comingSoon = games.length === 0;
 
   return (
-    <div className="wx-bg min-h-screen text-white">
+    <div className="wx-lobby wx-bg min-h-[100dvh] text-white">
       <Header viewer={viewer} active="home" />
       <main className={`${CONTAINER} space-y-3 px-2 pb-28 pt-3 md:space-y-5 md:px-4 md:pb-12 lg:px-6`}>
         <BannerCarousel slides={slides} />
