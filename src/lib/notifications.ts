@@ -2,6 +2,13 @@ import { dbConnect } from "./mongo";
 import { Notification, User, oid } from "@/models";
 import { getSessionSync } from "./auth";
 
+type NotificationType = "info" | "promo" | "warning" | "success";
+
+export async function notifyUser(userId: string, title: string, body: string, type: NotificationType = "info") {
+  await dbConnect();
+  return Notification.create({ title, body, type, audience: "user", userId: oid(userId) });
+}
+
 export async function getNotifications() {
   await dbConnect();
   const s = getSessionSync();
