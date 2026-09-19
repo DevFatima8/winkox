@@ -27,9 +27,9 @@ export function Shell({ title, nav, userName, badge, children, support = true }:
   const tabs = nav.slice(0, 4);
 
   return (
-    <div className="wx-bg flex min-h-[100dvh] flex-col md:flex-row">
+    <div className="wx-shell-root wx-bg flex min-h-[100dvh] flex-col md:flex-row">
       {/* ===== Desktop / tablet sidebar: icons-only (md–lg), full (xl+), SCROLLABLE ===== */}
-      <aside className="hidden shrink-0 flex-col border-r border-[#3a2470] bg-[#140c2a]/90 backdrop-blur rtl:border-l rtl:border-r-0 md:sticky md:top-0 md:flex md:h-[100dvh] md:w-[4.5rem] xl:w-64 2xl:w-72">
+      <aside className="wx-sidebar-desktop hidden shrink-0 flex-col border-r border-[#3a2470] bg-[#140c2a]/90 backdrop-blur rtl:border-l rtl:border-r-0 md:sticky md:top-0 md:flex md:h-[100dvh] md:w-[4.5rem] xl:w-64 2xl:w-72">
         {/* header (fixed) */}
         <Link href="/" className="flex shrink-0 items-center gap-3 border-b border-[#3a2470]/60 px-3 py-4 xl:px-5">
           <BrandLogo className="h-10 w-10 shrink-0 drop-shadow-[0_0_10px_rgba(255,184,0,.5)]" />
@@ -81,7 +81,7 @@ export function Shell({ title, nav, userName, badge, children, support = true }:
       </div>
 
       {/* ===== Main ===== */}
-      <main className="min-w-0 flex-1 p-3 pb-24 sm:p-4 md:p-6 md:pb-6 lg:p-8 2xl:px-12">
+      <main className="wx-main min-w-0 flex-1 p-3 pb-28 sm:p-4 md:pb-6 lg:p-8 2xl:px-12">
         <div className="mx-auto w-full max-w-[1600px] 2xl:max-w-[1800px]">
           {support && <div className="mb-3 hidden items-center justify-end gap-2 md:flex"><ThemeToggle /><NotificationBell loggedIn /></div>}
           {!support && <div className="mb-3 hidden items-center justify-end gap-2 md:flex"><ThemeToggle /><LanguageSwitch compact /></div>}

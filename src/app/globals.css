@@ -457,3 +457,61 @@ html.light .wx-winners-card .text-\[#b8a7e6\],
 html.light .wx-winners-card [class*="text-\[#b8a7e6\]"] { color: #c4b5fd !important; }
 html.light .wx-winners-card .text-amber-300 { color: #fcd34d !important; }
 html.light .wx-winners-card [style*="rgba(255,255,255,.03)"] { background: rgba(255,255,255,.04) !important; }
+
+/* ============================================================
+   MOBILE SCROLL — bulletproof
+   The DOCUMENT (html) is always the only vertical scroll container.
+   No wrapper/sidebar/section is allowed to set a fixed viewport height
+   or its own overflow on phones (the side drawer is the single exception).
+   ============================================================ */
+html {
+  height: 100dvh;
+  width: 100%;
+  overflow-x: clip;
+  overflow-y: scroll;             /* always reserve the scrollbar / allow momentum */
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  scroll-behavior: smooth;
+}
+body {
+  min-height: 100dvh;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: clip;
+  overflow-y: visible;
+}
+
+/* the client/admin shells must NOT create their own scroll context */
+.wx-shell-root,
+.wx-lobby,
+.wx-main {
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+/* fixed bottom navigation leaves room for content */
+@media (max-width: 767px) {
+  .wx-main { padding-bottom: 96px !important; }
+
+  /* desktop sticky sidebar hidden on phones (drawer used instead) */
+  .wx-sidebar-desktop { display: none !important; }
+
+  /* never let a canvas / game board swallow vertical touches */
+  canvas { touch-action: pan-y !important; }
+
+  /* drawer (menu) keeps its OWN scroll, everything behind stays put while open */
+  .wx-drawer-overlay { position: fixed; inset: 0; }
+  .wx-drawer-panel { position: fixed; top: 0; bottom: 0; height: 100dvh !important; max-height: 100dvh; }
+  .wx-drawer-panel > div, .wx-scroll { -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+  body.drawer-open { overflow: hidden !important; }
+
+  /* popups/modals taller than the screen must scroll inside themselves */
+  .game-surface { max-height: 92dvh; overflow-y: auto !important; -webkit-overflow-scrolling: touch; }
+}
+
+/* Desktop keeps the sticky full-height sidebar shell */
+@media (min-width: 768px) {
+  .wx-shell-root { min-height: 100dvh; }
+  .wx-sidebar-desktop { position: sticky; top: 0; height: 100dvh; }
+}
