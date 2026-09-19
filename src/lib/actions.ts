@@ -326,12 +326,19 @@ export async function processTransactionAction(id: string, decision: "approved" 
 }
 
 // users
-export async function toggleUserActiveAction(id: string, isActive: boolean) {
+export async function toggleUserActiveAction(id: string, isActive: boolean, form?: FormData) {
   const me = await requireSuper();
-  const t = await User.findById(id, "role phone").lean();
+  const reason = str(form ?? new FormData(), "reason");
+  const t = await User.findById(id, "role phone adminNote").lean();
   if (!t || isStaff(t.role)) return;
-  await User.updateOne({ _id: oid(id) }, { $set: { isActive } });
-  await logAdmin(me, isActive ? "unblock_user" : "block_user", t.phone);
+  const update = isActive ? { isActive: true } : { isActive: false, adminNote: reason || "Account blocked by administrator." };
+  await User.updateOne({ _id: oid(id) }, { $set: update });
+  if (isActive) {
+    await notifyUser(id, "Account unblocked", "Your account has been unblocked. You can use the website again.", "success");
+  } else {
+    await notifyUser(id, "Account blocked", `Your account has been blocked. Reason: ${reason || "Account blocked by administrator."} Contact Support if you believe this is incorrect.`, "warning");
+  }
+  await logAdmin(me, isActive ? "unblock_user" : "block_user", t.phone, reason || t.adminNote || "No reason provided");
   revalidatePath("/admin/users"); revalidatePath(`/admin/users/${id}`);
 }
 export async function deleteUserAction(id: string) {
