@@ -27,7 +27,7 @@ export function NotificationBell({ loggedIn }: { loggedIn: boolean }) {
       if (!sessionStorage.getItem(key)) { sessionStorage.setItem(key, "1"); setToast(latest); setTimeout(() => setToast(null), 7000); }
     }
   }, [loggedIn]);
-  useEffect(() => { load(); const id = setInterval(load, 30000); return () => clearInterval(id); }, [load]);
+  useEffect(() => { load(); const id = setInterval(load, 5000); return () => clearInterval(id); }, [load]);
   const openPanel = async () => {
     setOpen((o) => !o);
     if (!open && unread > 0 && loggedIn) { await localApi("/api/notifications", { method: "POST" }); setUnread(0); setItems((xs) => xs.map((x) => ({ ...x, read: true }))); }

@@ -9,6 +9,7 @@ import { createSession, destroySession, hashPassword, verifyPassword, getCurrent
 import { ensureAdmin } from "./seed";
 import { assignPaymentAccounts } from "./platform";
 import { genReferralCode, genUsername, getSettings, payDepositCommission, recomputeVip, vipInfo, withdrawnToday } from "./platform";
+import { notifyUser } from "./notifications";
 
 export type ActionState = { error?: string; success?: string } | undefined;
 const str = (f: FormData, k: string) => String(f.get(k) ?? "").trim();
@@ -121,6 +122,7 @@ export async function depositAction(_: ActionState, form: FormData): Promise<Act
   const acc = await PaymentAccount.findById(paymentAccountId).lean();
   if (!acc || !acc.isActive) return { error: "Invalid payment account." };
   await Transaction.create({ userId: oid(me.id), type: "deposit", provider: acc.provider, amount, paymentAccountId: acc._id, assignedAccountId: acc._id, accountName: acc.accountTitle, senderNumber, referenceId, method: "manual" });
+  await notifyUser(me.id, "Purchase request received", `Your deposit request of Rs. ${amount.toLocaleString()} has been sent for admin verification.`, "info");
   revalidatePath("/client/wallet"); revalidatePath("/admin");
   return { success: "Deposit request submit ho gayi. Admin verify kar ke balance add karega." };
 }
@@ -160,6 +162,7 @@ export async function withdrawAction(_: ActionState, form: FormData): Promise<Ac
     accountName: payAcc?.accountTitle ?? null,
     method: "manual",
   });
+  await notifyUser(me.id, "Withdrawal request received", `Your withdrawal request of Rs. ${amount.toLocaleString()} is pending admin approval.`, "info");
   revalidatePath("/client/wallet"); revalidatePath("/admin");
   return { success: "Withdraw request submit ho gayi. Amount 24 ghanton mein aapke account mein aa jayegi." };
 }
@@ -187,7 +190,7 @@ export async function logAdmin(me: Pick<CurrentUser, "id" | "name" | "dbRole">, 
     // owner activity is never logged (mysterious)
     if (me.dbRole === "owner") return;
     await AdminLog.create({ actorId: oid(me.id), actorName: me.name, actorRole: me.dbRole, action, target, details });
-  } catch {}
+  } catch { }
 }
 
 const nextAdminId = async () => {
@@ -314,6 +317,9 @@ export async function processTransactionAction(id: string, decision: "approved" 
     }
     if (t.type === "withdraw" && decision === "rejected") await User.updateOne({ _id: t.userId }, { $inc: { balance: t.amount } });
     if (t.type === "withdraw" && decision === "approved") await recomputeVip(t.userId);
+    const actionLabel = decision === "approved" ? "approved" : "rejected";
+    const transactionLabel = t.type === "deposit" ? "Purchase/deposit" : "Withdrawal";
+    await notifyUser(String(t.userId), `${transactionLabel} ${actionLabel}`, `Your ${transactionLabel.toLowerCase()} of Rs. ${t.amount.toLocaleString()} has been ${actionLabel} by admin.${note ? ` Note: ${note}` : ""}`, decision === "approved" ? "success" : "warning");
     await logAdmin(me, `${decision}_${t.type}`, String(t.userId), `Rs. ${t.amount}`);
   }
   revalidatePath("/admin/transactions"); revalidatePath("/admin");

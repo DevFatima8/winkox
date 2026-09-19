@@ -1,6 +1,7 @@
 import { dbConnect } from "./mongo";
 import { GatewaySession, Transaction, User, oid } from "@/models";
 import { getSettings, payDepositCommission, recomputeVip, vipInfo, withdrawnToday } from "./platform";
+import { notifyUser } from "./notifications";
 
 const TTL_MS = 10 * 60 * 1000;
 const r2 = (n: number) => Math.round(n * 100) / 100;
@@ -86,12 +87,14 @@ export async function verifyOtp(userId: string, id: string, otp: string) {
     await User.updateOne({ _id: uid }, { $inc: { balance: s.amount } });
     await recomputeVip(uid);
     await payDepositCommission(uid, s.amount);
+    await notifyUser(userId, "Purchase successful", `Your instant deposit of Rs. ${s.amount.toLocaleString()} has been added to your balance.`, "success");
     s.transactionId = tx._id;
   } else {
     const upd = await User.updateOne({ _id: uid, balance: { $gte: s.amount } }, { $inc: { balance: -s.amount } });
     if (!upd.modifiedCount) { s.status = "failed"; await s.save(); return { error: "Insufficient balance.", failed: true }; }
     const tx = await Transaction.create({ userId: uid, type: "withdraw", provider: s.provider, amount: s.amount, senderNumber: s.accountNumber, holderName: s.holderName ?? "", accountName: "Client payout", referenceId: ref, method: "gateway", status: "approved", adminNote: "Auto-approved test payout", processedAt: new Date(), processedByName: "System (test gateway)" });
     await recomputeVip(uid);
+    await notifyUser(userId, "Withdrawal approved", `Your instant withdrawal of Rs. ${s.amount.toLocaleString()} has been approved and processed.`, "success");
     s.transactionId = tx._id;
   }
   s.status = "paid"; s.txnRef = ref; await s.save();
