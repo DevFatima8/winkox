@@ -27,8 +27,8 @@ const AV = ["#c0392b", "#8e44ad", "#2980b9", "#16a085", "#d35400", "#27ae60", "#
 const cpClass = (m: number) => (m < 2 ? "bg-[#34b4ff]/20 text-[#34b4ff]" : m < 10 ? "bg-[#913ef8]/20 text-[#c274ff]" : "bg-[#c017b4]/20 text-[#ff4dd8]");
 const fmt2 = (n: number) => n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-type Panel = { tab: "bet" | "auto"; amount: string; autoBet: boolean; autoCash: boolean; autoCashAt: string; busy: boolean };
-const mk = (): Panel => ({ tab: "bet", amount: "100.00", autoBet: false, autoCash: false, autoCashAt: "2.00", busy: false });
+type Panel = { tab: "bet" | "auto"; amount: string; customAmount: string; autoBet: boolean; autoCash: boolean; autoCashAt: string; busy: boolean };
+const mk = (): Panel => ({ tab: "bet", amount: "100.00", customAmount: "100.00", autoBet: false, autoCash: false, autoCashAt: "2.00", busy: false });
 
 export function AviatorGame({ table = "aviator" }: { table?: Table }) {
   const T = THEME[table];
@@ -64,7 +64,7 @@ export function AviatorGame({ table = "aviator" }: { table?: Table }) {
       const s: State = await r.json();
       setOffset(s.serverNow - Date.now());
       stRef.current = s; setState(s);
-    } catch {}
+    } catch { }
   }, [table]);
   useEffect(() => { refresh(); const id = setInterval(refresh, 600); return () => clearInterval(id); }, [refresh]);
 
@@ -278,7 +278,11 @@ export function AviatorGame({ table = "aviator" }: { table?: Table }) {
                         <input value={p.amount} onChange={(e) => setPanel(i, { amount: e.target.value })} onBlur={() => setAmt(Number(p.amount) || state.config.minBet)} className="w-full min-w-0 bg-transparent text-center text-lg font-bold text-white outline-none" />
                         <button onClick={() => setAmt(amount + 10)} className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-base leading-none text-slate-400" style={{ border: `1px solid #3c3e44` }}>+</button>
                       </div>
-                      <div className="mt-1.5 grid grid-cols-4 gap-1">{[100,300,500,1000].map((v) => <button key={v} onClick={() => setAmt(v)} className={`rounded-md py-1 text-[11px] font-bold ${amount===v ? "bg-[#28a909] text-white" : "text-slate-300 hover:text-white"}`} style={amount===v?{}:{background:T.panel2,border:`1px solid ${T.line}`}}>{v}</button>)}</div>
+                      <div className="mt-1.5 grid grid-cols-4 gap-1">{[100, 300, 500, 1000].map((v) => <button key={v} onClick={() => setAmt(v)} className={`rounded-md py-1 text-[11px] font-bold ${amount === v ? "bg-[#28a909] text-white" : "text-slate-300 hover:text-white"}`} style={amount === v ? {} : { background: T.panel2, border: `1px solid ${T.line}` }}>{v}</button>)}</div>
+                      <div className="mt-1.5 flex items-center gap-1 rounded-md px-1 py-1" style={{ background: T.panel2, border: `1px solid ${T.line}` }}>
+                        <input type="number" min={state.config.minBet} max={state.config.maxBet} value={p.customAmount} onChange={(e) => setPanel(i, { customAmount: e.target.value })} className="w-full min-w-0 bg-transparent text-center text-[11px] font-bold text-white outline-none" />
+                        <button onClick={() => setAmt(Number(p.customAmount) || state.config.minBet)} className={`shrink-0 rounded-md px-2 py-1 text-[10px] font-black ${amount === (Number(p.customAmount) || state.config.minBet) ? "bg-[#28a909] text-white" : "text-slate-300"}`} style={amount === (Number(p.customAmount) || state.config.minBet) ? {} : { background: T.panel }}>Custom</button>
+                      </div>
                     </div>
                     <div className="flex min-h-[74px]">
                       {mode === "bet" && <button data-action="bet" disabled={p.busy} onClick={() => placeBet(i)} className="flex w-full flex-col items-center justify-center rounded-2xl bg-[#28a909] text-white shadow-[inset_0_-3px_0_rgba(0,0,0,.25)] transition hover:bg-[#36cb12] disabled:opacity-60"><span className="text-lg font-semibold uppercase leading-none">Bet</span><span className="mt-1 text-base font-bold">{fmt2(amount)} <span className="text-[10px]">PKR</span></span></button>}
