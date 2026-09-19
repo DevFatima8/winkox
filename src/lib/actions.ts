@@ -4,7 +4,7 @@ import { dbConnect } from "./mongo";
 const redirect = (url: string) => { if (typeof window !== "undefined") window.location.assign(url); };
 const revalidatePath = (_p: string) => { void _p; };
 const readCookie = (name: string) => (typeof document === "undefined" ? "" : (document.cookie.match(new RegExp("(?:^|; )" + name + "=([^;]+)"))?.[1] ?? ""));
-import { AdminLog, Commission, Feedback, Game, HelpArticle, Notification, PaymentAccount, Settings, SupportMessage, SupportThread, Transaction, User, oid, type Provider } from "@/models";
+import { AdminLog, AviatorRound, CardBet, CardRound, ChickenDash, ChickenGame, Commission, Feedback, Game, GameResult, GatewaySession, HelpArticle, MinesGame, Notification, PaymentAccount, PlinkoBet, Settings, SupportMessage, SupportThread, Transaction, User, oid, type Provider } from "@/models";
 import { createSession, destroySession, hashPassword, verifyPassword, getCurrentUser, isStaff, staffLevel, type CurrentUser } from "./auth";
 import { ensureAdmin } from "./seed";
 import { assignPaymentAccounts } from "./platform";
@@ -457,6 +457,39 @@ export async function deleteNotificationAction(id: string) {
   await requireSuper();
   await Notification.deleteOne({ _id: oid(id) });
   revalidatePath("/admin/notifications");
+}
+
+export async function cleanupHistoryAction(_: ActionState, form: FormData): Promise<ActionState> {
+  const me = await requireSuper();
+  const kind = str(form, "kind");
+  const rawDays = Number(form.get("olderThanDays") ?? 0);
+  const olderThanDays = Number.isFinite(rawDays) && rawDays > 0 ? Math.floor(rawDays) : 0;
+  const createdAt = olderThanDays ? { $lt: new Date(Date.now() - olderThanDays * 24 * 60 * 60 * 1000) } : undefined;
+  const filter = createdAt ? { createdAt } : {};
+  let deleted = 0;
+  if (kind === "transactions") deleted = (await Transaction.deleteMany(filter)).deletedCount;
+  else if (kind === "game-results") {
+    deleted += (await GameResult.deleteMany(filter)).deletedCount;
+    deleted += (await PlinkoBet.deleteMany(filter)).deletedCount;
+    deleted += (await MinesGame.deleteMany(filter)).deletedCount;
+    deleted += (await ChickenGame.deleteMany(filter)).deletedCount;
+    deleted += (await ChickenDash.deleteMany(filter)).deletedCount;
+  } else if (kind === "aviator") deleted = (await AviatorRound.deleteMany(filter)).deletedCount;
+  else if (kind === "card-games") {
+    deleted += (await CardBet.deleteMany(filter)).deletedCount;
+    deleted += (await CardRound.deleteMany(filter)).deletedCount;
+  } else if (kind === "notifications") deleted = (await Notification.deleteMany(filter)).deletedCount;
+  else if (kind === "support") {
+    const threads = await SupportThread.find(filter, "_id").lean();
+    for (const thread of threads) deleted += (await SupportMessage.deleteMany({ threadId: thread._id })).deletedCount;
+    deleted += (await SupportThread.deleteMany(filter)).deletedCount;
+  } else if (kind === "gateway") deleted = (await GatewaySession.deleteMany(filter)).deletedCount;
+  else if (kind === "commissions") deleted = (await Commission.deleteMany(filter)).deletedCount;
+  else if (kind === "admin-logs") deleted = (await AdminLog.deleteMany(filter)).deletedCount;
+  else return { error: "History category select karein." };
+  await logAdmin(me, "cleanup_history", kind, `${deleted} record(s) deleted${olderThanDays ? ` older than ${olderThanDays} days` : ""}`);
+  revalidatePath("/admin/cleanup"); revalidatePath("/admin/logs");
+  return { success: `${deleted} history record(s) delete ho gaye.` };
 }
 
 // help center

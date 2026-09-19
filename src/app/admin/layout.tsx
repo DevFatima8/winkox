@@ -22,6 +22,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     ...(superNav ? [
       { href: "/admin/staff", label: "Admins / Staff", icon: "🛡️" },
       { href: "/admin/logs", label: "Activity Logs", icon: "📜" },
+      { href: "/admin/cleanup", label: "History Cleanup", icon: "🧹" },
       { href: "/admin/vip", label: "VIP Levels", icon: "👑" },
       { href: "/admin/help", label: "Help Center", icon: "📘" },
       { href: "/admin/payments", label: "Payment Accounts", icon: "🏦" },
