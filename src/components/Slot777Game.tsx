@@ -75,6 +75,7 @@ function Reel({ target, spinning, delay, onStop }: { target: Sym; spinning: bool
 export function Slot777Game() {
   const [st, setSt] = useState<State | null>(null);
   const [amount, setAmount] = useState(100);
+  const [customAmount, setCustomAmount] = useState(100);
   const [reels, setReels] = useState<Sym[]>(["seven", "seven", "seven"]);
   const [spinning, setSpinning] = useState(false);
   const [stopped, setStopped] = useState(0);
@@ -147,7 +148,11 @@ export function Slot777Game() {
             </div>
             <button onClick={spin} disabled={spinning} className="h-16 w-28 rounded-2xl bg-gradient-to-b from-[#fbbf24] to-[#d97706] text-xl font-black text-[#431407] shadow-[0_6px_0_#92400e] transition active:translate-y-1 active:shadow-none disabled:opacity-60 sm:w-36">{spinning ? "…" : "SPIN"}</button>
             <div className="flex flex-col items-end gap-1">
-              <div className="grid grid-cols-4 gap-1">{[100,300,500,1000].map((v) => <button key={v} onClick={() => setAmount(v)} className={`rounded-md px-2 py-1 text-[11px] font-bold ${amount === v ? "bg-[#fbbf24] text-[#431407]" : "bg-[#431407] text-slate-200"}`}>{v}</button>)}</div>
+              <div className="grid grid-cols-4 gap-1">{[100, 300, 500, 1000].map((v) => <button key={v} onClick={() => setAmount(v)} className={`rounded-md px-2 py-1 text-[11px] font-bold ${amount === v ? "bg-[#fbbf24] text-[#431407]" : "bg-[#431407] text-slate-200"}`}>{v}</button>)}</div>
+              <div className="flex items-center gap-2 rounded-md bg-[#431407] px-2 py-1">
+                <input type="number" min={st.limits.min} max={st.limits.max} value={customAmount} onChange={(e) => setCustomAmount(Math.max(st.limits.min, Math.min(st.limits.max, Number(e.target.value) || st.limits.min)))} className="w-16 bg-transparent text-center text-[11px] font-bold text-white outline-none" />
+                <button onClick={() => setAmount(customAmount)} className={`rounded-md px-2 py-1 text-[10px] font-black ${amount === customAmount ? "bg-[#fbbf24] text-[#431407]" : "bg-[#7c2d12] text-white"}`}>Custom</button>
+              </div>
               <button onClick={() => setAuto((a) => !a)} className={`rounded-md px-3 py-1 text-[11px] font-bold ${auto ? "bg-[#ef4444] text-white" : "bg-[#431407] text-slate-200"}`}>{auto ? "AUTO ON" : "AUTO"}</button>
             </div>
           </div>

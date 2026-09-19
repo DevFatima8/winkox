@@ -15,6 +15,7 @@ const C = { bg: "#0b1a30", panel: "#0f2240", tile: "#1e3a6b", tileTop: "#2a4d8a"
 export function MinesGame() {
   const [st, setSt] = useState<State | null>(null);
   const [amount, setAmount] = useState("100.00");
+  const [customAmount, setCustomAmount] = useState(100);
   const [mines, setMines] = useState(3);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -101,7 +102,11 @@ export function MinesGame() {
               <input value={amount} onChange={(e) => setAmount(e.target.value)} onBlur={() => setAmt(Number(amount) || st.limits.min)} className="w-full min-w-0 bg-transparent text-center text-lg font-bold text-white outline-none" />
               <button onClick={() => setAmt(amt + 10)} className="flex h-7 w-7 items-center justify-center rounded-full text-lg leading-none text-slate-300" style={{ border: `1px solid ${C.line}` }}>+</button>
             </div>
-            <div className="mt-2 grid grid-cols-4 gap-1">{[100,300,500,1000].map((v) => <button key={v} onClick={() => setAmt(v)} className={`rounded-md py-1 text-[11px] font-bold ${amt===v ? "bg-[#28a909] text-white" : "text-slate-300 hover:text-white"}`} style={amt===v?{}:{background:C.bg,border:`1px solid ${C.line}`}}>{v}</button>)}</div>
+            <div className="mt-2 grid grid-cols-4 gap-1">{[100, 300, 500, 1000].map((v) => <button key={v} onClick={() => setAmt(v)} className={`rounded-md py-1 text-[11px] font-bold ${amt === v ? "bg-[#28a909] text-white" : "text-slate-300 hover:text-white"}`} style={amt === v ? {} : { background: C.bg, border: `1px solid ${C.line}` }}>{v}</button>)}</div>
+            <div className="mt-2 flex items-center gap-2 rounded-md px-2 py-1.5" style={{ background: C.bg, border: `1px solid ${C.line}` }}>
+              <input type="number" min={st.limits.min} max={st.limits.max} value={customAmount} onChange={(e) => setCustomAmount(Math.max(st.limits.min, Math.min(st.limits.max, Number(e.target.value) || st.limits.min)))} className="w-16 bg-transparent text-center text-[11px] font-bold text-white outline-none" />
+              <button onClick={() => setAmt(customAmount)} className={`rounded-md px-2 py-1 text-[10px] font-black ${Number(amount) === customAmount ? "bg-[#28a909] text-white" : "bg-[#1f3b5f] text-slate-200"}`}>Custom</button>
+            </div>
           </div>
           {autoOpen && (
             <div className="flex items-center justify-between rounded-lg px-3 py-2 text-[11px]" style={{ background: C.bg, border: `1px solid ${C.line}` }}>
