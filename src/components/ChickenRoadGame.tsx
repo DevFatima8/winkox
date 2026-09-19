@@ -313,6 +313,7 @@ export function ChickenRoadGame() {
   const [game, setGame] = useState<G | null>(null);
   const [phase, setPhase] = useState<"idle" | "active">("idle");
   const [amount, setAmount] = useState(100);
+  const [customAmount, setCustomAmount] = useState(100);
   const [diff, setDiff] = useState<Difficulty>("easy");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ t: "ok" | "err"; m: string } | null>(null);
@@ -358,7 +359,7 @@ export function ChickenRoadGame() {
       canvas.style.height = cssH + "px";
       viewRef.current = { w: cssW / scale, h: H, scale, dpr };
     });
-    if (typeof requestAnimationFrame!=="undefined") requestAnimationFrame(()=>{ try{(window as unknown as Window).dispatchEvent(new Event("resize"));}catch{} }); ro.observe(wrap);
+    if (typeof requestAnimationFrame !== "undefined") requestAnimationFrame(() => { try { (window as unknown as Window).dispatchEvent(new Event("resize")); } catch { } }); ro.observe(wrap);
     return () => ro.disconnect();
   }, []);
 
@@ -406,10 +407,12 @@ export function ChickenRoadGame() {
     if (j.event === "dead") {
       v.moving[target] = v.moving[target].filter((c) => c.y >= MANHOLE_Y + 50);
       hopTo(v, target, () => {
-        v.killer = { lane: target, y: -120, type: pick(CAR_TYPES), hit: false, done: () => {
-          v.status = "dead"; setPhase("idle"); setBusyBoth(false);
-          setMsg({ t: "err", m: `Gaari se takra gayi! ${money(g.bet)} haar gaye.` }); refresh();
-        } };
+        v.killer = {
+          lane: target, y: -120, type: pick(CAR_TYPES), hit: false, done: () => {
+            v.status = "dead"; setPhase("idle"); setBusyBoth(false);
+            setMsg({ t: "err", m: `Gaari se takra gayi! ${money(g.bet)} haar gaye.` }); refresh();
+          }
+        };
       });
     } else {
       blockLane(v, target);
@@ -544,6 +547,10 @@ export function ChickenRoadGame() {
               {[100, 300, 500, 1000].map((v) => (
                 <button key={v} onClick={() => setAmount(v)} className={`rounded-md py-1 text-[11px] font-bold ${amount === v ? "bg-[#3ecf5a] text-slate-950" : "bg-[#2b3136] text-slate-200 hover:bg-[#363d43]"}`}>{v}</button>
               ))}
+            </div>
+            <div className="mt-2 flex items-center gap-2 rounded-lg bg-[#111315] px-2 py-1.5">
+              <input type="number" min={min} max={max} value={customAmount} onChange={(e) => setCustomAmount(Math.max(min, Math.min(max, Number(e.target.value) || min)))} className="w-16 bg-transparent text-center text-[11px] font-bold text-white outline-none" />
+              <button onClick={() => setAmount(customAmount)} className={`rounded-md px-2 py-1 text-[10px] font-black ${amount === customAmount ? "bg-[#3ecf5a] text-slate-950" : "bg-[#2b3136] text-slate-200"}`}>Custom</button>
             </div>
           </div>
 

@@ -186,17 +186,17 @@ function drawBarrier(ctx: CanvasRenderingContext2D, x: number, y: number, now: n
   ctx.save(); ctx.translate(x, y);
   const w = 76, h = 24;
   // legs
-  ctx.fillStyle = "#aab4c4"; rr(ctx, -28, h/2 - 2, 10, 20, 3); ctx.fill(); rr(ctx, 18, h/2 - 2, 10, 20, 3); ctx.fill();
+  ctx.fillStyle = "#aab4c4"; rr(ctx, -28, h / 2 - 2, 10, 20, 3); ctx.fill(); rr(ctx, 18, h / 2 - 2, 10, 20, 3); ctx.fill();
   // top/bottom yellow bars
-  ctx.fillStyle = "#ffc533"; rr(ctx, -w/2, -h/2 - 14, w, 10, 4); ctx.fill(); rr(ctx, -w/2, h/2 - 14, w, 10, 4); ctx.fill();
+  ctx.fillStyle = "#ffc533"; rr(ctx, -w / 2, -h / 2 - 14, w, 10, 4); ctx.fill(); rr(ctx, -w / 2, h / 2 - 14, w, 10, 4); ctx.fill();
   // hazard middle
-  ctx.fillStyle = "#4a5568"; rr(ctx, -w/2, -6, w, 12, 2); ctx.fill();
-  ctx.save(); rr(ctx, -w/2, -6, w, 12, 2); ctx.clip();
+  ctx.fillStyle = "#4a5568"; rr(ctx, -w / 2, -6, w, 12, 2); ctx.fill();
+  ctx.save(); rr(ctx, -w / 2, -6, w, 12, 2); ctx.clip();
   ctx.fillStyle = "#ffc533";
   for (let i = -3; i < 5; i++) { ctx.save(); ctx.translate(i * 22, 0); ctx.rotate(-0.6); ctx.fillRect(-5, -14, 10, 30); ctx.restore(); }
   ctx.restore();
   // metal clamps
-  ctx.fillStyle = "#cdd6e3"; rr(ctx, -30, -h/2 - 16, 8, h + 4, 2); ctx.fill(); rr(ctx, 22, -h/2 - 16, 8, h + 4, 2); ctx.fill();
+  ctx.fillStyle = "#cdd6e3"; rr(ctx, -30, -h / 2 - 16, 8, h + 4, 2); ctx.fill(); rr(ctx, 22, -h / 2 - 16, 8, h + 4, 2); ctx.fill();
   ctx.restore();
   void now;
 }
@@ -494,6 +494,7 @@ export function ChickenDashGame() {
   const [game, setGame] = useState<G | null>(null);
   const [phase, setPhase] = useState<"idle" | "active">("idle");
   const [amount, setAmount] = useState(100);
+  const [customAmount, setCustomAmount] = useState(100);
   const [level, setLevel] = useState<Level>("easy");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ t: "ok" | "err"; m: string } | null>(null);
@@ -534,7 +535,7 @@ export function ChickenDashGame() {
       canvas.width = Math.round(cssW * dpr); canvas.height = Math.round(cssH * dpr); canvas.style.height = cssH + "px";
       viewRef.current = { w: cssW / scale, h: H, scale, dpr };
     });
-    if (typeof requestAnimationFrame!=="undefined") requestAnimationFrame(()=>{ try{(window as unknown as Window).dispatchEvent(new Event("resize"));}catch{} }); ro.observe(wrap);
+    if (typeof requestAnimationFrame !== "undefined") requestAnimationFrame(() => { try { (window as unknown as Window).dispatchEvent(new Event("resize")); } catch { } }); ro.observe(wrap);
     return () => ro.disconnect();
   }, []);
 
@@ -579,10 +580,12 @@ export function ChickenDashGame() {
       v.traffic[target] = v.traffic[target].filter((c) => c.y >= ROW_Y + 60);
       hopTo(v, target, false, () => {
         v.passed[target] = false;
-        v.killer = { lane: target, y: -140, type: pick(CAR_TYPES), color: pick(CAR_COLORS), hit: false, done: () => {
-          v.status = "dead"; setPhase("idle"); setBusyBoth(false);
-          setMsg({ t: "err", m: `Gaari se takra gayi! ${money(g.bet)} haar gaye.${v.bagCollected ? " Bonus bag bhi gaya." : ""}` }); refresh();
-        } };
+        v.killer = {
+          lane: target, y: -140, type: pick(CAR_TYPES), color: pick(CAR_COLORS), hit: false, done: () => {
+            v.status = "dead"; setPhase("idle"); setBusyBoth(false);
+            setMsg({ t: "err", m: `Gaari se takra gayi! ${money(g.bet)} haar gaye.${v.bagCollected ? " Bonus bag bhi gaya." : ""}` }); refresh();
+          }
+        };
       });
       return;
     }

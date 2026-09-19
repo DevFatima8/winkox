@@ -10,6 +10,7 @@ const fmt2 = (n: number) => n.toLocaleString("en-US", { minimumFractionDigits: 2
 export function LimboGame() {
   const [st, setSt] = useState<State | null>(null);
   const [amount, setAmount] = useState("100.00");
+  const [customAmount, setCustomAmount] = useState(100);
   const [target, setTarget] = useState("2.00");
   const [mode, setMode] = useState<"manual" | "auto">("manual");
   const [autoN, setAutoN] = useState(10);
@@ -84,7 +85,11 @@ export function LimboGame() {
           <label className="block"><span className="mb-1 flex justify-between text-xs font-semibold text-slate-300"><span>Bet Amount</span><span className="text-slate-400">Rs. {fmt2(amt)}</span></span>
             <div className="flex overflow-hidden rounded-md bg-[#0f212e] ring-1 ring-[#2f4553]"><input value={amount} onChange={(e) => setAmount(e.target.value)} onBlur={() => setAmount((Number(amount) || st.limits.min).toFixed(2))} className="w-full min-w-0 bg-transparent px-3 py-2.5 text-sm font-bold outline-none" /><button onClick={() => setAmount(Math.max(st.limits.min, amt / 2).toFixed(2))} className="border-l border-[#213743] bg-[#2f4553] px-3 text-xs font-bold">½</button><button onClick={() => setAmount(Math.min(st.limits.max, amt * 2).toFixed(2))} className="border-l border-[#213743] bg-[#2f4553] px-3 text-xs font-bold">2×</button></div>
           </label>
-          <div className="grid grid-cols-4 gap-1">{[100,300,500,1000].map((v) => <button key={v} onClick={() => setAmount(String(v))} className={`rounded-md py-1.5 text-[11px] font-bold ${Number(amt)===v ? "bg-[#00e701] text-slate-950" : "bg-[#0f212e] text-slate-300 ring-1 ring-[#2f4553]"}`}>{v}</button>)}</div>
+          <div className="grid grid-cols-4 gap-1">{[100, 300, 500, 1000].map((v) => <button key={v} onClick={() => setAmount(String(v))} className={`rounded-md py-1.5 text-[11px] font-bold ${Number(amt) === v ? "bg-[#00e701] text-slate-950" : "bg-[#0f212e] text-slate-300 ring-1 ring-[#2f4553]"}`}>{v}</button>)}</div>
+          <div className="flex items-center gap-2 rounded-md border border-[#2f4553] bg-[#0f212e] px-2 py-1.5">
+            <input type="number" min={st.limits.min} max={st.limits.max} value={customAmount} onChange={(e) => setCustomAmount(Math.max(st.limits.min, Math.min(st.limits.max, Number(e.target.value) || st.limits.min)))} className="w-16 bg-transparent text-center text-[11px] font-bold text-white outline-none" />
+            <button onClick={() => setAmount(String(customAmount))} className={`rounded-md px-2 py-1 text-[10px] font-black ${Number(amt) === customAmount ? "bg-[#00e701] text-slate-950" : "bg-[#2f4553] text-white"}`}>Custom</button>
+          </div>
           <label className="block"><span className="mb-1 block text-xs font-semibold text-slate-300">Profit on Win</span><input readOnly value={`Rs. ${fmt2(Math.max(0, profit))}`} className={input + " text-slate-300"} /></label>
           {mode === "auto" && (
             <div><span className="mb-1 block text-xs font-semibold text-slate-300">Number of Bets</span><div className="grid grid-cols-4 gap-1">{[10, 25, 50, 100].map((n) => <button key={n} onClick={() => setAutoN(n)} className={`rounded-md py-1.5 text-xs font-bold ${autoN === n ? "bg-[#00e701] text-slate-950" : "bg-[#0f212e] text-slate-300"}`}>{n}</button>)}</div></div>

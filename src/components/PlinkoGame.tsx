@@ -41,6 +41,7 @@ type Vis = { rows: number; table: number[]; balls: Ball[]; hitPegs: Map<string, 
 export function PlinkoGame() {
   const [st, setSt] = useState<State | null>(null);
   const [amount, setAmount] = useState(100);
+  const [customAmount, setCustomAmount] = useState(100);
   const [risk, setRisk] = useState<Risk>("medium");
   const [rows, setRows] = useState(16);
   const [msg, setMsg] = useState<string | null>(null);
@@ -83,7 +84,7 @@ export function PlinkoGame() {
       canvas.style.height = Math.round(H * scale) + "px";
       scaleRef.current = { dpr, scale };
     });
-    if (typeof requestAnimationFrame!=="undefined") requestAnimationFrame(()=>{ try{(window as unknown as Window).dispatchEvent(new Event("resize"));}catch{} }); ro.observe(wrap);
+    if (typeof requestAnimationFrame !== "undefined") requestAnimationFrame(() => { try { (window as unknown as Window).dispatchEvent(new Event("resize")); } catch { } }); ro.observe(wrap);
     return () => ro.disconnect();
   }, []);
 
@@ -167,7 +168,11 @@ export function PlinkoGame() {
               <button disabled={auto} onClick={() => setAmount((a) => Math.min(max, a * 2))} className="border-l border-[#213743] bg-[#2f4553] px-3 text-xs font-bold text-white hover:bg-[#3d5564]">2×</button>
             </div>
           </label>
-          <div className="grid grid-cols-4 gap-1">{[100,300,500,1000].map((v) => <button key={v} disabled={auto} onClick={() => setAmount(v)} className={`rounded-md py-1.5 text-[11px] font-bold ${amount===v ? "bg-[#00e701] text-slate-950" : "bg-[#0f212e] text-slate-300 ring-1 ring-[#2f4553]"}`}>{v}</button>)}</div>
+          <div className="grid grid-cols-4 gap-1">{[100, 300, 500, 1000].map((v) => <button key={v} disabled={auto} onClick={() => setAmount(v)} className={`rounded-md py-1.5 text-[11px] font-bold ${amount === v ? "bg-[#00e701] text-slate-950" : "bg-[#0f212e] text-slate-300 ring-1 ring-[#2f4553]"}`}>{v}</button>)}</div>
+          <div className="flex items-center gap-2 rounded-md border border-[#2f4553] bg-[#0f212e] px-2 py-1.5">
+            <input type="number" min={min} max={max} value={customAmount} disabled={auto} onChange={(e) => setCustomAmount(Math.max(min, Math.min(max, Number(e.target.value) || min)))} className="w-16 bg-transparent text-center text-[11px] font-bold text-white outline-none" />
+            <button disabled={auto} onClick={() => setAmount(customAmount)} className={`rounded-md px-2 py-1 text-[10px] font-black ${amount === customAmount ? "bg-[#00e701] text-slate-950" : "bg-[#2f4553] text-white"}`}>Custom</button>
+          </div>
 
           <label className="block">
             <span className="mb-1 block text-xs font-semibold text-slate-300">Risk</span>
