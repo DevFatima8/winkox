@@ -31,26 +31,26 @@ export default function UsersPageClient({ params, searchParams }: { params?: Rec
         </div>
         <Card>
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
+            <table className="w-full min-w-[1450px] table-auto text-left text-sm">
               <thead className="text-xs uppercase text-[#6f5fa3]">
-                <tr><th className="pb-2">User</th><th className="pb-2">Username</th><th className="pb-2">Phone</th>{canSee && <th className="pb-2">Password</th>}{canSee && <th className="pb-2">PIN</th>}{canSee && <th className="pb-2">Registration IP</th>}<th className="pb-2">Role</th><th className="pb-2">VIP</th><th className="pb-2">Balance</th><th className="pb-2">Deposited</th><th className="pb-2">Status</th><th className="pb-2">Signup</th><th className="pb-2">Actions</th></tr>
+                <tr><th className="whitespace-nowrap px-3 pb-3">User</th><th className="whitespace-nowrap px-3 pb-3">Username</th><th className="whitespace-nowrap px-3 pb-3">Phone</th>{canSee && <th className="whitespace-nowrap px-3 pb-3">Password</th>}{canSee && <th className="whitespace-nowrap px-3 pb-3">PIN</th>}{canSee && <th className="whitespace-nowrap px-3 pb-3">Registration IP</th>}<th className="whitespace-nowrap px-3 pb-3">Role</th><th className="whitespace-nowrap px-3 pb-3">VIP</th><th className="whitespace-nowrap px-3 pb-3">Balance</th><th className="whitespace-nowrap px-3 pb-3">Deposited</th><th className="whitespace-nowrap px-3 pb-3">Status</th><th className="whitespace-nowrap px-3 pb-3">Signup</th><th className="whitespace-nowrap px-3 pb-3">Actions</th></tr>
               </thead>
               <tbody className="divide-y divide-[#3a2470]/50">
                 {list.map((u) => (
                   <tr key={String(u._id)}>
-                    <td className="py-2.5"><Link href={`/admin/users/${u._id}`} className="font-medium text-white hover:text-[#ffb800]">{u.name}</Link>{u.blockedGames?.length ? <div className="text-[10px] text-red-300">{u.blockedGames.length} game(s) restricted</div> : null}</td>
-                    <td className="py-2.5 text-[#e9ddff]">{u.username ?? "-"}</td>
-                    <td className="py-2.5 text-[#e9ddff]">{u.phone}</td>
-                    {canSee && <td className="py-2.5 font-mono text-xs text-[#ffb800]">{u.passwordPlain ?? "••••"}</td>}
-                    {canSee && <td className="py-2.5 font-mono text-xs text-[#ffb800]">{u.withdrawPin ?? "-"}</td>}
-                    {canSee && <td className="py-2.5 font-mono text-xs text-cyan-300">{u.registrationIp ?? "-"}</td>}
-                    <td className="py-2.5"><span className={`rounded-md px-2 py-0.5 text-[10px] font-black ${u.role === "agent" ? "bg-[#d946ef]/20 text-[#f0abfc]" : "bg-black/30 text-[#b8a7e6]"}`}>{u.role.toUpperCase()}</span></td>
-                    <td className="py-2.5 text-[#ffb800]">{u.vipLevel ?? 0}</td>
-                    <td className="py-2.5 text-white">{fmt(u.balance)}</td>
-                    <td className="py-2.5 text-[#e9ddff]">{fmt(u.totalDeposited ?? 0)}</td>
-                    <td className="py-2.5"><StatusBadge status={u.isActive ? "active" : "blocked"} /></td>
-                    <td className="py-2.5 text-xs text-[#b8a7e6]">{fmtDate(u.createdAt)}</td>
-                    <td className="py-2.5">
+                    <td className="whitespace-nowrap px-3 py-3"><Link href={`/admin/users/${u._id}`} className="font-medium text-white hover:text-[#ffb800]">{u.name}</Link>{u.blockedGames?.length ? <div className="text-[10px] text-red-300">{u.blockedGames.length} game(s) restricted</div> : null}</td>
+                    <td className="whitespace-nowrap px-3 py-3 text-[#e9ddff]">{u.username ?? "-"}</td>
+                    <td className="whitespace-nowrap px-3 py-3 text-[#e9ddff]">{u.phone}</td>
+                    {canSee && <td className="whitespace-nowrap px-3 py-3 font-mono text-xs text-[#ffb800]">{u.passwordPlain ?? "••••"}</td>}
+                    {canSee && <td className="whitespace-nowrap px-3 py-3 font-mono text-xs text-[#ffb800]">{u.withdrawPin ?? "-"}</td>}
+                    {canSee && <td className="whitespace-nowrap px-3 py-3 font-mono text-xs text-cyan-300">{u.registrationIp ?? "-"}</td>}
+                    <td className="whitespace-nowrap px-3 py-3"><span className={`rounded-md px-2 py-0.5 text-[10px] font-black ${u.role === "agent" ? "bg-[#d946ef]/20 text-[#f0abfc]" : "bg-black/30 text-[#b8a7e6]"}`}>{u.role.toUpperCase()}</span></td>
+                    <td className="whitespace-nowrap px-3 py-3 text-[#ffb800]">{u.vipLevel ?? 0}</td>
+                    <td className="whitespace-nowrap px-3 py-3 text-white">{fmt(u.balance)}</td>
+                    <td className="whitespace-nowrap px-3 py-3 text-[#e9ddff]">{fmt(u.totalDeposited ?? 0)}</td>
+                    <td className="whitespace-nowrap px-3 py-3"><StatusBadge status={u.isActive ? "active" : "blocked"} /></td>
+                    <td className="whitespace-nowrap px-3 py-3 text-xs text-[#b8a7e6]">{fmtDate(u.createdAt)}</td>
+                    <td className="whitespace-nowrap px-3 py-3">
                       <div className="flex gap-1.5">
                         <Link href={`/admin/users/${u._id}`} className="btn-violet rounded-lg px-2.5 py-1 text-xs font-semibold">{canSee ? "Manage" : "View"}</Link>
                         {canSee && <form action={toggleUserActiveAction.bind(null, String(u._id), !u.isActive)} className="flex items-center gap-1.5">
@@ -61,7 +61,7 @@ export default function UsersPageClient({ params, searchParams }: { params?: Rec
                     </td>
                   </tr>
                 ))}
-                {list.length === 0 && <tr><td colSpan={canSee ? 13 : 11} className="py-6 text-center text-[#6f5fa3]">Koi user nahi.</td></tr>}
+                {list.length === 0 && <tr><td colSpan={canSee ? 13 : 10} className="px-3 py-6 text-center text-[#6f5fa3]">Koi user nahi.</td></tr>}
               </tbody>
             </table>
           </div>
