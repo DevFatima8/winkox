@@ -73,7 +73,7 @@ export function InstallPrompt() {
   return (
     <>
       {showBtn && (
-        <button onClick={() => setPopup(true)} className="keep-white fixed bottom-[10.5rem] left-3 z-[39] flex items-center gap-2 rounded-full bg-gradient-to-r from-[#8b5cf6] to-[#d946ef] px-4 py-2.5 text-xs font-black text-white shadow-lg shadow-fuchsia-500/40 transition hover:scale-105 active:scale-95 md:bottom-6 md:left-6 md:z-[45]">
+        <button onClick={() => setPopup(true)} className="keep-white fixed bottom-[10.5rem] left-3 z-[39] flex items-center gap-2 rounded-full bg-gradient-to-r from-[#8b5cf6] to-[#d946ef] px-4 py-2.5 text-xs font-black text-white shadow-lg shadow-fuchsia-500/40 transition hover:scale-105 active:scale-95 md:bottom-6 md:left-auto md:right-6 md:z-[45]">
           <DownloadIcon size={16} /> Install App
         </button>
       )}
