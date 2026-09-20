@@ -86,7 +86,7 @@ export function SettingsForm({ s }: { s: SettingsShape }) {
       <section className="wx-card rounded-2xl p-4">
         <h2 className="mb-3 font-bold text-white">Mobile App</h2>
         <div className="grid gap-3 sm:grid-cols-3">
-          <label className="block"><span className={label}>Android APK / Play Store URL</span><input name="androidUrl" defaultValue={s.app.androidUrl} placeholder="https://.../winx555.apk" className={input} /></label>
+          <label className="block"><span className={label}>Android APK / Play Store URL</span><input name="androidUrl" defaultValue={s.app.androidUrl} placeholder="https://.../winkox.apk" className={input} /></label>
           <label className="block"><span className={label}>iOS / App Store URL</span><input name="iosUrl" defaultValue={s.app.iosUrl} className={input} /></label>
           <label className="block"><span className={label}>App version</span><input name="appVersion" defaultValue={s.app.version} className={input} /></label>
         </div>

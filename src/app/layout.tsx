@@ -7,11 +7,11 @@ import { getTheme } from "@/lib/theme";
 import { ParticlesBackground } from "@/components/ParticlesBackground";
 
 export const metadata: Metadata = {
-  title: "WinX555 — Khelo aur Kamao | winx555games.shop",
-  description: "WinX555 — Pakistan ka premium gaming & earning platform. Aviator, Chicken Dash, Plinko, Dragon Tiger aur bohot kuch. JazzCash & Easypaisa se instant deposit aur withdraw.",
+  title: "winkox — Khelo aur Kamao | winkox.shop",
+  description: "winkox — Pakistan ka premium gaming & earning platform. Aviator, Chicken Dash, Plinko, Dragon Tiger aur bohot kuch. JazzCash & Easypaisa se instant deposit aur withdraw.",
   icons: { icon: "/favicon.png", apple: "/apple-icon.png" },
-  metadataBase: new URL("https://winx555games.shop"),
-  openGraph: { title: "WinX555 — Khelo aur Kamao", description: "Games khel kar earning karein. JazzCash & Easypaisa se instant deposit & withdraw.", url: "https://winx555games.shop", siteName: "WinX555", images: ["/lobby/hero.jpg"] },
+  metadataBase: new URL("https://winkox.shop"),
+  openGraph: { title: "winkox — Khelo aur Kamao", description: "Games khel kar earning karein. JazzCash & Easypaisa se instant deposit & withdraw.", url: "https://winkox.shop", siteName: "winkox", images: ["/lobby/hero.jpg"] },
 };
 
 export const viewport: Viewport = {

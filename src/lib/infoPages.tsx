@@ -76,11 +76,11 @@ export const INFO_PAGES: InfoPage[] = [
     cta: { label: "Open Help Center", labelUr: "ہیلپ سینٹر کھولیں", href: "/help" },
   },
   {
-    slug: "terms", title: "Terms & Conditions", titleUr: "شرائط و ضوابط", subtitle: "Rules of using WinX555.", subtitleUr: "WinX555 استعمال کرنے کے قواعد۔", icon: I(BookIcon),
+    slug: "terms", title: "Terms & Conditions", titleUr: "شرائط و ضوابط", subtitle: "Rules of using winkox.", subtitleUr: "winkox استعمال کرنے کے قواعد۔", icon: I(BookIcon),
     sections: [
       { h: "Eligibility", hUr: "اہلیت", p: ["You must be 18 years or older to register and play. One account per person, phone number and device. Duplicate accounts will be closed and balances forfeited."], pUr: ["رجسٹر اور کھیلنے کے لیے آپ کی عمر 18 سال یا زیادہ ہونی چاہیے۔ فی شخص، فون نمبر اور ڈیوائس ایک اکاؤنٹ۔ ڈپلیکیٹ اکاؤنٹ بند کر کے بیلنس ضبط کر لیا جائے گا۔"] },
       { h: "Deposits & withdrawals", hUr: "ڈپازٹ اور وِدڈرا", p: ["Deposits are credited after verification of the Transaction ID. Withdrawals require a correct Withdrawal PIN and are subject to VIP daily limits. Withdrawals are sent only to accounts in the user's own name.", "Bonus balances may carry wagering requirements as stated in the promotion."], pUr: ["ڈپازٹ ٹرانزیکشن آئی ڈی کی تصدیق کے بعد کریڈٹ ہوتا ہے۔ وِدڈرا کے لیے درست وِدڈرا پن ضروری ہے اور VIP روزانہ حدود لاگو ہیں۔ وِدڈرا صرف صارف کے اپنے نام کے اکاؤنٹ میں بھیجا جاتا ہے۔", "بونس بیلنس پر پروموشن میں بیان کردہ ویجرنگ شرائط لاگو ہو سکتی ہیں۔"] },
-      { h: "Fair play", hUr: "منصفانہ کھیل", p: ["All games use server-side random outcomes. Any use of bots, exploits, multiple accounts or collusion results in permanent ban. WinX555 reserves the right to void bets placed during technical errors."], pUr: ["تمام گیمز سرور سائیڈ رینڈم نتائج استعمال کرتی ہیں۔ بوٹس، ایکسپلائٹس، ملٹیپل اکاؤنٹس یا ملی بھگت پر مستقل پابندی۔ تکنیکی خرابی کے دوران لگائی گئی بیٹس منسوخ کرنے کا حق WinX555 کے پاس محفوظ ہے۔"] },
+      { h: "Fair play", hUr: "منصفانہ کھیل", p: ["All games use server-side random outcomes. Any use of bots, exploits, multiple accounts or collusion results in permanent ban. winkox reserves the right to void bets placed during technical errors."], pUr: ["تمام گیمز سرور سائیڈ رینڈم نتائج استعمال کرتی ہیں۔ بوٹس، ایکسپلائٹس، ملٹیپل اکاؤنٹس یا ملی بھگت پر مستقل پابندی۔ تکنیکی خرابی کے دوران لگائی گئی بیٹس منسوخ کرنے کا حق winkox کے پاس محفوظ ہے۔"] },
     ],
   },
   {
@@ -94,7 +94,7 @@ export const INFO_PAGES: InfoPage[] = [
   {
     slug: "responsible-gaming", title: "Responsible Gaming", titleUr: "ذمہ دارانہ گیمنگ", subtitle: "Play for fun. Stay in control.", subtitleUr: "تفریح کے لیے کھیلیں۔ قابو میں رہیں۔", icon: I(HeartHandIcon),
     sections: [
-      { h: "Our commitment", hUr: "ہمارا عزم", p: ["WinX555 is for adults (18+) only. Gaming should be entertainment, never a way to make money or recover losses. Set a budget before you play and never exceed it."], pUr: ["WinX555 صرف بالغوں (18+) کے لیے ہے۔ گیمنگ تفریح ہونی چاہیے، پیسے کمانے یا نقصان پورا کرنے کا ذریعہ نہیں۔ کھیلنے سے پہلے بجٹ طے کریں اور اس سے تجاوز نہ کریں۔"] },
+      { h: "Our commitment", hUr: "ہمارا عزم", p: ["winkox is for adults (18+) only. Gaming should be entertainment, never a way to make money or recover losses. Set a budget before you play and never exceed it."], pUr: ["winkox صرف بالغوں (18+) کے لیے ہے۔ گیمنگ تفریح ہونی چاہیے، پیسے کمانے یا نقصان پورا کرنے کا ذریعہ نہیں۔ کھیلنے سے پہلے بجٹ طے کریں اور اس سے تجاوز نہ کریں۔"] },
       { h: "Tools", hUr: "ٹولز", p: ["Ask Live Support to set a daily deposit limit, take a break (7/30 days) or permanently close your account. Requests are applied within 24 hours."], pUr: ["لائیو سپورٹ سے روزانہ ڈپازٹ حد مقرر کرنے، وقفہ لینے (7/30 دن) یا اکاؤنٹ مستقل بند کرنے کو کہیں۔ درخواستیں 24 گھنٹوں میں لاگو ہوتی ہیں۔"] },
       { h: "Warning signs", hUr: "انتباہی علامات", p: ["Chasing losses, borrowing money to play, hiding play from family, or feeling anxious when not playing. If you notice these, take a break and talk to someone you trust."], pUr: ["نقصان پورا کرنے کی کوشش، کھیلنے کے لیے قرض لینا، گھر والوں سے چھپانا، یا نہ کھیلنے پر بے چینی۔ اگر یہ علامات ہوں تو وقفہ لیں اور کسی قابلِ اعتماد شخص سے بات کریں۔"] },
     ],
@@ -104,7 +104,7 @@ export const INFO_PAGES: InfoPage[] = [
     sections: [
       { h: "Fairness", hUr: "انصاف", p: ["All game results are generated on our servers using cryptographically secure random numbers before any client interaction. Game RTPs: Aviator 97%, Chicken Road 2 98%, Chicken Dash 96.85%, Plinko 99%, Dragon Tiger ~96.3%, Andar Bahar ~97%."], pUr: ["تمام گیم نتائج کسی بھی کلائنٹ تعامل سے پہلے ہمارے سرورز پر کرپٹوگرافک طور پر محفوظ رینڈم نمبرز سے بنائے جاتے ہیں۔ گیم RTP: ایوی ایٹر 97%، چکن روڈ 2 98%، چکن ڈیش 96.85%، پلنکو 99%، ڈریگن ٹائیگر ~96.3%، اندر باہر ~97%۔"] },
       { h: "Age & KYC", hUr: "عمر اور KYC", p: ["Users must be 18+. We may request identity verification (CNIC) before large withdrawals to prevent fraud and protect your funds."], pUr: ["صارفین کی عمر 18+ ہونی چاہیے۔ فراڈ روکنے اور آپ کے فنڈز کے تحفظ کے لیے بڑے وِدڈرا سے پہلے شناختی تصدیق (CNIC) مانگی جا سکتی ہے۔"] },
-      { h: "Operator", hUr: "آپریٹر", p: ["WinX555 — winx555games.shop. For compliance inquiries contact us via Online Support."], pUr: ["WinX555 — winx555games.shop۔ کمپلائنس سوالات کے لیے آن لائن سپورٹ کے ذریعے رابطہ کریں۔"] },
+      { h: "Operator", hUr: "آپریٹر", p: ["winkox — winkox.shop. For compliance inquiries contact us via Online Support."], pUr: ["winkox — winkox.shop۔ کمپلائنس سوالات کے لیے آن لائن سپورٹ کے ذریعے رابطہ کریں۔"] },
     ],
   },
 ];

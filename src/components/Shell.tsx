@@ -20,7 +20,7 @@ const ico = (i: string) => ICONS[i] ?? <span className="text-lg leading-none">{i
 const linkBase = "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[#e9ddff] transition hover:bg-[#8b5cf6]/20 hover:text-white md:justify-center xl:justify-start";
 const linkActive = "bg-[#8b5cf6]/20 text-white ring-1 ring-[#8b5cf6]/40";
 
-export function Shell({ title, nav, userName, badge, children, support = true }: { title: string; nav: NavItem[]; userName: string; badge?: ReactNode; children: ReactNode; support?: boolean }) {
+export function Shell({ title, nav, userName, badge, children, support = true, showInstallPrompt = true }: { title: string; nav: NavItem[]; userName: string; badge?: ReactNode; children: ReactNode; support?: boolean; showInstallPrompt?: boolean }) {
   const { t } = useI18n();
   const logout = async () => { await destroySession(); window.location.assign("/login"); };
   const mobileItems = [...nav.map((n) => ({ href: n.href, label: n.label, icon: ico(n.icon) })), { href: "/", label: t("home"), icon: <HomeIcon size={20} /> }];
@@ -34,7 +34,7 @@ export function Shell({ title, nav, userName, badge, children, support = true }:
         <Link href="/" className="flex shrink-0 items-center gap-3 border-b border-[#3a2470]/60 px-3 py-4 xl:px-5">
           <BrandLogo className="h-10 w-10 shrink-0 drop-shadow-[0_0_10px_rgba(255,184,0,.5)]" />
           <div className="hidden min-w-0 xl:block">
-            <div className="truncate font-black text-white"><span className="text-gold-grad">WinX555</span> <span className="text-xs font-semibold text-[#b8a7e6]">{title}</span></div>
+            <div className="truncate font-black text-white"><span className="text-gold-grad">winkox</span> <span className="text-xs font-semibold text-[#b8a7e6]">{title}</span></div>
             <div className="truncate text-xs text-[#b8a7e6]">{userName}</div>
           </div>
         </Link>
@@ -64,13 +64,13 @@ export function Shell({ title, nav, userName, badge, children, support = true }:
       <div className="sticky top-0 z-40 flex items-center justify-between gap-2 border-b border-[#3a2470] bg-[#140c2a]/95 px-2 py-2 backdrop-blur md:hidden">
         <div className="flex min-w-0 items-center gap-2">
           <MobileNavDrawer
-            title={`WinX555 · ${title}`}
+            title={`winkox · ${title}`}
             items={mobileItems}
             footer={<div className="space-y-2"><div className="flex items-center justify-between gap-2"><LanguageSwitch compact /><ThemeToggle compact /></div><button className="w-full rounded-xl border border-[#3a2470] py-2 text-sm text-[#b8a7e6]" onClick={logout}>{t("logout")}</button></div>}
           />
           <Link href="/" className="flex min-w-0 items-center gap-2">
             <BrandLogo className="h-8 w-8 shrink-0" />
-            <div className="hidden truncate text-sm font-black text-white min-[380px]:block"><span className="text-gold-grad">WinX555</span> <span className="text-xs font-semibold text-[#b8a7e6]">{title}</span></div>
+            <div className="hidden truncate text-sm font-black text-white min-[380px]:block"><span className="text-gold-grad">winkox</span> <span className="text-xs font-semibold text-[#b8a7e6]">{title}</span></div>
           </Link>
         </div>
         <div className="flex shrink-0 items-center gap-1.5">
@@ -91,7 +91,7 @@ export function Shell({ title, nav, userName, badge, children, support = true }:
       </main>
       {support && <SupportWidget userName={userName} />}
       <PwaRegister />
-      <InstallPrompt />
+      {showInstallPrompt && <InstallPrompt />}
 
       {/* ===== Mobile bottom tabs (4 + More) ===== */}
       <nav className="fixed inset-x-0 bottom-0 z-40 flex border-t border-[#3a2470] bg-[#140c2a]/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
@@ -102,7 +102,7 @@ export function Shell({ title, nav, userName, badge, children, support = true }:
           </ActiveLink>
         ))}
         <div className="flex min-w-0 flex-1 flex-col items-center gap-0.5 py-1.5 text-[10px] font-semibold text-[#b8a7e6]">
-          <MobileNavDrawer title={`WinX555 · ${title}`} items={mobileItems} footer={<button className="w-full rounded-xl border border-[#3a2470] py-2 text-sm text-[#b8a7e6]" onClick={logout}>{t("logout")}</button>} />
+          <MobileNavDrawer title={`winkox · ${title}`} items={mobileItems} footer={<button className="w-full rounded-xl border border-[#3a2470] py-2 text-sm text-[#b8a7e6]" onClick={logout}>{t("logout")}</button>} />
           <span>More</span>
         </div>
       </nav>

@@ -220,7 +220,7 @@ export function AviatorGame({ table = "aviator" }: { table?: Table }) {
               {state.top.length === 0 && <li className="py-6 text-center text-xs text-slate-600">No wins yet</li>}
             </ul>
           )}
-          <div className="mt-auto flex items-center justify-between px-3 py-2 text-[10px] text-slate-500" style={{ borderTop: `1px solid ${T.line}` }}><span>This game is <span className="text-[#28a909]">Provably Fair</span></span><span>Powered by WinX555</span></div>
+          <div className="mt-auto flex items-center justify-between px-3 py-2 text-[10px] text-slate-500" style={{ borderTop: `1px solid ${T.line}` }}><span>This game is <span className="text-[#28a909]">Provably Fair</span></span><span>Powered by winkox</span></div>
         </aside>
 
         {/* RIGHT: game */}

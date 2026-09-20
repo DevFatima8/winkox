@@ -132,7 +132,7 @@ export function MinesGame() {
             <div className="mb-1 flex items-center justify-between text-slate-400"><span>Multipliers ({mines} mines)</span><span>RTP {(st.limits.rtp * 100).toFixed(0)}%</span></div>
             <div className="flex flex-wrap gap-1">{Array.from({ length: Math.min(8, 25 - mines) }, (_, i) => mult(mines, (g?.revealed.length ?? 0) + i + 1, st.limits.rtp)).map((m, i) => <span key={i} className={`rounded-full px-2 py-0.5 font-bold ${i === 0 ? "bg-[#28a909] text-white" : "text-slate-200"}`} style={i === 0 ? {} : { background: C.tile }}>{fmt2(m)}x</span>)}</div>
           </div>
-          <div className="flex items-center justify-between text-[10px] text-slate-500"><span>This game is <span className="text-[#28a909]">Provably Fair</span></span><span>Powered by WinX555</span></div>
+          <div className="flex items-center justify-between text-[10px] text-slate-500"><span>This game is <span className="text-[#28a909]">Provably Fair</span></span><span>Powered by winkox</span></div>
         </aside>
       </div>
       {st.recent.length > 0 && <div className="px-4 py-2 text-[11px]" style={{ borderTop: `1px solid ${C.line}` }}><div className="flex flex-wrap gap-1.5">{st.recent.slice(0, 12).map((r) => <span key={r.id} className={`rounded-full px-2 py-0.5 font-bold ${r.status === "cashed" ? "bg-[#28a909]/20 text-[#4ade80]" : "bg-red-500/15 text-red-300"}`}>{r.status === "cashed" ? `${fmt2(r.multiplier)}x` : `✕ ${r.safe}`}</span>)}</div></div>}

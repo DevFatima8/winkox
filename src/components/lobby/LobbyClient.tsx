@@ -137,7 +137,7 @@ export function Drawer({ loggedIn, isAdmin }: { loggedIn: boolean; isAdmin: bool
       <button onClick={() => setOpen(true)} className="flex h-9 w-9 items-center justify-center rounded-lg text-white" aria-label="Menu"><MenuIcon size={24} /></button>
       <GlobalDrawer open={open} onClose={() => setOpen(false)} side="left">
         <div className="flex items-center gap-2 p-4 pb-3">
-          <BrandLogo className="h-9 w-9" /><span className="text-lg font-black text-gold-grad">WinX555</span>
+          <BrandLogo className="h-9 w-9" /><span className="text-lg font-black text-gold-grad">winkox</span>
         </div>
         <div className="space-y-2 px-3">
           <div className="wx-chip flex items-center justify-between rounded-xl bg-black/30 px-3 py-2.5 text-xs text-[#b8a7e6]"><span className="inline-flex items-center gap-2"><GlobeIcon size={14} /> {t("language")}</span><LanguageSwitch compact /></div>

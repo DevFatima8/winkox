@@ -226,7 +226,7 @@ export function PlinkoGame() {
 
       <div className="flex items-center justify-between border-t border-[#213743] bg-[#0f212e] px-4 py-2 text-[11px] text-slate-400">
         <div className="flex items-center gap-3"><span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-[#00e701]" />Fairness</span><span>Provably fair</span></div>
-        <span>WinX555 Originals</span>
+        <span>winkox Originals</span>
       </div>
       {st && st.recent.length > 0 && (
         <div className="border-t border-[#213743] px-4 py-3">

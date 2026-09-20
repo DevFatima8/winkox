@@ -22,7 +22,7 @@ export function MobileNavDrawer({ items, title, footer }: { items: MobileNavItem
       <button onClick={() => setOpen(true)} aria-label="Menu" className="flex h-9 w-9 items-center justify-center rounded-lg bg-black/30 text-white ring-1 ring-[#3a2470]"><MenuIcon size={20} /></button>
       <Panel open={open} onClose={() => setOpen(false)} side="left" showClose={false}>
         <div className="flex items-center justify-between border-b wx-drawer-border px-4 py-3">
-          <span className="font-black text-gold-grad">WinX555 · {title}</span>
+          <span className="font-black text-gold-grad">winkox · {title}</span>
           <button onClick={() => setOpen(false)} aria-label="Close menu" className="flex h-9 w-9 items-center justify-center rounded-full bg-white/5 text-slate-300 ring-1 ring-white/10">✕</button>
         </div>
         <nav className="space-y-0.5 p-2">

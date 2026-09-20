@@ -57,7 +57,7 @@ export function InstallPrompt() {
     // 2) iPhone / iPad — open the Share sheet (only way on iOS)
     if (dev.ios) {
       if (navigator.share) {
-        try { await navigator.share({ title: "WinX555", text: "WinX555 — Khelo aur Kamao", url: location.href }); setPopup(false); } catch { }
+        try { await navigator.share({ title: "winkox", text: "winkox — Khelo aur Kamao", url: location.href }); setPopup(false); } catch { }
         setIosHint(true); setBusy(false); return;
       }
       setPopup(false); setIosHint(true); setBusy(false); return;
@@ -68,7 +68,7 @@ export function InstallPrompt() {
   };
 
   if (installed) return null;
-  const host = typeof location !== "undefined" ? location.host : "winx555games.shop";
+  const host = typeof location !== "undefined" ? location.host : "winkox.shop";
 
   return (
     <>
@@ -90,7 +90,7 @@ export function InstallPrompt() {
             <div className="mt-4 flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
               <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#ffd45a] to-[#ff8a00] shadow"><img src="/favicon.png" alt="" className="h-7 w-7" /></span>
               <div className="min-w-0">
-                <div className="truncate rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-800">WinX555 — Khelo aur Kamao</div>
+                <div className="truncate rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-800">winkox — Khelo aur Kamao</div>
                 <div className="mt-1 text-xs text-slate-500">{host}</div>
               </div>
             </div>
@@ -98,12 +98,12 @@ export function InstallPrompt() {
             {warnChrome ? (
               <div className="mt-3 rounded-lg bg-amber-50 p-3 text-[11px] leading-relaxed text-amber-900">
                 {d.mobile ? <><b>Add to Home Screen:</b> is page ko browser ke menu se <b>Add to Home Screen</b> select karein, phir <b>Add</b> press karein.</> : <><b>Create shortcut:</b> Chrome ke menu <b>⋮</b> se <b>Save and share → Create shortcut</b> select karein, phir <b>Create</b> press karein.</>}
-                <button onClick={() => { try { navigator.share?.({ title: "WinX555", url: location.href }); } catch { } setWarnChrome(false); }} className="mt-2 flex w-full items-center justify-center gap-1 rounded-full bg-[#7edfff] py-2 font-bold text-[#07435a]">Share / Open in Chrome</button>
+                <button onClick={() => { try { navigator.share?.({ title: "winkox", url: location.href }); } catch { } setWarnChrome(false); }} className="mt-2 flex w-full items-center justify-center gap-1 rounded-full bg-[#7edfff] py-2 font-bold text-[#07435a]">Share / Open in Chrome</button>
               </div>
             ) : (
               <div className="mt-3 flex items-start gap-2 rounded-lg bg-sky-50 px-3 py-2 text-[11px] leading-relaxed text-sky-800">
                 {d.ios ? <span className="flex items-start gap-1"><AppleIcon size={14} className="mt-0.5 shrink-0" /> Press <b>Create</b>, then tap <ShareIcon size={12} className="inline" /> <b>Add to Home Screen</b> → <b>Add</b>.</span>
-                  : d.android ? <span className="flex items-start gap-1"><AndroidIcon size={14} className="mt-0.5 shrink-0" /> Press <b>Create</b>, then <b>Install</b> — WinX555 home screen par aa jayegi.</span>
+                  : d.android ? <span className="flex items-start gap-1"><AndroidIcon size={14} className="mt-0.5 shrink-0" /> Press <b>Create</b>, then <b>Install</b> — winkox home screen par aa jayegi.</span>
                     : <span className="flex items-start gap-1"><LaptopIcon size={14} className="mt-0.5 shrink-0" /> Press <b>Create</b> — Desktop/Start Menu shortcut ban jayega.</span>}
               </div>
             )}

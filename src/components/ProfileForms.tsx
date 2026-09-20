@@ -39,7 +39,7 @@ export function CopyLink({ link }: { link: string }) {
     <div className="flex gap-2">
       <input readOnly value={link} className={input + " text-xs"} />
       <button onClick={() => { navigator.clipboard.writeText(link); setOk(true); setTimeout(() => setOk(false), 1500); }} className="btn-gold shrink-0 rounded-xl px-4 text-sm font-black">{ok ? t("copied") : t("copy")}</button>
-      <a href={`https://wa.me/?text=${encodeURIComponent("WinX555 par join karo aur bonus lo! " + link)}`} target="_blank" rel="noreferrer" className="shrink-0 rounded-xl bg-[#25d366] px-3 text-sm font-bold text-white flex items-center">{t("share")}</a>
+      <a href={`https://wa.me/?text=${encodeURIComponent("winkox par join karo aur bonus lo! " + link)}`} target="_blank" rel="noreferrer" className="shrink-0 rounded-xl bg-[#25d366] px-3 text-sm font-bold text-white flex items-center">{t("share")}</a>
     </div>
   );
 }

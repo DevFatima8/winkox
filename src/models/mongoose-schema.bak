@@ -53,7 +53,7 @@ const settingsSchema = new Schema(
       startHour: { type: Number, default: 9 }, // 0-23 (PKT)
       endHour: { type: Number, default: 23 },
       offlineMessage: { type: String, default: "Customer support abhi off hai. Please subah 9 AM ke baad contact karein. Aapka message hamein mil gaya hai — hum jald jawab denge." },
-      welcomeMessage: { type: String, default: "WinX555 Support mein khush aamdeed! Aap kaise madad chahte hain?" },
+      welcomeMessage: { type: String, default: "winkox Support mein khush aamdeed! Aap kaise madad chahte hain?" },
     },
     links: {
       whatsapp: { type: String, default: "" },

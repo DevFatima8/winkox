@@ -32,7 +32,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     { href: "/admin/account", label: "My Account", icon: "👤" },
   ];
   return (
-    <Shell title={superNav ? "Super Admin" : "Admin"} nav={nav} userName={`${user.name}${user.adminId ? ` · ${user.adminId}` : ""}`} support={false} badge={<span className="btn-violet rounded-lg px-3 py-1 text-xs font-bold">{superNav ? "SUPER ADMIN" : "ADMIN"}</span>}>
+    <Shell title={superNav ? "Super Admin" : "Admin"} nav={nav} userName={`${user.name}${user.adminId ? ` · ${user.adminId}` : ""}`} support={false} showInstallPrompt={false} badge={<span className="btn-violet rounded-lg px-3 py-1 text-xs font-bold">{superNav ? "SUPER ADMIN" : "ADMIN"}</span>}>
       {children}
     </Shell>
   );
