@@ -5,6 +5,7 @@ import { Commission, Game, GameResult, Transaction, User, oid } from "@/models";
 import { Card, ProviderBadge, StatCard, StatusBadge, fmt, fmtDate } from "@/components/Shell";
 import { deleteUserAction, toggleUserActiveAction } from "@/lib/actions";
 import { UserEditForm } from "@/components/admin/UserEditForm";
+import { PaymentLockForm } from "@/components/admin/PaymentLockForm";
 import { getSettings, vipInfo } from "@/lib/platform";
 import { getCurrentUser, isStaff } from "@/lib/auth";
 import { usePage, NOT_FOUND, REDIRECT } from "@/lib/useDb";
@@ -63,12 +64,13 @@ export default function UserDetailClient({ params, searchParams }: { params?: Re
             {referrer && <p className="mb-3 text-xs text-[#b8a7e6]">Referred by: <b className="text-white">{referrer.name}</b> ({referrer.phone}) {referrer.role === "agent" && <span className="rounded bg-[#d946ef]/20 px-1.5 text-[10px] font-black text-[#f0abfc]">AGENT</span>}</p>}
             {canSee ? (
               <UserEditForm
-                user={{ id, name: u.name, username: u.username ?? "", email: u.email ?? "", role: u.role, passwordPlain: u.passwordPlain ?? "", withdrawPin: u.withdrawPin ?? "", agentCommissionPct: u.agentCommissionPct ?? null, blockedGames: u.blockedGames ?? [], balance: u.balance }}
+                user={{ id, name: u.name, username: u.username ?? "", email: u.email ?? "", role: u.role, passwordPlain: u.passwordPlain ?? "", withdrawPin: u.withdrawPin ?? "", agentCommissionPct: u.agentCommissionPct ?? null, blockedGames: u.blockedGames ?? [], balance: u.balance, paymentDepositLimit: u.paymentDepositLimit ?? 0 }}
                 games={games.map((g) => ({ slug: g.slug, name: g.name, icon: g.icon ?? "" }))}
               />
             ) : (
               <p className="rounded-xl bg-black/30 p-3 text-xs text-[#b8a7e6]">Account changes (password, PIN, block, balance, game restrictions) sirf Super Admin kar sakta hai.{u.blockedGames?.length ? ` Restricted games: ${u.blockedGames.join(", ")}` : ""}</p>
             )}
+            <PaymentLockForm userId={id} limit={u.paymentDepositLimit ?? 0} />
           </Card>
 
           <div className="space-y-6">

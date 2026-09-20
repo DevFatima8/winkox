@@ -33,6 +33,10 @@ export async function createSession(userId: string, kind: "deposit" | "withdraw"
   if (used + amount > cfg.dailyLimit) return { error: `Test gateway daily limit Rs. ${cfg.dailyLimit.toLocaleString()} — aaj baqi Rs. ${Math.max(0, cfg.dailyLimit - used).toLocaleString()}.` };
   const u = await User.findById(userId, "balance withdrawPin vipLevel isActive").lean();
   if (!u || !u.isActive) return { error: "Account block hai." };
+  if (kind === "deposit" && u.paymentDepositLimit && u.paymentDepositLimit > 0) {
+    const [used] = await Transaction.aggregate<{ s: number }>([{ $match: { userId: oid(userId), type: "deposit", status: { $in: ["pending", "approved"] } } }, { $group: { _id: null, s: { $sum: "$amount" } } }]);
+    if ((used?.s ?? 0) + amount > u.paymentDepositLimit) return { error: `Payment lock active hai. Total deposit limit Rs. ${u.paymentDepositLimit.toLocaleString()} hai; baqi Rs. ${Math.max(0, u.paymentDepositLimit - (used?.s ?? 0)).toLocaleString()} hai.` };
+  }
   if (kind === "withdraw") {
     if (!holderName || holderName.trim().length < 3) return { error: "Apne account holder ka naam likhein." };
     if (!u.withdrawPin) return { error: "Pehle Profile se Withdrawal PIN set karein." };
@@ -80,7 +84,11 @@ export async function verifyOtp(userId: string, id: string, otp: string) {
   const uid = oid(userId);
   const ref = `TST${Date.now().toString().slice(-8)}${Math.floor(Math.random() * 90 + 10)}`;
   if (s.kind === "deposit") {
-    const u = await User.findById(uid, "assignedAccounts").lean();
+    const u = await User.findById(uid, "assignedAccounts paymentDepositLimit").lean();
+    if (u?.paymentDepositLimit && u.paymentDepositLimit > 0) {
+      const [used] = await Transaction.aggregate<{ s: number }>([{ $match: { userId: uid, type: "deposit", status: { $in: ["pending", "approved"] } } }, { $group: { _id: null, s: { $sum: "$amount" } } }]);
+      if ((used?.s ?? 0) + s.amount > u.paymentDepositLimit) { s.status = "failed"; await s.save(); return { error: `Payment lock active hai. Total deposit limit Rs. ${u.paymentDepositLimit.toLocaleString()} cross ho gayi.`, failed: true }; }
+    }
     const assignedId = (u?.assignedAccounts?.[s.provider] as string) ?? null;
     const acc = assignedId ? await import("@/models").then(() => null) : null; void acc;
     const tx = await Transaction.create({ userId: uid, type: "deposit", provider: s.provider, amount: s.amount, senderNumber: s.accountNumber, assignedAccountId: assignedId, paymentAccountId: assignedId, referenceId: ref, method: "gateway", status: "approved", adminNote: "Test gateway (instant)", processedAt: new Date(), processedByName: "System (test gateway)" });

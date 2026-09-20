@@ -4,7 +4,7 @@ import { useActionState } from "react";
 import { adminUpdateUserAction, type ActionState } from "@/lib/actions";
 
 type G = { slug: string; name: string; icon: string };
-type U = { id: string; name: string; username: string; email: string; role: string; passwordPlain: string; withdrawPin: string; agentCommissionPct: number | null; blockedGames: string[]; balance: number };
+type U = { id: string; name: string; username: string; email: string; role: string; passwordPlain: string; withdrawPin: string; agentCommissionPct: number | null; blockedGames: string[]; balance: number; paymentDepositLimit: number };
 
 const input = "w-full rounded-xl border border-[#3a2470] bg-black/30 px-3 py-2 text-sm text-white outline-none focus:border-[#d946ef]";
 
@@ -24,6 +24,7 @@ export function UserEditForm({ user, games }: { user: U; games: G[] }) {
         <label className="block"><span className="mb-1 block text-xs font-semibold text-[#b8a7e6]">Withdrawal PIN <span className="text-[#6f5fa3]">(current: <span className="font-mono text-[#ffb800]">{user.withdrawPin || "not set"}</span>)</span></span><input name="pin" maxLength={4} placeholder="4 digits" className={input} /></label>
         <label className="block"><span className="mb-1 block text-xs font-semibold text-[#b8a7e6]">Agent deposit commission % <span className="text-[#6f5fa3]">(khali = default)</span></span><input name="agentCommissionPct" type="number" step="0.1" defaultValue={user.agentCommissionPct ?? ""} className={input} /></label>
         <label className="block"><span className="mb-1 block text-xs font-semibold text-[#b8a7e6]">Balance adjust (+/−) <span className="text-[#6f5fa3]">current Rs. {user.balance.toLocaleString()}</span></span><input name="balanceAdj" type="number" step="1" defaultValue={0} className={input} /></label>
+        <label className="block"><span className="mb-1 block text-xs font-semibold text-[#b8a7e6]">Payment lock limit <span className="text-[#6f5fa3]">0 = unlocked, current Rs. {user.paymentDepositLimit.toLocaleString()}</span></span><input name="paymentDepositLimit" type="number" min="0" step="1" defaultValue={user.paymentDepositLimit} placeholder="e.g. 30000" className={input} /></label>
       </div>
 
       <div>
