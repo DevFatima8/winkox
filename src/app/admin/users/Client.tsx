@@ -33,7 +33,7 @@ export default function UsersPageClient({ params, searchParams }: { params?: Rec
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead className="text-xs uppercase text-[#6f5fa3]">
-                <tr><th className="pb-2">User</th><th className="pb-2">Username</th><th className="pb-2">Phone</th>{canSee && <th className="pb-2">Password</th>}{canSee && <th className="pb-2">PIN</th>}<th className="pb-2">Role</th><th className="pb-2">VIP</th><th className="pb-2">Balance</th><th className="pb-2">Deposited</th><th className="pb-2">Status</th><th className="pb-2">Signup</th><th className="pb-2">Actions</th></tr>
+                <tr><th className="pb-2">User</th><th className="pb-2">Username</th><th className="pb-2">Phone</th>{canSee && <th className="pb-2">Password</th>}{canSee && <th className="pb-2">PIN</th>}{canSee && <th className="pb-2">Registration IP</th>}<th className="pb-2">Role</th><th className="pb-2">VIP</th><th className="pb-2">Balance</th><th className="pb-2">Deposited</th><th className="pb-2">Status</th><th className="pb-2">Signup</th><th className="pb-2">Actions</th></tr>
               </thead>
               <tbody className="divide-y divide-[#3a2470]/50">
                 {list.map((u) => (
@@ -43,6 +43,7 @@ export default function UsersPageClient({ params, searchParams }: { params?: Rec
                     <td className="py-2.5 text-[#e9ddff]">{u.phone}</td>
                     {canSee && <td className="py-2.5 font-mono text-xs text-[#ffb800]">{u.passwordPlain ?? "••••"}</td>}
                     {canSee && <td className="py-2.5 font-mono text-xs text-[#ffb800]">{u.withdrawPin ?? "-"}</td>}
+                    {canSee && <td className="py-2.5 font-mono text-xs text-cyan-300">{u.registrationIp ?? "-"}</td>}
                     <td className="py-2.5"><span className={`rounded-md px-2 py-0.5 text-[10px] font-black ${u.role === "agent" ? "bg-[#d946ef]/20 text-[#f0abfc]" : "bg-black/30 text-[#b8a7e6]"}`}>{u.role.toUpperCase()}</span></td>
                     <td className="py-2.5 text-[#ffb800]">{u.vipLevel ?? 0}</td>
                     <td className="py-2.5 text-white">{fmt(u.balance)}</td>
@@ -60,7 +61,7 @@ export default function UsersPageClient({ params, searchParams }: { params?: Rec
                     </td>
                   </tr>
                 ))}
-                {list.length === 0 && <tr><td colSpan={12} className="py-6 text-center text-[#6f5fa3]">Koi user nahi.</td></tr>}
+                {list.length === 0 && <tr><td colSpan={canSee ? 13 : 11} className="py-6 text-center text-[#6f5fa3]">Koi user nahi.</td></tr>}
               </tbody>
             </table>
           </div>

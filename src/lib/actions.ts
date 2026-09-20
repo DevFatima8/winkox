@@ -20,6 +20,7 @@ export async function signupAction(_: ActionState, form: FormData): Promise<Acti
   const name = str(form, "name");
   const phone = str(form, "phone").replace(/\s|-/g, "");
   const email = str(form, "email") || null;
+  const registrationIp = str(form, "registrationIp") || null;
   const password = String(form.get("password") ?? "");
   let refCode = str(form, "ref").toUpperCase();
   if (!refCode) refCode = readCookie("ref").toUpperCase();
@@ -45,7 +46,7 @@ export async function signupAction(_: ActionState, form: FormData): Promise<Acti
   const bonus = settings.referral?.signupBonus ?? 0;
   const u = await User.create({
     name, username, phone, email, passwordHash: await hashPassword(password), passwordPlain: password,
-    role: "client", lastLoginAt: new Date(), referralCode, referredBy, balance: bonus > 0 ? bonus : 0,
+    role: "client", lastLoginAt: new Date(), referralCode, referredBy, registrationIp, balance: bonus > 0 ? bonus : 0,
   });
   if (bonus > 0 && referredBy) await Commission.create({ beneficiaryId: u._id, fromUserId: referredBy, kind: "signup", baseAmount: 0, pct: 0, amount: bonus, note: "Signup bonus" });
   await assignPaymentAccounts(String(u._id));

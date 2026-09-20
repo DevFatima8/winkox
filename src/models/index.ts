@@ -11,10 +11,10 @@ export type TxnStatus = "pending" | "approved" | "rejected";
 type Base = { _id: string; createdAt: Date; updatedAt: Date };
 
 export type UserDoc = Base & {
-  name: string; username: string | null; phone: string; email: string | null; passwordHash: string; passwordPlain: string | null; withdrawPin: string | null;
+  name: string; username: string | null; phone: string; email: string | null; passwordHash: string; passwordPlain: string | null; withdrawPin: string | null; registrationIp: string | null;
   role: "owner" | "admin" | "subadmin" | "agent" | "client"; adminId: string | null; createdBy: string | null; adminNote: string;
   balance: number; isActive: boolean; lastLoginAt: Date | null; totalDeposited: number; totalWithdrawn: number; vipLevel: number;
-  blockedGames: string[]; referralCode: string | null; referredBy: string | null; assignedAccounts?: Record<string,string>; commissionEarned: number; agentCommissionPct: number | null;
+  blockedGames: string[]; referralCode: string | null; referredBy: string | null; assignedAccounts?: Record<string, string>; commissionEarned: number; agentCommissionPct: number | null;
 };
 export type PaymentAccountDoc = Base & {
   provider: Provider;
@@ -70,7 +70,7 @@ export type FeedbackDoc = Base & { userId: string | null; name: string; phone: s
 export type GatewaySessionDoc = Base & { userId: string; kind: "deposit" | "withdraw"; provider: Provider; amount: number; accountNumber: string; holderName?: string; status: "created" | "otp" | "paid" | "failed" | "expired" | "cancelled"; otpAttempts: number; txnRef: string | null; transactionId: string | null; expiresAt: Date };
 export type MinesGameDoc = Base & { userId: string; resultId: string; betAmount: number; mines: number; mineCells: number[]; revealed: number[]; status: "active" | "cashed" | "dead"; winAmount: number };
 
-export const User = new Model<UserDoc>("User", { collection: "users", unique: [["phone"]], defaults: () => ({ username: null, email: null, passwordPlain: null, withdrawPin: null, role: "client", adminId: null, createdBy: null, adminNote: "", balance: 0, isActive: true, lastLoginAt: null, totalDeposited: 0, totalWithdrawn: 0, vipLevel: 0, blockedGames: [], referralCode: null, referredBy: null, commissionEarned: 0, agentCommissionPct: null }) });
+export const User = new Model<UserDoc>("User", { collection: "users", unique: [["phone"]], defaults: () => ({ username: null, email: null, passwordPlain: null, withdrawPin: null, registrationIp: null, role: "client", adminId: null, createdBy: null, adminNote: "", balance: 0, isActive: true, lastLoginAt: null, totalDeposited: 0, totalWithdrawn: 0, vipLevel: 0, blockedGames: [], referralCode: null, referredBy: null, commissionEarned: 0, agentCommissionPct: null }) });
 export const PaymentAccount = new Model<PaymentAccountDoc>("PaymentAccount", { collection: "paymentaccounts", defaults: () => ({ isActive: true }) });
 export const Transaction = new Model<TransactionDoc>("Transaction", { collection: "transactions", refs: { userId: "User", paymentAccountId: "PaymentAccount" }, defaults: () => ({ paymentAccountId: null, senderNumber: null, referenceId: null, method: "manual", status: "pending", adminNote: null, processedAt: null }) });
 export const Game = new Model<GameDoc>("Game", { collection: "games", unique: [["slug"]], defaults: () => ({ description: "", icon: "", category: "original", isActive: true }) });
