@@ -4,6 +4,7 @@ import "./globals.css";
 import { getLocale } from "@/lib/i18n/server";
 import { I18nProvider } from "@/lib/i18n/client";
 import { getTheme } from "@/lib/theme";
+import { ParticlesBackground } from "@/components/ParticlesBackground";
 
 export const metadata: Metadata = {
   title: "WinX555 — Khelo aur Kamao | winx555games.shop",
@@ -28,11 +29,13 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   return (
     <html lang={locale} dir={ur ? "rtl" : "ltr"} data-scroll-behavior="smooth" className={`${ur ? "lang-ur" : ""} ${theme === "light" ? "light" : ""}`.trim()} suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: `try{if(document.cookie.match(/(?:^|; )theme=light/))document.documentElement.classList.add("light")}catch(e){}` }} />
         {ur && <link href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;600;700&display=swap" rel="stylesheet" />}
       </head>
       <body className="wx-bg min-h-screen text-slate-100 antialiased">
-        <I18nProvider locale={locale}>{children}</I18nProvider>
+        <ParticlesBackground />
+        <div className="relative z-[1]">
+          <I18nProvider locale={locale}>{children}</I18nProvider>
+        </div>
       </body>
     </html>
   );
