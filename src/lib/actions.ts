@@ -358,6 +358,25 @@ export async function deleteUserAction(id: string) {
   revalidatePath("/admin/users");
   redirect("/admin/users");
 }
+export async function adjustUserBalanceAction(_: ActionState, form: FormData): Promise<ActionState> {
+  const me = await requireSuper();
+  const id = str(form, "id");
+  const amount = num(form, "amount");
+  const direction = str(form, "direction");
+  if (!Number.isFinite(amount) || amount <= 0) return { error: "Amount 0 se zyada hona chahiye." };
+  if (direction !== "add" && direction !== "remove") return { error: "Balance action select karein." };
+  const u = await User.findById(id);
+  if (!u || isStaff(u.role)) return { error: "User nahi mila." };
+  if (direction === "remove" && (u.balance ?? 0) < amount) return { error: "User balance se zyada amount remove nahi kar sakte." };
+  const change = direction === "add" ? amount : -amount;
+  u.balance = (u.balance ?? 0) + change;
+  await u.save();
+  const label = direction === "add" ? "Balance added" : "Balance removed";
+  await notifyUser(id, label, `Super Admin ne aapke wallet mein Rs. ${amount.toLocaleString()} ${direction === "add" ? "add" : "remove"} kiye. New balance: Rs. ${u.balance.toLocaleString()}.`, direction === "add" ? "success" : "warning");
+  await logAdmin(me, direction === "add" ? "add_user_balance" : "remove_user_balance", u.phone, `Rs. ${amount.toLocaleString()} | new balance Rs. ${u.balance.toLocaleString()}`);
+  revalidatePath("/admin/users"); revalidatePath(`/admin/users/${id}`);
+  return { success: `Rs. ${amount.toLocaleString()} ${direction === "add" ? "add" : "remove"} ho gaye. New balance: Rs. ${u.balance.toLocaleString()}.` };
+}
 export async function adminUpdateUserAction(_: ActionState, form: FormData): Promise<ActionState> {
   const me = await requireSuper();
   const id = str(form, "id");
@@ -367,7 +386,6 @@ export async function adminUpdateUserAction(_: ActionState, form: FormData): Pro
   const password = String(form.get("password") ?? ""), pin = str(form, "pin");
   const role = str(form, "role"), agentPct = str(form, "agentCommissionPct");
   const paymentDepositLimit = num(form, "paymentDepositLimit");
-  const balanceAdj = num(form, "balanceAdj");
   if (name) u.name = name;
   if (username && username !== u.username) { if (await User.exists({ username, _id: { $ne: u._id } })) return { error: "Username already taken." }; u.username = username; }
   u.email = email || null;
@@ -377,11 +395,10 @@ export async function adminUpdateUserAction(_: ActionState, form: FormData): Pro
   u.agentCommissionPct = agentPct === "" ? null : Number(agentPct);
   if (!Number.isFinite(paymentDepositLimit) || paymentDepositLimit < 0) return { error: "Payment limit 0 ya positive amount hona chahiye." };
   u.paymentDepositLimit = paymentDepositLimit;
-  if (Number.isFinite(balanceAdj) && balanceAdj !== 0) u.balance = Math.max(0, (u.balance ?? 0) + balanceAdj);
   const blocked = form.getAll("blockedGames").map(String);
   u.blockedGames = blocked;
   await u.save();
-  await logAdmin(me, "update_user", u.phone, [password ? "password" : "", pin ? "pin" : "", balanceAdj ? `balance ${balanceAdj > 0 ? "+" : ""}${balanceAdj}` : "", `role ${u.role}`, `payment limit ${paymentDepositLimit || "off"}`, `blocked ${blocked.length}`].filter(Boolean).join(", "));
+  await logAdmin(me, "update_user", u.phone, [password ? "password" : "", pin ? "pin" : "", `role ${u.role}`, `payment limit ${paymentDepositLimit || "off"}`, `blocked ${blocked.length}`].filter(Boolean).join(", "));
   revalidatePath("/admin/users"); revalidatePath(`/admin/users/${id}`);
   return { success: "User update ho gaya." };
 }
