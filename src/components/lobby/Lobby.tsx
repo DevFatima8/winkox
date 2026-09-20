@@ -12,7 +12,8 @@ import { LanguageSwitch } from "@/components/LanguageSwitch";
 import { BrandLogo } from "@/components/BrandLogo";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useI18n, Hi } from "@/lib/i18n/client";
-import { WhatsAppIcon, TelegramIcon, FacebookIcon, InstagramIcon, YouTubeIcon, HeadsetIcon, HomeIcon, GiftIcon, UsersIcon, WalletIcon, UserIcon, ZapIcon, BanknoteIcon, ShieldIcon, FlameIcon, TrophyIcon, CrownIcon, PlayIcon, DownloadIcon, SlotIcon, GamepadIcon, SpadeIcon, FishIcon, CricketIcon, TicketIcon } from "@/components/Icons";
+import { WhatsAppIcon, TelegramIcon, FacebookIcon, InstagramIcon, YouTubeIcon, HeadsetIcon, HomeIcon, GiftIcon, UsersIcon, WalletIcon, UserIcon, ZapIcon, BanknoteIcon, ShieldIcon, FlameIcon, TrophyIcon, CrownIcon, PlayIcon, DownloadIcon, SlotIcon, GamepadIcon, SpadeIcon, FishIcon, CricketIcon, TicketIcon, RefreshIcon } from "@/components/Icons";
+import { InstallPrompt } from "@/components/InstallPrompt";
 
 export type Viewer = { loggedIn: boolean; isAdmin: boolean; name?: string; balance?: number };
 export type Links = { whatsapp?: string; whatsappChannel?: string; telegram?: string; telegramChannel?: string; facebook?: string; instagram?: string; youtube?: string; androidUrl?: string; iosUrl?: string };
@@ -113,6 +114,7 @@ export function Header({ viewer, active = "home" }: { viewer: Viewer; active?: "
           <span className="hidden md:inline-flex"><ThemeToggle /></span>
           <span className="hidden md:inline-flex"><LanguageSwitch /></span>
           <NotificationBell loggedIn={viewer.loggedIn} />
+          <button type="button" title="Reload page" aria-label="Reload page" onClick={() => window.location.reload()} className="flex h-8 w-8 items-center justify-center rounded-full border border-[#3a2470] text-[#c4b5fd] transition hover:border-[#00e5a0] hover:text-[#00e5a0]"><RefreshIcon size={16} /></button>
           <OpenSupportButton className="flex h-8 w-8 items-center justify-center rounded-full bg-black/30 text-[#c4b5fd] ring-1 ring-[#3a2470] hover:text-white"><HeadsetIcon size={16} /></OpenSupportButton>
           <div className="hidden items-center gap-2 md:flex">
             {viewer.loggedIn ? (
@@ -404,7 +406,7 @@ export function Lobby({ viewer, cat, links = {} }: { viewer: Viewer; cat: string
       <TopButton />
       <SupportWidget userName={viewer.name} />
       <PwaRegister />
-      {/* <InstallPrompt /> */}
+      <InstallPrompt />
       <BottomNav viewer={viewer} active="home" />
       {locale === "ur" && <span className="hidden" />}
     </div>

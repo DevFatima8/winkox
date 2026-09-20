@@ -14,5 +14,5 @@ export function BrandLogo({ className = "h-10 w-10", alt = "WinX555" }: { classN
       </svg>
     );
   }
-  return <img src="/brand/logo.png" alt={alt} width={56} height={56} className={className} onError={() => setBroken(true)} />;
+  return <img src="/brand/logo-mark.png" alt={alt} width={56} height={56} className={className} onError={() => setBroken(true)} />;
 }

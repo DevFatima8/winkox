@@ -71,6 +71,7 @@ export const ArrowLeftIcon = ({ size, ...p }: P) => (<svg {...stroke(size, p)}><
 export const SendIcon = ({ size, ...p }: P) => (<svg {...stroke(size, p)}><path d="m22 2-7 20-4-9-9-4Z" /><path d="M22 2 11 13" /></svg>);
 export const PlayIcon = ({ size, ...p }: P) => (<svg {...base(size, p)}><path d="M8 5v14l11-7z" /></svg>);
 export const DownloadIcon = ({ size, ...p }: P) => (<svg {...stroke(size, p)}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" /></svg>);
+export const RefreshIcon = ({ size, ...p }: P) => (<svg {...stroke(size, p)}><path d="M20 11a8.1 8.1 0 0 0-15.5-2M4 5v4h4M4 13a8.1 8.1 0 0 0 15.5 2M20 19v-4h-4" /></svg>);
 export const TrophyIcon = ({ size, ...p }: P) => (<svg {...stroke(size, p)}><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22M18 2H6v7a6 6 0 0 0 12 0V2Z" /></svg>);
 export const CheckIcon = ({ size, ...p }: P) => (<svg {...stroke(size, p)}><path d="M20 6 9 17l-5-5" /></svg>);
 export const MailIcon = ({ size, ...p }: P) => (<svg {...stroke(size, p)}><rect x="2" y="4" width="20" height="16" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" /></svg>);
@@ -93,7 +94,7 @@ export const CricketIcon = ({ size, ...p }: P) => (<svg {...stroke(size, p)}><pa
 export const SlotIcon = ({ size, ...p }: P) => (<svg {...stroke(size, p)}><rect x="3" y="5" width="16" height="14" rx="2" /><path d="M7 9v6M11 9v6M15 9v6M22 8v3" /><circle cx="22" cy="6" r="1.5" /></svg>);
 
 export const AndroidIcon = ({ size = 20, ...p }: P) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" {...p}><path d="M17.6 9.5 19.4 6.4a.55.55 0 1 0-.95-.55L16.6 9.05A8.9 8.9 0 0 0 12 8a8.9 8.9 0 0 0-4.6 1.05L5.55 5.85a.55.55 0 1 0-.95.55L6.4 9.5A8.7 8.7 0 0 0 3 16.5h18a8.7 8.7 0 0 0-3.4-7zm-9.1 4.4a.85.85 0 1 1 0-1.7.85.85 0 0 1 0 1.7zm7 0a.85.85 0 1 1 0-1.7.85.85 0 0 1 0 1.7z"/></svg>
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" {...p}><path d="M17.6 9.5 19.4 6.4a.55.55 0 1 0-.95-.55L16.6 9.05A8.9 8.9 0 0 0 12 8a8.9 8.9 0 0 0-4.6 1.05L5.55 5.85a.55.55 0 1 0-.95.55L6.4 9.5A8.7 8.7 0 0 0 3 16.5h18a8.7 8.7 0 0 0-3.4-7zm-9.1 4.4a.85.85 0 1 1 0-1.7.85.85 0 0 1 0 1.7zm7 0a.85.85 0 1 1 0-1.7.85.85 0 0 1 0 1.7z" /></svg>
 );
 export const LaptopIcon = ({ size, ...p }: P) => (<svg {...stroke(size, p)}><rect x="3" y="4" width="18" height="12" rx="1.5" /><path d="M2 20h20" /></svg>);
 export const TabletIcon = ({ size, ...p }: P) => (<svg {...stroke(size, p)}><rect x="5" y="2" width="14" height="20" rx="2" /><path d="M11 18h2" /></svg>);

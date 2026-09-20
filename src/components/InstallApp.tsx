@@ -1,10 +1,7 @@
 "use client";
 import { GooglePlayIcon, AppleIcon, DownloadIcon } from "@/components/Icons";
 
-const openPopup = () => {
-  const btn = document.querySelector<HTMLButtonElement>("button.fixed.bottom-20.left-3, button.fixed.bottom-6.left-6");
-  if (btn) btn.click();
-};
+const openPopup = () => window.dispatchEvent(new Event("wx:open-install"));
 
 export function InstallApp({ compact }: { androidUrl?: string; iosUrl?: string; compact?: boolean }) {
   return (
