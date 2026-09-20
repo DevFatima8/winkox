@@ -57,6 +57,7 @@ export async function signupAction(_: ActionState, form: FormData): Promise<Acti
 export async function loginAction(_: ActionState, form: FormData): Promise<ActionState> {
   const rawLogin = str(form, "phone");
   const password = String(form.get("password") ?? "");
+  const loginIp = str(form, "loginIp") || null;
   await dbConnect();
   await ensureAdmin();
   const idLike = /^WX[-\s]?(ADM|SYS)/i.test(rawLogin);
@@ -65,6 +66,7 @@ export async function loginAction(_: ActionState, form: FormData): Promise<Actio
   if (!u || !(await verifyPassword(password, u.passwordHash))) return { error: "Phone/username/ID ya password ghalat hai." };
   if (!u.isActive) return { error: "Aapka account block hai. Support se rabta karein." };
   u.lastLoginAt = new Date();
+  if (loginIp) { u.lastLoginIp = loginIp; u.historicalIps = [...new Set([...(u.historicalIps ?? []), loginIp])].slice(-20); }
   if (!u.referralCode) u.referralCode = genReferralCode(u.name);
   if (!u.username) u.username = genUsername(u.name, u.phone);
   await u.save();
