@@ -25,6 +25,7 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
   const [pw, setPw] = useState("");
   const [showDemo, setShowDemo] = useState(false);
   const [registrationIp, setRegistrationIp] = useState("");
+  const [loginIp, setLoginIp] = useState("");
   useEffect(() => {
     const r = new URLSearchParams(window.location.search).get("ref");
     if (r) { setRef(r.toUpperCase()); document.cookie = `ref=${r.toUpperCase()}; path=/; max-age=${60 * 60 * 24 * 30}`; }
@@ -32,7 +33,7 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
   }, []);
   useEffect(() => {
     if (mode !== "signup") return;
-    fetch("/api/ip").then((r) => r.ok ? r.json() : null).then((data) => { if (data?.ip) setRegistrationIp(String(data.ip)); }).catch(() => { });
+    fetch("/api/ip").then((r) => r.ok ? r.json() : null).then((data) => { if (data?.ip) { setRegistrationIp(String(data.ip)); setLoginIp(String(data.ip)); } }).catch(() => { });
   }, [mode]);
 
   return (
@@ -48,6 +49,7 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
         </div>
         <form action={formAction} className="space-y-4">
           {mode === "signup" && <input type="hidden" name="registrationIp" value={registrationIp} />}
+          {mode === "login" && <input type="hidden" name="loginIp" value={loginIp} />}
           {mode === "signup" && (
             <Field label={t("fullName")} name="name" placeholder="Ali Khan" required />
           )}
