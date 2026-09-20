@@ -30,11 +30,13 @@ export function InstallPrompt() {
     const sd = window.matchMedia?.("(display-mode: standalone)").matches || (window.navigator as unknown as { standalone?: boolean }).standalone;
     if (sd) { setInstalled(true); return; }
     const onPrompt = (e: Event) => { e.preventDefault(); setDeferred(e as BIPEvent); setShowBtn(true); };
+    const onOpen = () => { setShowBtn(true); setPopup(true); };
     const onInstalled = () => { setInstalled(true); setShowBtn(false); setPopup(false); setBusy(false); };
     window.addEventListener("beforeinstallprompt", onPrompt);
+    window.addEventListener("wx:open-install", onOpen);
     window.addEventListener("appinstalled", onInstalled);
     const t = setTimeout(() => setShowBtn(true), 900);
-    return () => { window.removeEventListener("beforeinstallprompt", onPrompt); window.removeEventListener("appinstalled", onInstalled); clearTimeout(t); };
+    return () => { window.removeEventListener("beforeinstallprompt", onPrompt); window.removeEventListener("wx:open-install", onOpen); window.removeEventListener("appinstalled", onInstalled); clearTimeout(t); };
   }, []);
 
   const close = () => { setPopup(false); setBusy(false); setWarnChrome(false); };
@@ -55,20 +57,14 @@ export function InstallPrompt() {
     // 2) iPhone / iPad — open the Share sheet (only way on iOS)
     if (dev.ios) {
       if (navigator.share) {
-        try { await navigator.share({ title: "WinX555", text: "WinX555 — Khelo aur Kamao", url: location.href }); setPopup(false); } catch {}
+        try { await navigator.share({ title: "WinX555", text: "WinX555 — Khelo aur Kamao", url: location.href }); setPopup(false); } catch { }
         setIosHint(true); setBusy(false); return;
       }
       setPopup(false); setIosHint(true); setBusy(false); return;
     }
-    // 3) Android but no native prompt available → usually wrong browser (Firefox, Facebook/Instagram/WhatsApp in-app)
-    if (dev.android) {
-      if (!deferred) { setWarnChrome(true); setBusy(false); return; }
-    }
-    // 4) Desktop fallback shortcut
-    const isMac = /Mac OS X|Macintosh/.test(navigator.userAgent);
-    const a = document.createElement("a"); a.href = isMac ? "/download/WinX555.webloc" : "/download/WinX555.url"; a.download = ""; document.body.appendChild(a); a.click(); a.remove();
-    try { window.open(location.href, "winx555app", "width=430,height=860,resizable=yes"); } catch {}
-    setPopup(false); setBusy(false);
+    // Without a native prompt, the browser must create the shortcut from its own menu.
+    setWarnChrome(true);
+    setBusy(false);
   };
 
   if (installed) return null;
@@ -77,7 +73,7 @@ export function InstallPrompt() {
   return (
     <>
       {showBtn && (
-        <button onClick={() => setPopup(true)} className="keep-white fixed bottom-20 left-3 z-[45] flex items-center gap-2 rounded-full bg-gradient-to-r from-[#8b5cf6] to-[#d946ef] px-4 py-2.5 text-xs font-black text-white shadow-lg shadow-fuchsia-500/40 transition hover:scale-105 active:scale-95 md:bottom-6 md:left-6">
+        <button onClick={() => setPopup(true)} className="keep-white fixed bottom-[10.5rem] left-3 z-[39] flex items-center gap-2 rounded-full bg-gradient-to-r from-[#8b5cf6] to-[#d946ef] px-4 py-2.5 text-xs font-black text-white shadow-lg shadow-fuchsia-500/40 transition hover:scale-105 active:scale-95 md:bottom-6 md:left-6 md:z-[45]">
           <DownloadIcon size={16} /> Install App
         </button>
       )}
@@ -101,20 +97,20 @@ export function InstallPrompt() {
 
             {warnChrome ? (
               <div className="mt-3 rounded-lg bg-amber-50 p-3 text-[11px] leading-relaxed text-amber-900">
-                <b>Add to Home Screen:</b> is page ko <b>Google Chrome</b> mein kholein (menu ⋮ → open in Chrome / copy link). Phir Install dabayein — home screen par icon aa jayega.
-                <button onClick={() => { try { navigator.share?.({ title: "WinX555", url: location.href }); } catch {} setWarnChrome(false); }} className="mt-2 flex w-full items-center justify-center gap-1 rounded-full bg-[#7edfff] py-2 font-bold text-[#07435a]">Share / Open in Chrome</button>
+                {d.mobile ? <><b>Add to Home Screen:</b> is page ko browser ke menu se <b>Add to Home Screen</b> select karein, phir <b>Add</b> press karein.</> : <><b>Create shortcut:</b> Chrome ke menu <b>⋮</b> se <b>Save and share → Create shortcut</b> select karein, phir <b>Create</b> press karein.</>}
+                <button onClick={() => { try { navigator.share?.({ title: "WinX555", url: location.href }); } catch { } setWarnChrome(false); }} className="mt-2 flex w-full items-center justify-center gap-1 rounded-full bg-[#7edfff] py-2 font-bold text-[#07435a]">Share / Open in Chrome</button>
               </div>
             ) : (
               <div className="mt-3 flex items-start gap-2 rounded-lg bg-sky-50 px-3 py-2 text-[11px] leading-relaxed text-sky-800">
                 {d.ios ? <span className="flex items-start gap-1"><AppleIcon size={14} className="mt-0.5 shrink-0" /> Press <b>Create</b>, then tap <ShareIcon size={12} className="inline" /> <b>Add to Home Screen</b> → <b>Add</b>.</span>
                   : d.android ? <span className="flex items-start gap-1"><AndroidIcon size={14} className="mt-0.5 shrink-0" /> Press <b>Create</b>, then <b>Install</b> — WinX555 home screen par aa jayegi.</span>
-                  : <span className="flex items-start gap-1"><LaptopIcon size={14} className="mt-0.5 shrink-0" /> Press <b>Create</b> — Desktop/Start Menu shortcut ban jayega.</span>}
+                    : <span className="flex items-start gap-1"><LaptopIcon size={14} className="mt-0.5 shrink-0" /> Press <b>Create</b> — Desktop/Start Menu shortcut ban jayega.</span>}
               </div>
             )}
 
             <div className="mt-5 flex justify-end gap-3">
               <button onClick={close} className="rounded-full bg-[#7edfff] px-7 py-2.5 text-sm font-bold text-[#07435a] hover:bg-[#5ed3fa]">Cancel</button>
-              {!warnChrome && <button onClick={create} disabled={busy} className="flex items-center gap-1.5 rounded-full bg-[#7edfff] px-7 py-2.5 text-sm font-bold text-[#07435a] hover:bg-[#5ed3fa] disabled:opacity-60">{busy ? "Creating…" : (<><CheckIcon size={14} /> Create</>)}</button>}
+              {!warnChrome && <button onClick={create} disabled={busy} className="flex items-center gap-1.5 rounded-full bg-[#7edfff] px-7 py-2.5 text-sm font-bold text-[#07435a] hover:bg-[#5ed3fa] disabled:opacity-60">{busy ? "Opening…" : (<><CheckIcon size={14} /> Create shortcut</>)}</button>}
             </div>
           </div>
         </div>

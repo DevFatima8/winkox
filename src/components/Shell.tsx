@@ -4,13 +4,13 @@ import { destroySession } from "@/lib/auth";
 import { SupportWidget } from "./SupportWidget";
 import { NotificationBell } from "./NotificationBell";
 import { PwaRegister } from "./PwaRegister";
-// import { InstallPrompt } from "./InstallPrompt";
+import { InstallPrompt } from "./InstallPrompt";
 import { LanguageSwitch } from "./LanguageSwitch";
 import { ThemeToggle } from "./ThemeToggle";
 import { BrandLogo } from "./BrandLogo";
 import { MobileNavDrawer, ActiveLink } from "./MobileNavDrawer";
 import { useI18n } from "@/lib/i18n/client";
-import { GamepadIcon, WalletIcon, UsersIcon, HistoryIcon, UserIcon, BellIcon, BookIcon, HomeIcon, TargetIcon, ShieldIcon, CrownIcon, MegaphoneIcon, BanknoteIcon, HeadsetIcon, PackageIcon, PercentIcon, CalendarIcon, CircleHelpIcon } from "./Icons";
+import { GamepadIcon, WalletIcon, UsersIcon, HistoryIcon, UserIcon, BellIcon, BookIcon, HomeIcon, TargetIcon, ShieldIcon, CrownIcon, MegaphoneIcon, BanknoteIcon, HeadsetIcon, PackageIcon, PercentIcon, CalendarIcon, CircleHelpIcon, RefreshIcon } from "./Icons";
 import type { ReactNode } from "react";
 
 type NavItem = { href: string; label: string; icon: string };
@@ -76,6 +76,7 @@ export function Shell({ title, nav, userName, badge, children, support = true }:
         <div className="flex shrink-0 items-center gap-1.5">
           <span className="hidden min-[420px]:inline-flex">{badge}</span>
           {support && <NotificationBell loggedIn />}
+          <button type="button" title="Reload page" aria-label="Reload page" onClick={() => window.location.reload()} className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#3a2470] text-[#b8a7e6] transition hover:border-[#00e5a0] hover:text-[#00e5a0]"><RefreshIcon size={16} /></button>
           <button className="rounded-lg border border-[#3a2470] px-2 py-1.5 text-[11px] text-[#b8a7e6]" onClick={logout}>{t("logout")}</button>
         </div>
       </div>
@@ -90,7 +91,7 @@ export function Shell({ title, nav, userName, badge, children, support = true }:
       </main>
       {support && <SupportWidget userName={userName} />}
       <PwaRegister />
-      {/* <InstallPrompt /> */}
+      <InstallPrompt />
 
       {/* ===== Mobile bottom tabs (4 + More) ===== */}
       <nav className="fixed inset-x-0 bottom-0 z-40 flex border-t border-[#3a2470] bg-[#140c2a]/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">

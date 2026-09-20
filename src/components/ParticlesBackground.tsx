@@ -89,9 +89,10 @@ export function ParticlesBackground() {
             {layers.map((layer) => <div className="wx-particles-layer" id={layer.id} key={layer.id} />)}
             <div className="wx-heart-particles">
                 {hearts.map(([top, left, size, delay], index) => (
-                    <span className="wx-heart-particle" key={index} style={{ "--heart-top": `${top}%`, "--heart-left": `${left}%`, "--heart-size": `${size}px`, "--heart-delay": `${delay}s` } as CSSProperties}>♥</span>
+                    <span className="wx-heart-particle" key={index} style={{ position: "absolute", top: `${top}%`, left: `${left}%`, color: "#ff4d7d", fontSize: `${size}px`, lineHeight: 1, textShadow: "0 0 8px rgba(255, 63, 114, .9), 0 0 18px rgba(255, 176, 32, .45)", animation: `wx-heart-float 8s ease-in-out ${delay}s infinite` } as CSSProperties}>♥</span>
                 ))}
             </div>
+            <style>{`@keyframes wx-heart-float { 0%,100% { transform: translate3d(0,12px,0) rotate(-8deg); opacity:.3 } 50% { transform: translate3d(14px,-34px,0) rotate(12deg); opacity:1 } }`}</style>
         </div>
     );
 }
