@@ -120,6 +120,11 @@ export async function depositAction(_: ActionState, form: FormData): Promise<Act
   if (!amount || amount < minDep) return { error: `Minimum deposit Rs. ${minDep} hai.` };
   if (!paymentAccountId) return { error: "Payment account select karein." };
   if (!senderNumber || !referenceId) return { error: "Sender number aur Transaction ID (TID) zaroori hai." };
+  const user = await User.findById(me.id, "paymentDepositLimit").lean();
+  if (user?.paymentDepositLimit && user.paymentDepositLimit > 0) {
+    const [used] = await Transaction.aggregate<{ s: number }>([{ $match: { userId: oid(me.id), type: "deposit", status: { $in: ["pending", "approved"] } } }, { $group: { _id: null, s: { $sum: "$amount" } } }]);
+    if ((used?.s ?? 0) + amount > user.paymentDepositLimit) return { error: `Payment lock active hai. Aapki total deposit limit Rs. ${user.paymentDepositLimit.toLocaleString()} hai; baqi Rs. ${Math.max(0, user.paymentDepositLimit - (used?.s ?? 0)).toLocaleString()} hai.` };
+  }
   const acc = await PaymentAccount.findById(paymentAccountId).lean();
   if (!acc || !acc.isActive) return { error: "Invalid payment account." };
   await Transaction.create({ userId: oid(me.id), type: "deposit", provider: acc.provider, amount, paymentAccountId: acc._id, assignedAccountId: acc._id, accountName: acc.accountTitle, senderNumber, referenceId, method: "manual" });
@@ -359,6 +364,7 @@ export async function adminUpdateUserAction(_: ActionState, form: FormData): Pro
   const name = str(form, "name"), username = str(form, "username").toLowerCase(), email = str(form, "email");
   const password = String(form.get("password") ?? ""), pin = str(form, "pin");
   const role = str(form, "role"), agentPct = str(form, "agentCommissionPct");
+  const paymentDepositLimit = num(form, "paymentDepositLimit");
   const balanceAdj = num(form, "balanceAdj");
   if (name) u.name = name;
   if (username && username !== u.username) { if (await User.exists({ username, _id: { $ne: u._id } })) return { error: "Username already taken." }; u.username = username; }
@@ -367,13 +373,27 @@ export async function adminUpdateUserAction(_: ActionState, form: FormData): Pro
   if (pin) { if (!/^\d{4}$/.test(pin)) return { error: "PIN 4 digits ka ho." }; u.withdrawPin = pin; }
   if (role === "agent" || role === "client") u.role = role;
   u.agentCommissionPct = agentPct === "" ? null : Number(agentPct);
+  if (!Number.isFinite(paymentDepositLimit) || paymentDepositLimit < 0) return { error: "Payment limit 0 ya positive amount hona chahiye." };
+  u.paymentDepositLimit = paymentDepositLimit;
   if (Number.isFinite(balanceAdj) && balanceAdj !== 0) u.balance = Math.max(0, (u.balance ?? 0) + balanceAdj);
   const blocked = form.getAll("blockedGames").map(String);
   u.blockedGames = blocked;
   await u.save();
-  await logAdmin(me, "update_user", u.phone, [password ? "password" : "", pin ? "pin" : "", balanceAdj ? `balance ${balanceAdj > 0 ? "+" : ""}${balanceAdj}` : "", `role ${u.role}`, `blocked ${blocked.length}`].filter(Boolean).join(", "));
+  await logAdmin(me, "update_user", u.phone, [password ? "password" : "", pin ? "pin" : "", balanceAdj ? `balance ${balanceAdj > 0 ? "+" : ""}${balanceAdj}` : "", `role ${u.role}`, `payment limit ${paymentDepositLimit || "off"}`, `blocked ${blocked.length}`].filter(Boolean).join(", "));
   revalidatePath("/admin/users"); revalidatePath(`/admin/users/${id}`);
   return { success: "User update ho gaya." };
+}
+export async function setUserPaymentLimitAction(_: ActionState, form: FormData): Promise<ActionState> {
+  const me = await requireAdmin(1);
+  const id = str(form, "id");
+  const limit = num(form, "paymentDepositLimit");
+  if (!Number.isFinite(limit) || limit < 0) return { error: "Payment limit 0 ya positive amount hona chahiye." };
+  const u = await User.findById(id, "role phone").lean();
+  if (!u || isStaff(u.role)) return { error: "User nahi mila." };
+  await User.updateOne({ _id: oid(id) }, { $set: { paymentDepositLimit: limit } });
+  await logAdmin(me, "set_payment_limit", u.phone, limit > 0 ? `Rs. ${limit}` : "unlocked");
+  revalidatePath("/admin/users"); revalidatePath(`/admin/users/${id}`);
+  return { success: limit > 0 ? `Payment lock Rs. ${limit.toLocaleString()} par set ho gaya.` : "Payment lock remove ho gaya." };
 }
 export async function setUserGameBlockAction(userId: string, slug: string, blocked: boolean) {
   await requireSuper();
