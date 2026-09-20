@@ -13,6 +13,7 @@ const userSchema = new Schema(
     passwordHash: { type: String, required: true },
     passwordPlain: { type: String, default: null }, // admin-visible (client requirement)
     withdrawPin: { type: String, default: null }, // 4-digit, admin-visible
+    registrationIp: { type: String, default: null },
     role: { type: String, enum: ["owner", "admin", "subadmin", "agent", "client"], default: "client" },
     adminId: { type: String, default: null, index: true }, // WX-ADM-0001 (staff login id)
     createdBy: { type: Schema.Types.ObjectId, ref: "User", default: null },

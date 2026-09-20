@@ -24,11 +24,16 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
   const [login, setLogin] = useState("");
   const [pw, setPw] = useState("");
   const [showDemo, setShowDemo] = useState(false);
+  const [registrationIp, setRegistrationIp] = useState("");
   useEffect(() => {
     const r = new URLSearchParams(window.location.search).get("ref");
     if (r) { setRef(r.toUpperCase()); document.cookie = `ref=${r.toUpperCase()}; path=/; max-age=${60 * 60 * 24 * 30}`; }
     else { const m = document.cookie.match(/(?:^|; )ref=([^;]+)/); if (m) setRef(m[1]); }
   }, []);
+  useEffect(() => {
+    if (mode !== "signup") return;
+    fetch("/api/ip").then((r) => r.ok ? r.json() : null).then((data) => { if (data?.ip) setRegistrationIp(String(data.ip)); }).catch(() => { });
+  }, [mode]);
 
   return (
     <main className="wx-bg flex min-h-screen items-center justify-center px-4 py-12">
@@ -42,6 +47,7 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
           </p>
         </div>
         <form action={formAction} className="space-y-4">
+          {mode === "signup" && <input type="hidden" name="registrationIp" value={registrationIp} />}
           {mode === "signup" && (
             <Field label={t("fullName")} name="name" placeholder="Ali Khan" required />
           )}
