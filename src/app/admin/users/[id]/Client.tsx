@@ -5,6 +5,7 @@ import { Commission, Game, GameResult, Transaction, User } from "@/models";
 import { Card, ProviderBadge, StatCard, StatusBadge, fmt, fmtDate } from "@/components/Shell";
 import { deleteUserAction, toggleUserActiveAction } from "@/lib/actions";
 import { UserEditForm } from "@/components/admin/UserEditForm";
+import { BalanceAdjustForm } from "@/components/admin/BalanceAdjustForm";
 import { PaymentLockForm } from "@/components/admin/PaymentLockForm";
 import { getSettings, vipInfo } from "@/lib/platform";
 import { getCurrentUser, isStaff } from "@/lib/auth";
@@ -60,6 +61,7 @@ export default function UserDetailClient({ params, searchParams }: { params?: Re
                 <Card title="Credentials & Settings">
                     <InfoGrid items={[["Username", u.username ?? "-"], ["Phone", u.phone], ["Password", canSee ? (u.passwordPlain ?? "••••••") : "Hidden"], ["Withdraw PIN", canSee ? (u.withdrawPin ?? "Not set") : "Hidden"]]} />
                     {canSee ? <UserEditForm user={{ id, name: u.name, username: u.username ?? "", email: u.email ?? "", role: u.role, passwordPlain: u.passwordPlain ?? "", withdrawPin: u.withdrawPin ?? "", agentCommissionPct: u.agentCommissionPct ?? null, blockedGames: u.blockedGames ?? [], balance: u.balance, paymentDepositLimit: limit }} games={games.map((g) => ({ slug: g.slug, name: g.name, icon: g.icon ?? "" }))} /> : <p className="mt-3 rounded-xl bg-black/30 p-3 text-xs text-[#b8a7e6]">Account changes sirf Super Admin kar sakta hai.</p>}
+                    {canSee && <div className="mt-5 border-t border-[#3a2470]/60 pt-5"><h3 className="mb-2 text-sm font-bold text-white">Manual wallet balance</h3><p className="mb-3 text-xs text-[#b8a7e6]">Sirf Super Admin user ko amount de ya uske balance se amount remove kar sakta hai.</p><BalanceAdjustForm userId={id} balance={u.balance} /></div>}
                     <PaymentLockForm userId={id} limit={limit} />
                 </Card>
                 <div className="space-y-6"><Card title={`Team / Referrals (${team.length})`}>{team.length ? <ul className="divide-y divide-[#3a2470]/50 text-sm">{team.map((t) => <li key={String(t._id)} className="flex justify-between py-2"><Link href={`/admin/users/${t._id}`} className="text-white">{t.name} <span className="text-xs text-[#b8a7e6]">{t.phone}</span></Link><span className="text-xs text-[#b8a7e6]">Deposited {fmt(t.totalDeposited ?? 0)}</span></li>)}</ul> : <Empty text="Koi referral nahi." />}</Card><Card title="Commission history">{comm.length ? <ul className="divide-y divide-[#3a2470]/50 text-sm">{comm.map((c) => <li key={String(c._id)} className="flex justify-between py-2"><span>{c.kind} · {c.fromUserId?.name ?? "-"}</span><b className="text-emerald-300">+{fmt(c.amount)}</b></li>)}</ul> : <Empty text="Abhi koi commission nahi." />}</Card></div>
