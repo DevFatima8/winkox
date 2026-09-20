@@ -1,4 +1,4 @@
-# WinX555 (winx555games.shop) — LocalDB / No-database edition
+# winkox (winkox.shop) — LocalDB / No-database edition
 
 This build runs **without any server database**. All data (users, balances, games, rounds, chats, settings)
 is stored in the browser's `localStorage`, so it deploys to Vercel with zero configuration.
@@ -7,7 +7,7 @@ Data is per-browser (open Admin and Client in two tabs of the same browser to te
 ## Deploy to Vercel
 1. Push this folder to GitHub.
 2. vercel.com → Add New Project → import the repo → Deploy (no environment variables needed).
-3. Add your domain (winx555games.shop) in Project → Settings → Domains.
+3. Add your domain (winkox.shop) in Project → Settings → Domains.
 
 ## Run locally
 ```bash

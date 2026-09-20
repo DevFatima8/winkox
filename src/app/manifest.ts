@@ -2,9 +2,9 @@ import type { MetadataRoute } from "next";
 export default function manifest(): MetadataRoute.Manifest {
   return {
     id: "/?source=pwa",
-    name: "WinX555 — Khelo aur Kamao",
-    short_name: "WinX555",
-    description: "WinX555 — games, live casino aur earning ek hi app mein.",
+    name: "winkox — Khelo aur Kamao",
+    short_name: "winkox",
+    description: "winkox — games, live casino aur earning ek hi app mein.",
     start_url: "/?source=pwa",
     scope: "/",
     display: "standalone",

@@ -84,7 +84,7 @@ export function GatewayCheckout({ id }: { id: string }) {
 
         {/* amount summary */}
         <div className="border-b border-slate-100 px-5 py-4">
-          <div className="flex items-center justify-between text-sm text-slate-500"><span>Merchant</span><span className="font-bold text-slate-800">WinX555</span></div>
+          <div className="flex items-center justify-between text-sm text-slate-500"><span>Merchant</span><span className="font-bold text-slate-800">winkox</span></div>
           <div className="mt-1 flex items-center justify-between text-sm text-slate-500"><span>{isDep ? "Payment amount" : "Withdrawal amount"}</span><span className="text-2xl font-black text-slate-900">Rs. {s.amount.toLocaleString()}</span></div>
           <div className="mt-1 flex items-center justify-between text-sm text-slate-500"><span>{isDep ? "From account" : "To account"}</span><span className="font-mono font-bold text-slate-800">{s.accountNumber}</span></div>
           {step !== "done" && step !== "failed" && <div className="mt-2 text-right text-[11px] text-slate-400">Session expires in <span className="font-mono font-bold" style={{ color: left < 60 ? "#dc2626" : b.accent }}>{mm}:{ss}</span></div>}
@@ -93,7 +93,7 @@ export function GatewayCheckout({ id }: { id: string }) {
         <div className="px-5 py-5">
           {step === "confirm" && (
             <div className="space-y-3">
-              <p className="text-sm text-slate-600">{isDep ? `Aapke ${b.name} account se Rs. ${s.amount.toLocaleString()} WinX555 wallet mein transfer honge. Continue dabane par aapke number par OTP bheja jayega.` : `WinX555 wallet se Rs. ${s.amount.toLocaleString()} aapke ${b.name} account mein bheje jayenge. Confirm karne ke liye OTP verify karein.`}</p>
+              <p className="text-sm text-slate-600">{isDep ? `Aapke ${b.name} account se Rs. ${s.amount.toLocaleString()} winkox wallet mein transfer honge. Continue dabane par aapke number par OTP bheja jayega.` : `winkox wallet se Rs. ${s.amount.toLocaleString()} aapke ${b.name} account mein bheje jayenge. Confirm karne ke liye OTP verify karein.`}</p>
               <button disabled={busy} onClick={confirm} className="w-full rounded-xl py-3 text-base font-black text-white shadow-lg disabled:opacity-60" style={{ background: b.accent }}>{busy ? "Please wait…" : "Continue & Send OTP"}</button>
               <button onClick={cancel} className="w-full rounded-xl border border-slate-200 py-2.5 text-sm font-bold text-slate-600">Cancel</button>
             </div>

@@ -2,7 +2,7 @@
 import { useState } from "react";
 
 /** Logo image with inline SVG fallback (in case /public/brand is missing on the host). */
-export function BrandLogo({ className = "h-10 w-10", alt = "WinX555" }: { className?: string; alt?: string }) {
+export function BrandLogo({ className = "h-10 w-10", alt = "winkox" }: { className?: string; alt?: string }) {
   const [broken, setBroken] = useState(false);
   if (broken) {
     return (
