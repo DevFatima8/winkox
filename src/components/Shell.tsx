@@ -4,7 +4,7 @@ import { destroySession } from "@/lib/auth";
 import { SupportWidget } from "./SupportWidget";
 import { NotificationBell } from "./NotificationBell";
 import { PwaRegister } from "./PwaRegister";
-import { InstallPrompt } from "./InstallPrompt";
+// import { InstallPrompt } from "./InstallPrompt";
 import { LanguageSwitch } from "./LanguageSwitch";
 import { ThemeToggle } from "./ThemeToggle";
 import { BrandLogo } from "./BrandLogo";
@@ -55,8 +55,8 @@ export function Shell({ title, nav, userName, badge, children, support = true }:
           <div className="hidden xl:block">{badge}</div>
           <div className="mt-2 flex flex-col items-center gap-2 xl:mt-3 xl:flex-row xl:justify-start"><LanguageSwitch compact /><ThemeToggle compact /></div>
           <button title={t("logout")} className="mt-2 w-full rounded-xl border border-[#3a2470] py-2 text-sm text-[#b8a7e6] hover:border-[#ff3b5c] hover:text-[#ff3b5c] xl:mt-3" onClick={logout}>
-              <span className="xl:hidden">⎋</span><span className="hidden xl:inline">{t("logout")}</span>
-            </button>
+            <span className="xl:hidden">⎋</span><span className="hidden xl:inline">{t("logout")}</span>
+          </button>
         </div>
       </aside>
 
@@ -90,7 +90,7 @@ export function Shell({ title, nav, userName, badge, children, support = true }:
       </main>
       {support && <SupportWidget userName={userName} />}
       <PwaRegister />
-      <InstallPrompt />
+      {/* <InstallPrompt /> */}
 
       {/* ===== Mobile bottom tabs (4 + More) ===== */}
       <nav className="fixed inset-x-0 bottom-0 z-40 flex border-t border-[#3a2470] bg-[#140c2a]/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">

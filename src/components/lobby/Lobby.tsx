@@ -5,7 +5,7 @@ import { BannerCarousel, Drawer, JackpotCounter, LeaderboardTable, Marquee, TopB
 import { NotificationBell } from "@/components/NotificationBell";
 import { SupportWidget } from "@/components/SupportWidget";
 import { PwaRegister } from "@/components/PwaRegister";
-import { InstallPrompt } from "@/components/InstallPrompt";
+// import { InstallPrompt } from "@/components/InstallPrompt";
 import { InstallApp } from "@/components/InstallApp";
 import { OpenSupportButton } from "@/components/OpenSupport";
 import { LanguageSwitch } from "@/components/LanguageSwitch";
@@ -38,12 +38,12 @@ const PROVIDER_STYLE: Record<string, string> = { SPRIBE: "text-[#ff5c5c] trackin
 const BADGE_STYLE: Record<string, string> = { "777x": "bg-gradient-to-r from-[#ef4444] to-[#b91c1c]", "1M x": "bg-gradient-to-r from-[#0ea5e9] to-[#6366f1]", HOT: "bg-gradient-to-r from-[#ff3b5c] to-[#ff8a00]", NEW: "bg-gradient-to-r from-[#22c55e] to-[#16a34a]", LIVE: "bg-gradient-to-r from-[#d946ef] to-[#8b5cf6]", "1000x": "bg-gradient-to-r from-[#ffb800] to-[#ff8a00] text-slate-950" };
 
 export const MARQUEE = [
-"WinX555 mein khush aamdeed! Register karein aur PKR 1500 welcome bonus hasil karein",
-"Har deposit par 7% bonus — PKR 60,000 tak! JazzCash & Easypaisa instant",
-"1 dost invite karein jo top-up kare — 588 PKR bonus + 1.5% betting commission + 4% top-up commission",
+  "WinX555 mein khush aamdeed! Register karein aur PKR 1500 welcome bonus hasil karein",
+  "Har deposit par 7% bonus — PKR 60,000 tak! JazzCash & Easypaisa instant",
+  "1 dost invite karein jo top-up kare — 588 PKR bonus + 1.5% betting commission + 4% top-up commission",
   "💵 Har bet par cashback — agle din 00:00 ke baad claim karein 📅",
-"🆘 Har hafte PKR 100,000 tak rescue fund!",
-"Rozana 3 random red packets — PKR 888,888 tak jeetne ka mauqa",
+  "🆘 Har hafte PKR 100,000 tak rescue fund!",
+  "Rozana 3 random red packets — PKR 888,888 tak jeetne ka mauqa",
 ];
 
 const SLIDES: Slide[] = [
@@ -157,7 +157,7 @@ export function GameCard({ slug, href }: { slug: string; href: string }) {
         {m.badge && <span className={`absolute right-1.5 top-1.5 rounded-md px-1.5 py-0.5 text-[9px] font-black text-white shadow ${BADGE_STYLE[m.badge]}`}>{m.badge}</span>}
         <span className="btn-gold absolute bottom-2 left-1/2 flex -translate-x-1/2 items-center gap-1 rounded-full px-3.5 py-1 text-[10px] font-black opacity-0 transition group-hover:opacity-100"><PlayIcon size={10} /> PLAY</span>
       </div>
-      </span>
+    </span>
       <div className="flex items-center justify-between bg-[#140c2a] px-2 py-1.5">
         <span className="truncate text-xs font-bold text-white">{m.label}</span>
         <span className="text-[#ffb800]"><CrownIcon size={12} /></span>
@@ -404,7 +404,7 @@ export function Lobby({ viewer, cat, links = {} }: { viewer: Viewer; cat: string
       <TopButton />
       <SupportWidget userName={viewer.name} />
       <PwaRegister />
-      <InstallPrompt />
+      {/* <InstallPrompt /> */}
       <BottomNav viewer={viewer} active="home" />
       {locale === "ur" && <span className="hidden" />}
     </div>
