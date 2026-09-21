@@ -251,57 +251,59 @@ export function AviatorGame({ table = "aviator" }: { table?: Table }) {
           </div>
 
           {/* bet panels */}
-          <div className={`grid gap-2 p-2 ${slots === 3 ? "grid-cols-1 lg:grid-cols-3" : "grid-cols-1 lg:grid-cols-2"}`} style={{ background: T.panel2 }}>
-            {Array.from({ length: slots }, (_, i) => {
-              const p = panels[i];
-              const mine = state.myBets.find((b) => b.slot === i) ?? null;
-              const queued = state.queued.find((q) => q.slot === i) ?? null;
-              const amount = Number(p.amount) || 0;
-              const pending = mine?.outcome === "pending";
-              const potential = Math.min(state.config.maxWin, Math.floor((mine?.bet ?? amount) * mult * 100) / 100);
-              const setAmt = (v: number) => setPanel(i, { amount: Math.max(state.config.minBet, Math.min(state.config.maxBet, v)).toFixed(2) });
-              let mode: "bet" | "cancel" | "cashout" | "queued" | "next";
-              if (pending && (phase === "running")) mode = "cashout";
-              else if (pending && phase === "waiting") mode = "cancel";
-              else if (queued) mode = "queued";
-              else if (phase === "waiting") mode = "bet";
-              else mode = "next";
-              const locked = pending || !!queued;
-              const border = mine?.outcome === "win" ? "#427f00" : pending || queued ? T.accent : T.line;
-              return (
-                <div key={i} className="rounded-xl p-1.5" style={{ background: T.panel, border: `1px solid ${border}` }}>
-                  <div className="mb-1.5 flex justify-center"><div className="flex rounded-full p-0.5 text-[10px] font-semibold" style={{ background: T.panel2 }}><button onClick={() => setPanel(i, { tab: "bet" })} className={`rounded-full px-3 py-0.5 ${p.tab === "bet" ? "bg-[#2c2d30] text-white" : "text-slate-400"}`}>Bet</button><button onClick={() => setPanel(i, { tab: "auto" })} className={`rounded-full px-3 py-0.5 ${p.tab === "auto" ? "bg-[#2c2d30] text-white" : "text-slate-400"}`}>Auto</button></div></div>
-                  <div className="grid grid-cols-[1fr_1.05fr] gap-1.5">
-                    <div className={locked ? "pointer-events-none opacity-60" : ""}>
-                      <div className="flex items-center gap-1 rounded-full bg-black px-1 py-0.5" style={{ border: `1px solid ${T.line}` }}>
-                        <button onClick={() => setAmt(amount - 10)} className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-base leading-none text-slate-400" style={{ border: `1px solid #3c3e44` }}>−</button>
-                        <input value={p.amount} onChange={(e) => setPanel(i, { amount: e.target.value })} onBlur={() => setAmt(Number(p.amount) || state.config.minBet)} className="w-full min-w-0 bg-transparent text-center text-sm font-bold text-white outline-none" />
-                        <button onClick={() => setAmt(amount + 10)} className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-base leading-none text-slate-400" style={{ border: `1px solid #3c3e44` }}>+</button>
+          <div className={`overflow-x-auto pb-1 ${slots === 3 ? "" : ""}`} style={{ background: T.panel2 }}>
+            <div className={`grid min-w-[620px] gap-2 p-2 ${slots === 3 ? "grid-cols-3" : "grid-cols-2"}`}>
+              {Array.from({ length: slots }, (_, i) => {
+                const p = panels[i];
+                const mine = state.myBets.find((b) => b.slot === i) ?? null;
+                const queued = state.queued.find((q) => q.slot === i) ?? null;
+                const amount = Number(p.amount) || 0;
+                const pending = mine?.outcome === "pending";
+                const potential = Math.min(state.config.maxWin, Math.floor((mine?.bet ?? amount) * mult * 100) / 100);
+                const setAmt = (v: number) => setPanel(i, { amount: Math.max(state.config.minBet, Math.min(state.config.maxBet, v)).toFixed(2) });
+                let mode: "bet" | "cancel" | "cashout" | "queued" | "next";
+                if (pending && (phase === "running")) mode = "cashout";
+                else if (pending && phase === "waiting") mode = "cancel";
+                else if (queued) mode = "queued";
+                else if (phase === "waiting") mode = "bet";
+                else mode = "next";
+                const locked = pending || !!queued;
+                const border = mine?.outcome === "win" ? "#427f00" : pending || queued ? T.accent : T.line;
+                return (
+                  <div key={i} className="rounded-xl p-1.5" style={{ background: T.panel, border: `1px solid ${border}` }}>
+                    <div className="mb-1.5 flex justify-center"><div className="flex rounded-full p-0.5 text-[10px] font-semibold" style={{ background: T.panel2 }}><button onClick={() => setPanel(i, { tab: "bet" })} className={`rounded-full px-3 py-0.5 ${p.tab === "bet" ? "bg-[#2c2d30] text-white" : "text-slate-400"}`}>Bet</button><button onClick={() => setPanel(i, { tab: "auto" })} className={`rounded-full px-3 py-0.5 ${p.tab === "auto" ? "bg-[#2c2d30] text-white" : "text-slate-400"}`}>Auto</button></div></div>
+                    <div className="grid grid-cols-[1fr_1.05fr] gap-1.5">
+                      <div className={locked ? "pointer-events-none opacity-60" : ""}>
+                        <div className="flex items-center gap-1 rounded-full bg-black px-1 py-0.5" style={{ border: `1px solid ${T.line}` }}>
+                          <button onClick={() => setAmt(amount - 10)} className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-base leading-none text-slate-400" style={{ border: `1px solid #3c3e44` }}>−</button>
+                          <input value={p.amount} onChange={(e) => setPanel(i, { amount: e.target.value })} onBlur={() => setAmt(Number(p.amount) || state.config.minBet)} className="w-full min-w-0 bg-transparent text-center text-sm font-bold text-white outline-none" />
+                          <button onClick={() => setAmt(amount + 10)} className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-base leading-none text-slate-400" style={{ border: `1px solid #3c3e44` }}>+</button>
+                        </div>
+                        <div className="mt-1 grid grid-cols-4 gap-1">{[100, 300, 500, 1000].map((v) => <button key={v} onClick={() => setAmt(v)} className={`rounded-md py-1 text-[9px] font-bold ${amount === v ? "bg-[#28a909] text-white" : "text-slate-300 hover:text-white"}`} style={amount === v ? {} : { background: T.panel2, border: `1px solid ${T.line}` }}>{v}</button>)}</div>
+                        <div className="mt-1 flex items-center gap-1 rounded-md px-1 py-1" style={{ background: T.panel2, border: `1px solid ${T.line}` }}>
+                          <input type="number" min={state.config.minBet} max={state.config.maxBet} value={p.customAmount} onChange={(e) => setPanel(i, { customAmount: e.target.value })} className="w-full min-w-0 bg-transparent text-center text-[9px] font-bold text-white outline-none" />
+                          <button onClick={() => setAmt(Number(p.customAmount) || state.config.minBet)} className={`shrink-0 rounded-md px-2 py-1 text-[8px] font-black ${amount === (Number(p.customAmount) || state.config.minBet) ? "bg-[#28a909] text-white" : "text-slate-300"}`} style={amount === (Number(p.customAmount) || state.config.minBet) ? {} : { background: T.panel }}>Custom</button>
+                        </div>
                       </div>
-                      <div className="mt-1 grid grid-cols-4 gap-1">{[100, 300, 500, 1000].map((v) => <button key={v} onClick={() => setAmt(v)} className={`rounded-md py-1 text-[9px] font-bold ${amount === v ? "bg-[#28a909] text-white" : "text-slate-300 hover:text-white"}`} style={amount === v ? {} : { background: T.panel2, border: `1px solid ${T.line}` }}>{v}</button>)}</div>
-                      <div className="mt-1 flex items-center gap-1 rounded-md px-1 py-1" style={{ background: T.panel2, border: `1px solid ${T.line}` }}>
-                        <input type="number" min={state.config.minBet} max={state.config.maxBet} value={p.customAmount} onChange={(e) => setPanel(i, { customAmount: e.target.value })} className="w-full min-w-0 bg-transparent text-center text-[9px] font-bold text-white outline-none" />
-                        <button onClick={() => setAmt(Number(p.customAmount) || state.config.minBet)} className={`shrink-0 rounded-md px-2 py-1 text-[8px] font-black ${amount === (Number(p.customAmount) || state.config.minBet) ? "bg-[#28a909] text-white" : "text-slate-300"}`} style={amount === (Number(p.customAmount) || state.config.minBet) ? {} : { background: T.panel }}>Custom</button>
+                      <div className="flex min-h-[68px]">
+                        {mode === "bet" && <button data-action="bet" disabled={p.busy} onClick={() => placeBet(i)} className="flex w-full flex-col items-center justify-center rounded-2xl bg-[#28a909] text-white shadow-[inset_0_-3px_0_rgba(0,0,0,.25)] transition hover:bg-[#36cb12] disabled:opacity-60"><span className="text-base font-semibold uppercase leading-none">Bet</span><span className="mt-1 text-sm font-bold">{fmt2(amount)} <span className="text-[9px]">PKR</span></span></button>}
+                        {mode === "next" && <button data-action="bet-next" disabled={p.busy} onClick={() => placeBet(i)} className="flex w-full flex-col items-center justify-center rounded-2xl bg-[#28a909] text-white shadow-[inset_0_-3px_0_rgba(0,0,0,.25)] transition hover:bg-[#36cb12] disabled:opacity-60"><span className="text-base font-semibold uppercase leading-none">Bet</span><span className="mt-1 text-sm font-bold">{fmt2(amount)} <span className="text-[9px]">PKR</span></span></button>}
+                        {mode === "queued" && <div className="flex w-full flex-col items-center justify-center gap-1"><span className="text-[9px] text-slate-400">Next round</span><button data-action="cancel" disabled={p.busy} onClick={() => cancelBet(i)} className="w-full rounded-2xl bg-[#cb011a] py-2 text-base font-semibold uppercase text-white shadow-[inset_0_-3px_0_rgba(0,0,0,.25)]">Cancel</button></div>}
+                        {mode === "cancel" && <button data-action="cancel" disabled={p.busy} onClick={() => cancelBet(i)} className="flex w-full flex-col items-center justify-center rounded-2xl bg-[#cb011a] text-white shadow-[inset_0_-3px_0_rgba(0,0,0,.25)] transition hover:bg-[#e3061f] disabled:opacity-60"><span className="text-base font-semibold uppercase leading-none">Cancel</span></button>}
+                        {mode === "cashout" && <button data-action="cashout" disabled={p.busy} onClick={() => cashOut(i)} className="flex w-full flex-col items-center justify-center rounded-2xl bg-[#d07206] text-white shadow-[inset_0_-3px_0_rgba(0,0,0,.25)] transition hover:bg-[#f18a12] disabled:opacity-60"><span className="text-base font-semibold uppercase leading-none">Cash out</span><span className="mt-1 text-sm font-bold">{fmt2(potential)} <span className="text-[9px]">PKR</span></span></button>}
                       </div>
                     </div>
-                    <div className="flex min-h-[68px]">
-                      {mode === "bet" && <button data-action="bet" disabled={p.busy} onClick={() => placeBet(i)} className="flex w-full flex-col items-center justify-center rounded-2xl bg-[#28a909] text-white shadow-[inset_0_-3px_0_rgba(0,0,0,.25)] transition hover:bg-[#36cb12] disabled:opacity-60"><span className="text-base font-semibold uppercase leading-none">Bet</span><span className="mt-1 text-sm font-bold">{fmt2(amount)} <span className="text-[9px]">PKR</span></span></button>}
-                      {mode === "next" && <button data-action="bet-next" disabled={p.busy} onClick={() => placeBet(i)} className="flex w-full flex-col items-center justify-center rounded-2xl bg-[#28a909] text-white shadow-[inset_0_-3px_0_rgba(0,0,0,.25)] transition hover:bg-[#36cb12] disabled:opacity-60"><span className="text-base font-semibold uppercase leading-none">Bet</span><span className="mt-1 text-sm font-bold">{fmt2(amount)} <span className="text-[9px]">PKR</span></span></button>}
-                      {mode === "queued" && <div className="flex w-full flex-col items-center justify-center gap-1"><span className="text-[9px] text-slate-400">Next round</span><button data-action="cancel" disabled={p.busy} onClick={() => cancelBet(i)} className="w-full rounded-2xl bg-[#cb011a] py-2 text-base font-semibold uppercase text-white shadow-[inset_0_-3px_0_rgba(0,0,0,.25)]">Cancel</button></div>}
-                      {mode === "cancel" && <button data-action="cancel" disabled={p.busy} onClick={() => cancelBet(i)} className="flex w-full flex-col items-center justify-center rounded-2xl bg-[#cb011a] text-white shadow-[inset_0_-3px_0_rgba(0,0,0,.25)] transition hover:bg-[#e3061f] disabled:opacity-60"><span className="text-base font-semibold uppercase leading-none">Cancel</span></button>}
-                      {mode === "cashout" && <button data-action="cashout" disabled={p.busy} onClick={() => cashOut(i)} className="flex w-full flex-col items-center justify-center rounded-2xl bg-[#d07206] text-white shadow-[inset_0_-3px_0_rgba(0,0,0,.25)] transition hover:bg-[#f18a12] disabled:opacity-60"><span className="text-base font-semibold uppercase leading-none">Cash out</span><span className="mt-1 text-sm font-bold">{fmt2(potential)} <span className="text-[9px]">PKR</span></span></button>}
-                    </div>
+                    {mine && mine.outcome !== "pending" && <div className={`mt-2 rounded-lg px-2 py-1 text-center text-[10px] font-semibold ${mine.outcome === "win" ? "bg-[#123717] text-[#4ade80]" : "bg-[#3a0b12] text-red-300"}`}>{mine.outcome === "win" ? `Cashed out ${fmt2(mine.win)} PKR` : `Lost ${fmt2(mine.bet)} PKR`}</div>}
+                    {p.tab === "auto" && (
+                      <div className="mt-2 flex flex-wrap items-center justify-between gap-2 rounded-lg px-2 py-1 text-[10px]" style={{ background: T.panel2, border: `1px solid ${T.line}` }}>
+                        <label className="flex items-center gap-1.5"><span className="text-slate-300">Auto Bet</span><Toggle on={p.autoBet} onChange={(v) => setPanel(i, { autoBet: v })} /></label>
+                        <label className="flex items-center gap-1.5"><span className="text-slate-300">Auto Cash</span><Toggle on={p.autoCash} onChange={(v) => setPanel(i, { autoCash: v })} /><span className="flex items-center rounded-full px-1.5" style={{ background: T.panel, border: `1px solid ${T.line}` }}><input value={p.autoCashAt} disabled={!p.autoCash} onChange={(e) => setPanel(i, { autoCashAt: e.target.value })} onBlur={() => setPanel(i, { autoCashAt: Math.max(1.01, Number(p.autoCashAt) || 1.01).toFixed(2) })} className="w-10 bg-transparent py-0.5 text-center font-bold text-white outline-none disabled:opacity-40" /><span className="text-slate-500">x</span></span></label>
+                      </div>
+                    )}
                   </div>
-                  {mine && mine.outcome !== "pending" && <div className={`mt-2 rounded-lg px-2 py-1 text-center text-[10px] font-semibold ${mine.outcome === "win" ? "bg-[#123717] text-[#4ade80]" : "bg-[#3a0b12] text-red-300"}`}>{mine.outcome === "win" ? `Cashed out ${fmt2(mine.win)} PKR` : `Lost ${fmt2(mine.bet)} PKR`}</div>}
-                  {p.tab === "auto" && (
-                    <div className="mt-2 flex flex-wrap items-center justify-between gap-2 rounded-lg px-2 py-1 text-[10px]" style={{ background: T.panel2, border: `1px solid ${T.line}` }}>
-                      <label className="flex items-center gap-1.5"><span className="text-slate-300">Auto Bet</span><Toggle on={p.autoBet} onChange={(v) => setPanel(i, { autoBet: v })} /></label>
-                      <label className="flex items-center gap-1.5"><span className="text-slate-300">Auto Cash</span><Toggle on={p.autoCash} onChange={(v) => setPanel(i, { autoCash: v })} /><span className="flex items-center rounded-full px-1.5" style={{ background: T.panel, border: `1px solid ${T.line}` }}><input value={p.autoCashAt} disabled={!p.autoCash} onChange={(e) => setPanel(i, { autoCashAt: e.target.value })} onBlur={() => setPanel(i, { autoCashAt: Math.max(1.01, Number(p.autoCashAt) || 1.01).toFixed(2) })} className="w-10 bg-transparent py-0.5 text-center font-bold text-white outline-none disabled:opacity-40" /><span className="text-slate-500">x</span></span></label>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         </section>
       </div>
