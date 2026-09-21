@@ -183,9 +183,9 @@ export function AviatorGame({ table = "aviator" }: { table?: Table }) {
         </div>
       )}
 
-      <div className="grid lg:grid-cols-[260px_1fr] xl:grid-cols-[300px_1fr]">
+      <div className="flex flex-col gap-2 lg:grid lg:grid-cols-[260px_1fr] xl:grid-cols-[300px_1fr]">
         {/* LEFT: bets */}
-        <aside className="order-2 flex flex-col lg:order-1" style={{ background: T.panel2, borderRight: `1px solid ${T.line}` }}>
+        <aside className="order-2 w-full min-w-0 flex flex-col lg:order-1" style={{ background: T.panel2, borderRight: `1px solid ${T.line}` }}>
           <div className="flex gap-1 p-2">
             {(["all", "prev", "top"] as const).map((k) => <button key={k} onClick={() => setTab(k)} className="flex-1 rounded-full py-1.5 text-xs font-semibold transition" style={{ background: tab === k ? T.panel : "transparent", color: tab === k ? "#fff" : "#8b8f96", border: `1px solid ${tab === k ? T.line : "transparent"}` }}>{k === "all" ? "All Bets" : k === "prev" ? "Previous" : "Top"}</button>)}
           </div>
@@ -224,7 +224,7 @@ export function AviatorGame({ table = "aviator" }: { table?: Table }) {
         </aside>
 
         {/* RIGHT: game */}
-        <section className="order-1 flex flex-col lg:order-2">
+        <section className="order-1 w-full min-w-0 flex flex-col overflow-hidden lg:order-2">
           <div className="relative flex items-center gap-1 px-2 py-1.5" style={{ borderBottom: `1px solid ${T.line}` }}>
             <div className="flex flex-1 gap-1 overflow-hidden">{state.history.slice(0, 30).map((h) => <span key={h.id} className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-bold ${cpClass(h.crashPoint)}`}>{fmt2(h.crashPoint)}x</span>)}</div>
             <button onClick={() => setShowHist((v) => !v)} className="flex h-6 w-9 shrink-0 items-center justify-center rounded-full text-[10px] text-slate-300" style={{ background: T.panel, border: `1px solid ${T.line}` }}>⏱▾</button>
@@ -251,8 +251,8 @@ export function AviatorGame({ table = "aviator" }: { table?: Table }) {
           </div>
 
           {/* bet panels */}
-          <div className={`overflow-x-auto pb-1 ${slots === 3 ? "" : ""}`} style={{ background: T.panel2 }}>
-            <div className={`grid min-w-[620px] gap-2 p-2 ${slots === 3 ? "grid-cols-3" : "grid-cols-2"}`}>
+          <div className="overflow-x-auto pb-1" style={{ background: T.panel2 }}>
+            <div className={`grid min-w-[420px] gap-2 p-2 ${slots === 3 ? "grid-cols-3" : "grid-cols-2"} lg:min-w-0`}>
               {Array.from({ length: slots }, (_, i) => {
                 const p = panels[i];
                 const mine = state.myBets.find((b) => b.slot === i) ?? null;
