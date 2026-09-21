@@ -3,7 +3,7 @@ import { Game, GameResult, User, oid, type ObjectId } from "@/models";
 import { checkGameAccess } from "./gameAccess";
 import { payBetCommission } from "./platform";
 
-export const MIN_BET = 10, MAX_BET = 10000, MAX_WIN = 1_000_000;
+export const MIN_BET = 10, MAX_BET = 10000, MAX_WIN = 2_000;
 // Classic 3-reel, 1-line "Lucky 777". Symbols and weighted reel strips.
 export const SYMBOLS = ["seven", "bar3", "bar2", "bar1", "bell", "cherry", "lemon", "orange", "plum"] as const;
 export type Sym = (typeof SYMBOLS)[number];
@@ -100,7 +100,8 @@ export async function spin(userId: string, amount: number) {
     }
   } else if (hit && hit.mult >= 1.5) {
     // force a losing spin (re-spin until no triple win; keep cherry singles allowed)
-    for (let i = 0; i < 12; i++) { reels = [spinReel(0), spinReel(1), spinReel(2)]; const e = evaluate(reels);
+    for (let i = 0; i < 12; i++) {
+      reels = [spinReel(0), spinReel(1), spinReel(2)]; const e = evaluate(reels);
       if (!e || e.mult < 1.5) { hit = e; break; } hit = e;
     }
   }

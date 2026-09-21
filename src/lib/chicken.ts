@@ -6,7 +6,7 @@ import { payBetCommission } from "./platform";
 
 export const MIN_BET = 10;
 export const MAX_BET = 50000;
-export const MAX_WIN = 10_000_000; // Rs. 1 crore cap per game
+export const MAX_WIN = 2_000;
 const CELLS = 25; // like the original: 25 cells, N of them have cars
 const RTP = 0.98; // 2% house edge
 
@@ -75,10 +75,10 @@ export async function getState(userId: string | null) {
   await dbConnect();
   const [active, me, recent] = userId
     ? await Promise.all([
-        ChickenGame.findOne({ userId: oid(userId), status: "active" }).lean(),
-        User.findById(userId, "balance").lean(),
-        ChickenGame.find({ userId: oid(userId), status: { $ne: "active" } }).sort({ createdAt: -1 }).limit(12).lean(),
-      ])
+      ChickenGame.findOne({ userId: oid(userId), status: "active" }).lean(),
+      User.findById(userId, "balance").lean(),
+      ChickenGame.find({ userId: oid(userId), status: { $ne: "active" } }).sort({ createdAt: -1 }).limit(12).lean(),
+    ])
     : [null, null, []];
   const keys = Object.keys(DIFFICULTIES) as Difficulty[];
   return {

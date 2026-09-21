@@ -10,7 +10,7 @@ function randomHex(bytes = 32) {
   return Array.from(arr, (b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-export const MIN_BET = 10, MAX_BET = 50000, MAX_WIN = 2_000_000;
+export const MIN_BET = 10, MAX_BET = 50000, MAX_WIN = 2_000;
 export const RTP = 0.99; // Stake Limbo: 99% RTP (1% house edge)
 export const MIN_TARGET = 1.01, MAX_TARGET = 1_000_000;
 
