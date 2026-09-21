@@ -83,7 +83,7 @@ export function Logo({ size = "md" }: { size?: "sm" | "md" | "lg" }) {
     <Link href="/" className="flex items-center gap-2">
       <BrandLogo className={`${img} shrink-0 object-contain drop-shadow-[0_0_12px_rgba(255,184,0,.55)]`} />
       <span className={`${txt} font-black tracking-tight leading-none`}>
-        <span className="text-gold-grad">Win</span><span className="text-white">X</span><span className="text-violet-grad">555</span>
+        <span className="text-gold-grad">Winko</span><span className="text-white">X</span>
       </span>
     </Link>
   );
