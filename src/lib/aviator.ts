@@ -11,8 +11,8 @@ function randomHex(bytes = 32) {
 }
 
 export const TABLES = {
-  aviator: { name: "Aviator", waitMs: 6000, pauseMs: 3500, growth: 0.06, houseEdge: 0.03, maxMult: 10000, slots: 2, minBet: 10, maxBet: 50000, maxWin: 1_000_000 },
-  "aviator-x": { name: "Aviator X", waitMs: 6000, pauseMs: 3500, growth: 0.075, houseEdge: 0.03, maxMult: 10000, slots: 3, minBet: 10, maxBet: 50000, maxWin: 2_000_000 },
+  aviator: { name: "Aviator", waitMs: 6000, pauseMs: 3500, growth: 0.06, houseEdge: 0.03, maxMult: 20, slots: 2, minBet: 10, maxBet: 50000, maxWin: 2_000 },
+  "aviator-x": { name: "Aviator X", waitMs: 6000, pauseMs: 3500, growth: 0.075, houseEdge: 0.03, maxMult: 20, slots: 3, minBet: 10, maxBet: 50000, maxWin: 2_000 },
 } as const;
 export type Table = keyof typeof TABLES;
 export const isTable = (t: string): t is Table => t in TABLES;

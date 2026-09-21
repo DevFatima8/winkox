@@ -6,7 +6,7 @@ import { payBetCommission } from "./platform";
 
 export const MIN_BET = 10;
 export const MAX_BET = 50000;
-export const MAX_WIN = 10_000_000;
+export const MAX_WIN = 2_000;
 export const ROWS = [8, 9, 10, 11, 12, 13, 14, 15, 16] as const;
 export type Risk = "low" | "medium" | "high";
 export const isRisk = (r: string): r is Risk => r === "low" || r === "medium" || r === "high";

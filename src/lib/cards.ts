@@ -6,6 +6,7 @@ import { payBetCommission } from "./platform";
 
 export const MIN_BET = 10;
 export const MAX_BET = 50000;
+const MAX_SINGLE_WIN = 2_000;
 const CLOSE_GRACE_MS = 500; // bets rejected in the last 0.5s of the betting window
 
 export const TABLES = {
@@ -71,13 +72,15 @@ export function generate(table: Table): { result: Result; revealMs: number } {
 const r2 = (n: number) => Math.round(n * 100) / 100;
 
 export function payoutFor(result: Result, option: string, amount: number) {
+  let raw = 0;
   if (result.kind === "dragon-tiger") {
-    if (option === "tie") return result.winner === "tie" ? amount * 9 : 0;
-    if (result.winner === "tie") return amount * 0.5; // Dragon/Tiger bets: half refund on tie
-    return option === result.winner ? amount * 2 : 0;
+    if (option === "tie") raw = result.winner === "tie" ? amount * 9 : 0;
+    else if (result.winner === "tie") raw = amount * 0.5; // Dragon/Tiger bets: half refund on tie
+    else raw = option === result.winner ? amount * 2 : 0;
+  } else if (option === result.winner) {
+    raw = option === "andar" ? amount * 1.9 : amount * 2;
   }
-  if (option !== result.winner) return 0;
-  return option === "andar" ? amount * 1.9 : amount * 2;
+  return Math.min(MAX_SINGLE_WIN, raw);
 }
 
 const RANKS = ["", "A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];

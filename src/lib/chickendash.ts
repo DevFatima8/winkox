@@ -7,7 +7,7 @@ import { payBetCommission } from "./platform";
 
 export const MIN_BET = 10;
 export const MAX_BET = 50000;
-export const MAX_WIN = 10_000_000;
+export const MAX_WIN = 2_000;
 export const RTP = 0.9685; // official Chicken Dash RTP 96.85%
 
 // Official level specs: tiles, first-step multiplier, max multiplier
@@ -114,10 +114,10 @@ export async function getState(userId: string | null) {
   await dbConnect();
   const [active, me, recent] = userId
     ? await Promise.all([
-        ChickenDash.findOne({ userId: oid(userId), status: "active" }).lean(),
-        User.findById(userId, "balance").lean(),
-        ChickenDash.find({ userId: oid(userId), status: { $ne: "active" } }).sort({ createdAt: -1 }).limit(12).lean(),
-      ])
+      ChickenDash.findOne({ userId: oid(userId), status: "active" }).lean(),
+      User.findById(userId, "balance").lean(),
+      ChickenDash.find({ userId: oid(userId), status: { $ne: "active" } }).sort({ createdAt: -1 }).limit(12).lean(),
+    ])
     : [null, null, []];
   return {
     game: active ? pub(active) : null,

@@ -3,7 +3,7 @@ import { Game, GameResult, MinesGame, User, oid, type ObjectId } from "@/models"
 import { checkGameAccess } from "./gameAccess";
 import { payBetCommission } from "./platform";
 
-export const MIN_BET = 10, MAX_BET = 50000, MAX_WIN = 1_000_000;
+export const MIN_BET = 10, MAX_BET = 50000, MAX_WIN = 2_000;
 export const RTP = 0.97; // Spribe Mines 97%
 export const CELLS = 25, MIN_MINES = 1, MAX_MINES = 24;
 
