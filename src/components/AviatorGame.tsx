@@ -162,9 +162,9 @@ export function AviatorGame({ table = "aviator" }: { table?: Table }) {
   const slots = state.config.slots;
 
   return (
-    <div className="relative overflow-hidden rounded-2xl text-[13px] text-[#bbbfc5]" style={{ background: T.bg }}>
+    <div className="relative overflow-hidden rounded-2xl text-[12px] text-[#bbbfc5]" style={{ background: T.bg }}>
       {/* top bar */}
-      <div className="flex items-center justify-between px-3 py-1.5" style={{ background: T.panel2, borderBottom: `1px solid ${T.line}` }}>
+      <div className="flex items-center justify-between px-2 py-1" style={{ background: T.panel2, borderBottom: `1px solid ${T.line}` }}>
         <div className="flex items-center gap-2">
           <span className={`text-xl font-black italic tracking-tight ${T.logo}`}>{T.title}</span>
           <button onClick={() => setRules(true)} className="ml-1 hidden items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold text-slate-300 sm:flex" style={{ background: T.panel }}><span className="flex h-4 w-4 items-center justify-center rounded-full border border-current text-[9px]">?</span> How to play</button>
@@ -231,7 +231,7 @@ export function AviatorGame({ table = "aviator" }: { table?: Table }) {
             {showHist && <div className="absolute right-2 top-9 z-30 w-[min(92vw,520px)] rounded-lg p-3 shadow-2xl" style={{ background: T.panel, border: `1px solid ${T.line}` }}><div className="mb-2 flex items-center justify-between text-xs"><span className="font-bold text-white">Round History</span><button onClick={() => setShowHist(false)} className="text-slate-400">✕</button></div><div className="flex flex-wrap gap-1">{state.history.map((h) => <span key={h.id} className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${cpClass(h.crashPoint)}`}>{fmt2(h.crashPoint)}x</span>)}</div></div>}
           </div>
 
-          <div ref={wrapRef} className="relative h-[42dvh] min-h-[220px] w-full sm:h-[300px] md:h-[340px] lg:h-[380px] xl:h-[420px]" style={{ background: T.bg }}>
+          <div ref={wrapRef} className="relative h-[30dvh] min-h-[200px] w-full sm:h-[280px] md:h-[300px] lg:h-[360px] xl:h-[390px]" style={{ background: T.bg }}>
             <canvas ref={canvasRef} className="block h-full w-full" />
             <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
               {phase === "waiting" ? (
@@ -251,7 +251,7 @@ export function AviatorGame({ table = "aviator" }: { table?: Table }) {
           </div>
 
           {/* bet panels */}
-          <div className={`grid gap-2 p-2 ${slots === 3 ? "grid-cols-1 sm:grid-cols-2 xl:grid-cols-3" : "grid-cols-1 sm:grid-cols-2"}`} style={{ background: T.panel2 }}>
+          <div className={`grid gap-2 p-2 ${slots === 3 ? "grid-cols-1 lg:grid-cols-3" : "grid-cols-1 lg:grid-cols-2"}`} style={{ background: T.panel2 }}>
             {Array.from({ length: slots }, (_, i) => {
               const p = panels[i];
               const mine = state.myBets.find((b) => b.slot === i) ?? null;
@@ -269,19 +269,19 @@ export function AviatorGame({ table = "aviator" }: { table?: Table }) {
               const locked = pending || !!queued;
               const border = mine?.outcome === "win" ? "#427f00" : pending || queued ? T.accent : T.line;
               return (
-                <div key={i} className="rounded-xl p-2" style={{ background: T.panel, border: `1px solid ${border}` }}>
-                  <div className="mb-2 flex justify-center"><div className="flex rounded-full p-0.5 text-[10px] font-semibold" style={{ background: T.panel2 }}><button onClick={() => setPanel(i, { tab: "bet" })} className={`rounded-full px-3 py-0.5 ${p.tab === "bet" ? "bg-[#2c2d30] text-white" : "text-slate-400"}`}>Bet</button><button onClick={() => setPanel(i, { tab: "auto" })} className={`rounded-full px-3 py-0.5 ${p.tab === "auto" ? "bg-[#2c2d30] text-white" : "text-slate-400"}`}>Auto</button></div></div>
-                  <div className="grid grid-cols-[1fr_1.05fr] gap-2">
+                <div key={i} className="rounded-xl p-1.5" style={{ background: T.panel, border: `1px solid ${border}` }}>
+                  <div className="mb-1.5 flex justify-center"><div className="flex rounded-full p-0.5 text-[10px] font-semibold" style={{ background: T.panel2 }}><button onClick={() => setPanel(i, { tab: "bet" })} className={`rounded-full px-3 py-0.5 ${p.tab === "bet" ? "bg-[#2c2d30] text-white" : "text-slate-400"}`}>Bet</button><button onClick={() => setPanel(i, { tab: "auto" })} className={`rounded-full px-3 py-0.5 ${p.tab === "auto" ? "bg-[#2c2d30] text-white" : "text-slate-400"}`}>Auto</button></div></div>
+                  <div className="grid grid-cols-[1fr_1.05fr] gap-1.5">
                     <div className={locked ? "pointer-events-none opacity-60" : ""}>
                       <div className="flex items-center gap-1 rounded-full bg-black px-1 py-0.5" style={{ border: `1px solid ${T.line}` }}>
                         <button onClick={() => setAmt(amount - 10)} className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-base leading-none text-slate-400" style={{ border: `1px solid #3c3e44` }}>−</button>
-                        <input value={p.amount} onChange={(e) => setPanel(i, { amount: e.target.value })} onBlur={() => setAmt(Number(p.amount) || state.config.minBet)} className="w-full min-w-0 bg-transparent text-center text-base font-bold text-white outline-none" />
+                        <input value={p.amount} onChange={(e) => setPanel(i, { amount: e.target.value })} onBlur={() => setAmt(Number(p.amount) || state.config.minBet)} className="w-full min-w-0 bg-transparent text-center text-sm font-bold text-white outline-none" />
                         <button onClick={() => setAmt(amount + 10)} className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-base leading-none text-slate-400" style={{ border: `1px solid #3c3e44` }}>+</button>
                       </div>
-                      <div className="mt-1.5 grid grid-cols-4 gap-1">{[100, 300, 500, 1000].map((v) => <button key={v} onClick={() => setAmt(v)} className={`rounded-md py-1 text-[10px] font-bold ${amount === v ? "bg-[#28a909] text-white" : "text-slate-300 hover:text-white"}`} style={amount === v ? {} : { background: T.panel2, border: `1px solid ${T.line}` }}>{v}</button>)}</div>
-                      <div className="mt-1.5 flex items-center gap-1 rounded-md px-1 py-1" style={{ background: T.panel2, border: `1px solid ${T.line}` }}>
-                        <input type="number" min={state.config.minBet} max={state.config.maxBet} value={p.customAmount} onChange={(e) => setPanel(i, { customAmount: e.target.value })} className="w-full min-w-0 bg-transparent text-center text-[10px] font-bold text-white outline-none" />
-                        <button onClick={() => setAmt(Number(p.customAmount) || state.config.minBet)} className={`shrink-0 rounded-md px-2 py-1 text-[9px] font-black ${amount === (Number(p.customAmount) || state.config.minBet) ? "bg-[#28a909] text-white" : "text-slate-300"}`} style={amount === (Number(p.customAmount) || state.config.minBet) ? {} : { background: T.panel }}>Custom</button>
+                      <div className="mt-1 grid grid-cols-4 gap-1">{[100, 300, 500, 1000].map((v) => <button key={v} onClick={() => setAmt(v)} className={`rounded-md py-1 text-[9px] font-bold ${amount === v ? "bg-[#28a909] text-white" : "text-slate-300 hover:text-white"}`} style={amount === v ? {} : { background: T.panel2, border: `1px solid ${T.line}` }}>{v}</button>)}</div>
+                      <div className="mt-1 flex items-center gap-1 rounded-md px-1 py-1" style={{ background: T.panel2, border: `1px solid ${T.line}` }}>
+                        <input type="number" min={state.config.minBet} max={state.config.maxBet} value={p.customAmount} onChange={(e) => setPanel(i, { customAmount: e.target.value })} className="w-full min-w-0 bg-transparent text-center text-[9px] font-bold text-white outline-none" />
+                        <button onClick={() => setAmt(Number(p.customAmount) || state.config.minBet)} className={`shrink-0 rounded-md px-2 py-1 text-[8px] font-black ${amount === (Number(p.customAmount) || state.config.minBet) ? "bg-[#28a909] text-white" : "text-slate-300"}`} style={amount === (Number(p.customAmount) || state.config.minBet) ? {} : { background: T.panel }}>Custom</button>
                       </div>
                     </div>
                     <div className="flex min-h-[68px]">
