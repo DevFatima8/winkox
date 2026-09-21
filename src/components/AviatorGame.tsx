@@ -252,7 +252,7 @@ export function AviatorGame({ table = "aviator" }: { table?: Table }) {
 
           {/* bet panels */}
           <div className="overflow-x-auto pb-1" style={{ background: T.panel2 }}>
-            <div className={`grid min-w-[420px] gap-2 p-2 ${slots === 3 ? "grid-cols-3" : "grid-cols-2"} lg:min-w-0`}>
+            <div className={`grid min-w-[680px] gap-2 p-2 ${slots === 3 ? "grid-cols-3" : "grid-cols-2"} lg:min-w-0`}>
               {Array.from({ length: slots }, (_, i) => {
                 const p = panels[i];
                 const mine = state.myBets.find((b) => b.slot === i) ?? null;
@@ -270,7 +270,7 @@ export function AviatorGame({ table = "aviator" }: { table?: Table }) {
                 const locked = pending || !!queued;
                 const border = mine?.outcome === "win" ? "#427f00" : pending || queued ? T.accent : T.line;
                 return (
-                  <div key={i} className="rounded-xl p-1.5" style={{ background: T.panel, border: `1px solid ${border}` }}>
+                  <div key={i} className="min-w-[220px] rounded-xl p-2 lg:min-w-0" style={{ background: T.panel, border: `1px solid ${border}` }}>
                     <div className="mb-1.5 flex justify-center"><div className="flex rounded-full p-0.5 text-[10px] font-semibold" style={{ background: T.panel2 }}><button onClick={() => setPanel(i, { tab: "bet" })} className={`rounded-full px-3 py-0.5 ${p.tab === "bet" ? "bg-[#2c2d30] text-white" : "text-slate-400"}`}>Bet</button><button onClick={() => setPanel(i, { tab: "auto" })} className={`rounded-full px-3 py-0.5 ${p.tab === "auto" ? "bg-[#2c2d30] text-white" : "text-slate-400"}`}>Auto</button></div></div>
                     <div className="grid grid-cols-[1fr_1.05fr] gap-1.5">
                       <div className={locked ? "pointer-events-none opacity-60" : ""}>
@@ -279,7 +279,7 @@ export function AviatorGame({ table = "aviator" }: { table?: Table }) {
                           <input value={p.amount} onChange={(e) => setPanel(i, { amount: e.target.value })} onBlur={() => setAmt(Number(p.amount) || state.config.minBet)} className="w-full min-w-0 bg-transparent text-center text-sm font-bold text-white outline-none" />
                           <button onClick={() => setAmt(amount + 10)} className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-base leading-none text-slate-400" style={{ border: `1px solid #3c3e44` }}>+</button>
                         </div>
-                        <div className="mt-1 grid grid-cols-4 gap-1">{[100, 300, 500, 1000].map((v) => <button key={v} onClick={() => setAmt(v)} className={`rounded-md py-1 text-[9px] font-bold ${amount === v ? "bg-[#28a909] text-white" : "text-slate-300 hover:text-white"}`} style={amount === v ? {} : { background: T.panel2, border: `1px solid ${T.line}` }}>{v}</button>)}</div>
+                        <div className="mt-1 grid grid-cols-4 gap-1">{[100, 300, 500, 1000].map((v) => <button key={v} onClick={() => setAmt(v)} className={`whitespace-nowrap rounded-md py-1 text-[9px] font-bold ${amount === v ? "bg-[#28a909] text-white" : "text-slate-300 hover:text-white"}`} style={amount === v ? {} : { background: T.panel2, border: `1px solid ${T.line}` }}>{v}</button>)}</div>
                         <div className="mt-1 flex items-center gap-1 rounded-md px-1 py-1" style={{ background: T.panel2, border: `1px solid ${T.line}` }}>
                           <input type="number" min={state.config.minBet} max={state.config.maxBet} value={p.customAmount} onChange={(e) => setPanel(i, { customAmount: e.target.value })} className="w-full min-w-0 bg-transparent text-center text-[9px] font-bold text-white outline-none" />
                           <button onClick={() => setAmt(Number(p.customAmount) || state.config.minBet)} className={`shrink-0 rounded-md px-2 py-1 text-[8px] font-black ${amount === (Number(p.customAmount) || state.config.minBet) ? "bg-[#28a909] text-white" : "text-slate-300"}`} style={amount === (Number(p.customAmount) || state.config.minBet) ? {} : { background: T.panel }}>Custom</button>
