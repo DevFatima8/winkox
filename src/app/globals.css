@@ -1578,6 +1578,110 @@ html.light .wx-drawer-panel .wx-chip {
   animation-play-state: paused;
 }
 
+.wx-prize-modal {
+  background: radial-gradient(circle at 18% 0%, rgba(215, 167, 62, .18), transparent 32%), linear-gradient(145deg, #1d1913, #0e0d0b 72%);
+}
+
+.wx-prize-wheel {
+  position: relative;
+  display: grid;
+  width: min(72vw, 270px);
+  aspect-ratio: 1;
+  place-items: center;
+  border: 8px solid #b5862e;
+  border-radius: 50%;
+  background: conic-gradient(#8a5d1d 0deg 24deg, #d4a642 24deg 48deg, #573d19 48deg 72deg, #c69335 72deg 96deg, #6c491a 96deg 120deg, #d9ad4c 120deg 144deg, #79521a 144deg 168deg, #b67f25 168deg 192deg, #604318 192deg 216deg, #d4a642 216deg 240deg, #80581e 240deg 264deg, #bd8a2f 264deg 288deg, #644519 288deg 312deg, #d3a340 312deg 336deg, #79521c 336deg 360deg);
+  box-shadow: inset 0 0 0 4px #f1d17b, 0 0 0 10px rgba(116, 82, 27, .35), 0 18px 40px rgba(0, 0, 0, .45);
+  transition: transform 4.2s cubic-bezier(.12, .75, .16, 1);
+}
+
+.wx-prize-wheel::before {
+  position: absolute;
+  inset: 12px;
+  border: 1px dashed rgba(255, 226, 154, .65);
+  border-radius: 50%;
+  content: "";
+}
+
+.wx-wheel-label {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 72px;
+  margin: -8px 0 0 -36px;
+  color: #fff0bd;
+  font-size: 8px;
+  font-weight: 900;
+  text-align: center;
+  text-shadow: 0 1px 2px #2e1b03;
+}
+
+.wx-wheel-center {
+  z-index: 2;
+  display: flex;
+  width: 74px;
+  aspect-ratio: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 4px solid #f2d783;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff2b5, #b77d20 70%);
+  color: #332006;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, .45);
+}
+
+.wx-wheel-center span {
+  font-size: 15px;
+  font-weight: 1000;
+  letter-spacing: .12em;
+}
+
+.wx-wheel-center small {
+  font-size: 7px;
+  font-weight: 900;
+  letter-spacing: .2em;
+}
+
+.wx-wheel-pointer {
+  position: relative;
+  z-index: 4;
+  top: 13px;
+  width: 0;
+  height: 0;
+  border-right: 12px solid transparent;
+  border-left: 12px solid transparent;
+  border-top: 25px solid #fff0b2;
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, .7));
+}
+
+.wx-prize-list-track {
+  animation: wxPrizeList 26s linear infinite;
+}
+
+.wx-prize-list:hover .wx-prize-list-track {
+  animation-play-state: paused;
+}
+
+@keyframes wxPrizeList {
+  from {
+    transform: translateY(0);
+  }
+
+  to {
+    transform: translateY(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .wx-prize-wheel,
+  .wx-prize-list-track {
+    animation: none;
+    transition: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .wx-winners {
     animation: none;
