@@ -2,7 +2,7 @@ import { dbConnect } from "./mongo";
 import { CardBet, CardRound, Game, GameResult, User, oid, type CardRoundDoc, type ObjectId } from "@/models";
 import { checkGameAccess } from "./gameAccess";
 import { payBetCommission } from "./platform";
-import { MAX_MULTIPLIER } from "./outcomes";
+import { isWinOutcome, MAX_MULTIPLIER } from "./outcomes";
 
 
 export const MIN_BET = 10;
@@ -134,7 +134,7 @@ async function settle(table: Table, r: CardRoundDoc) {
   if (!bets.length) return;
   // House rule: ~35% of rounds are won by the player. Adjust the (hidden) result per player option before payout.
   const mainBet = bets[0];
-  const playerWins = Math.random() < 0.35;
+  const playerWins = isWinOutcome();
   if (table === "dragon-tiger") {
     const dt = result as DTResult;
     if (mainBet.option === "tie") {

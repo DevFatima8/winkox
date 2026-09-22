@@ -3,7 +3,7 @@ import { ChickenDash, Game, GameResult, User, oid, type ObjectId, type ChickenDa
 import type { Doc } from "./localdb";
 import { checkGameAccess } from "./gameAccess";
 import { payBetCommission } from "./platform";
-import { MAX_MULTIPLIER } from "./outcomes";
+import { isWinOutcome, MAX_MULTIPLIER } from "./outcomes";
 
 
 export const MIN_BET = 10;
@@ -62,7 +62,7 @@ export const multiplierAt = (l: Level, k: number) => (k <= 0 ? 1 : Math.min(MAX_
 function rollCrashLane(l: Level) {
   const steps = LEVELS[l].steps;
   // 35% of runs are clean runs (player can cross / cash out); 65% end in a crash at a random tile
-  if (Math.random() < 0.35) return steps + 1;
+  if (isWinOutcome()) return steps + 1;
   return 1 + Math.floor(Math.random() * steps);
 }
 
