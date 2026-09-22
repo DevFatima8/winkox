@@ -44,7 +44,7 @@ export async function ensureHelp() { if ((await HelpArticle.countDocuments()) ==
 export async function ensureSettings() { if (!(await Settings.exists({ key: "main" }))) await Settings.create({ key: "main", vipLevels: DEFAULT_VIP }); }
 export async function ensurePaymentAccounts() {
   if ((await PaymentAccount.countDocuments()) === 0) {
-    await PaymentAccount.insertMany([{ provider: "jazzcash", accountTitle: "winkox Official", accountNumber: "03001112233", isActive: true }, { provider: "easypaisa", accountTitle: "winkox Official", accountNumber: "03334445566", isActive: true }]);
+    await PaymentAccount.insertMany([{ provider: "jazzcash", accountTitle: "winkox Official", accountNumber: "03035433872", isActive: true }, { provider: "easypaisa", accountTitle: "winkox Official", accountNumber: "03035433872", isActive: true }]);
   }
 }
 
