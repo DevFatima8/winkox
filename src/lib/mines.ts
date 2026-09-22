@@ -2,7 +2,7 @@ import { dbConnect } from "./mongo";
 import { Game, GameResult, MinesGame, User, oid, type ObjectId } from "@/models";
 import { checkGameAccess } from "./gameAccess";
 import { payBetCommission } from "./platform";
-import { MAX_MULTIPLIER } from "./outcomes";
+import { isWinOutcome, MAX_MULTIPLIER } from "./outcomes";
 
 export const MIN_BET = 10, MAX_BET = 50000, MAX_WIN = Number.MAX_SAFE_INTEGER;
 export const RTP = 0.97; // Spribe Mines 97%
@@ -67,7 +67,7 @@ export async function start(userId: string, amount: number, mines: number) {
   void payBetCommission(uid, amount);
   // Mine layout: 35% of rounds are "generous" (normal random), 65% are "tight" — mines cluster
   // among the cells players reach early, so ~65% of runs end in a loss while ~35% can be won.
-  const tight = Math.random() >= 0.35;
+  const tight = !isWinOutcome();
   const cells = Array.from({ length: CELLS }, (_, i) => i);
   for (let i = cells.length - 1; i > 0; i--) {
     if (tight) {

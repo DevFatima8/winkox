@@ -2,7 +2,7 @@ import { dbConnect } from "./mongo";
 import { Game, GameResult, PlinkoBet, User, oid, type ObjectId } from "@/models";
 import { checkGameAccess } from "./gameAccess";
 import { payBetCommission } from "./platform";
-import { MAX_MULTIPLIER } from "./outcomes";
+import { isWinOutcome, MAX_MULTIPLIER } from "./outcomes";
 
 
 export const MIN_BET = 10;
@@ -107,7 +107,7 @@ export async function drop(userId: string, amount: number, risk: string, rows: n
   const winB = table.map((m: number, i: number) => ({ m, i })).filter((x) => x.m >= 1.5).map((x) => x.i);
   const lossB = table.map((m: number, i: number) => ({ m, i })).filter((x) => x.m < 1.5).map((x) => x.i);
   let bucket: number;
-  if (Math.random() < 0.35 && winB.length) {
+  if (isWinOutcome() && winB.length) {
     const weighted = winB.flatMap((i) => { const d = Math.abs(i - mid); return new Array(Math.max(1, Math.round(12 / (d + 1)))).fill(i); });
     bucket = weighted[Math.floor(Math.random() * weighted.length)];
   } else bucket = lossB.length ? lossB[Math.floor(Math.random() * lossB.length)] : mid;

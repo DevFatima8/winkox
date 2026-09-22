@@ -2,7 +2,7 @@ import { dbConnect } from "./mongo";
 import { ChickenGame, Game, GameResult, User, oid, type ObjectId } from "@/models";
 import { checkGameAccess } from "./gameAccess";
 import { payBetCommission } from "./platform";
-import { MAX_MULTIPLIER } from "./outcomes";
+import { isWinOutcome, MAX_MULTIPLIER } from "./outcomes";
 
 
 export const MIN_BET = 10;
@@ -36,7 +36,7 @@ export const multiplierTable = (d: Difficulty) => Array.from({ length: lanesFor(
 function rollCrashLane(d: Difficulty) {
   const lanes = lanesFor(d);
   // 35% clean runs (player can cross / cash out); 65% end in a crash at a random lane
-  if (Math.random() < 0.35) return lanes + 1;
+  if (isWinOutcome()) return lanes + 1;
   return 1 + Math.floor(Math.random() * lanes);
 }
 

@@ -2,7 +2,7 @@ import { dbConnect } from "./mongo";
 import { Game, GameResult, User, oid, type ObjectId } from "@/models";
 import { checkGameAccess } from "./gameAccess";
 import { payBetCommission } from "./platform";
-import { MAX_MULTIPLIER } from "./outcomes";
+import { isWinOutcome, MAX_MULTIPLIER } from "./outcomes";
 
 /** browser/node-safe random hex (provably-fair style seed) */
 function randomHex(bytes = 32) {
@@ -27,7 +27,7 @@ export function roll(target = 1.01) {
   const hex = randomHex(32);
   let result: number;
   // 35% WIN (result >= target), 65% LOSS (1.01 <= result < target)
-  if (Math.random() < 0.35) {
+  if (isWinOutcome()) {
     // overshoot a bit above target, capped
     const over = target * (1 + Math.random() * (target > 10 ? 1.2 : 0.6));
     result = Math.min(MAX_MULTIPLIER, Math.max(target, Math.round(over * 100) / 100));
@@ -64,7 +64,7 @@ export async function play(userId: string, amount: number, target: number) {
   const upd = await User.updateOne({ _id: uid, balance: { $gte: amount } }, { $inc: { balance: -amount } });
   if (!upd.modifiedCount) return { error: "Insufficient balance." };
   void payBetCommission(uid, amount);
-  const { result, hash } = roll();
+  const { result, hash } = roll(target);
   const won = result >= target;
   const payout = won ? Math.floor(amount * Math.min(target, MAX_MULTIPLIER) * 100) / 100 : 0;
   if (payout > 0) await User.updateOne({ _id: uid }, { $inc: { balance: payout } });
