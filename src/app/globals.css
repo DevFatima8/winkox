@@ -1663,6 +1663,39 @@ html.light .wx-drawer-panel .wx-chip {
   animation-play-state: paused;
 }
 
+@media (max-width: 767px) {
+  .wx-prize-modal {
+    max-height: calc(100dvh - 1rem);
+    border-radius: 18px;
+  }
+
+  .wx-prize-modal>div:first-child {
+    padding: 12px 14px;
+  }
+
+  .wx-prize-modal>div:first-child h2 {
+    font-size: 1.25rem;
+  }
+
+  .wx-prize-modal>div:first-child button {
+    position: relative;
+    z-index: 5;
+    flex-shrink: 0;
+  }
+
+  .wx-prize-modal>div:last-child {
+    padding: 14px;
+  }
+
+  .wx-prize-wheel {
+    width: min(78vw, 250px);
+  }
+
+  .wx-prize-list {
+    max-height: 270px;
+  }
+}
+
 @keyframes wxPrizeList {
   from {
     transform: translateY(0);
