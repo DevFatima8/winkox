@@ -25,7 +25,34 @@ function tone(frequency: number, duration: number, type: OscillatorType, volume:
     oscillator.stop(start + duration + 0.02);
 }
 
-export type GameSound = "jump" | "coin" | "danger" | "crash" | "launch" | "cashout" | "click";
+export type GameSound = "jump" | "coin" | "danger" | "crash" | "launch" | "cashout" | "click" | "ballDrop";
+
+export type GameVoice = "chickenJump" | "chickenCrash" | "chickenWin" | "planeLaunch" | "planeCrash" | "planeWin" | "ballDrop" | "gemFound" | "mineHit" | "slotWin" | "cardWin" | "limboWin";
+
+export function speakGameVoice(voice: GameVoice) {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+    const lines: Record<GameVoice, { text: string; pitch: number; rate: number }> = {
+        chickenJump: { text: "Go chicken!", pitch: 1.35, rate: 1.15 },
+        chickenCrash: { text: "Oh no!", pitch: 0.75, rate: 1.05 },
+        chickenWin: { text: "Great crossing!", pitch: 1.5, rate: 1.05 },
+        planeLaunch: { text: "Take off!", pitch: 1.2, rate: 1.1 },
+        planeCrash: { text: "Flew away!", pitch: 0.7, rate: 0.95 },
+        planeWin: { text: "Cash out!", pitch: 1.45, rate: 1.1 },
+        ballDrop: { text: "Drop!", pitch: 1, rate: 1.2 },
+        gemFound: { text: "Gem found!", pitch: 1.55, rate: 1.1 },
+        mineHit: { text: "Mine!", pitch: 0.65, rate: 1.15 },
+        slotWin: { text: "Winner!", pitch: 1.5, rate: 1.05 },
+        cardWin: { text: "You win!", pitch: 1.35, rate: 1.05 },
+        limboWin: { text: "Multiplier win!", pitch: 1.4, rate: 1.05 },
+    };
+    const line = lines[voice];
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(line.text);
+    utterance.pitch = line.pitch;
+    utterance.rate = line.rate;
+    utterance.volume = 0.75;
+    window.speechSynthesis.speak(utterance);
+}
 
 export function playGameSound(sound: GameSound) {
     switch (sound) {
@@ -57,6 +84,10 @@ export function playGameSound(sound: GameSound) {
             break;
         case "click":
             tone(340, 0.05, "square", 0.018);
+            break;
+        case "ballDrop":
+            tone(180, 0.08, "triangle", 0.03);
+            tone(280, 0.12, "triangle", 0.025, 0.07);
             break;
     }
 }

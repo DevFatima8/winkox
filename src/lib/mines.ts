@@ -2,8 +2,9 @@ import { dbConnect } from "./mongo";
 import { Game, GameResult, MinesGame, User, oid, type ObjectId } from "@/models";
 import { checkGameAccess } from "./gameAccess";
 import { payBetCommission } from "./platform";
+import { MAX_MULTIPLIER } from "./outcomes";
 
-export const MIN_BET = 10, MAX_BET = 50000, MAX_WIN = 2_000;
+export const MIN_BET = 10, MAX_BET = 50000, MAX_WIN = Number.MAX_SAFE_INTEGER;
 export const RTP = 0.97; // Spribe Mines 97%
 export const CELLS = 25, MIN_MINES = 1, MAX_MINES = 24;
 
@@ -12,7 +13,7 @@ export function multiplier(mines: number, safe: number) {
   if (safe <= 0) return 1;
   let m = 1;
   for (let i = 0; i < safe; i++) m *= (CELLS - i) / (CELLS - mines - i);
-  return Math.floor(m * RTP * 100) / 100;
+  return Math.min(MAX_MULTIPLIER, Math.floor(m * RTP * 100) / 100);
 }
 export function nextMultipliers(mines: number, safe: number) {
   const maxSafe = CELLS - mines;
@@ -31,7 +32,7 @@ function pub(g: { _id: ObjectId; betAmount: number; mines: number; mineCells: nu
   const m = multiplier(g.mines, safe);
   return {
     id: String(g._id), bet: g.betAmount, mines: g.mines, revealed: g.revealed, status: g.status as "active" | "cashed" | "dead", win: g.winAmount,
-    multiplier: m, potential: Math.min(MAX_WIN, Math.floor(g.betAmount * m * 100) / 100), next: multiplier(g.mines, safe + 1), safeLeft: CELLS - g.mines - safe,
+    multiplier: m, potential: Math.floor(g.betAmount * m * 100) / 100, next: multiplier(g.mines, safe + 1), safeLeft: CELLS - g.mines - safe,
     mineCells: g.status === "active" ? null : g.mineCells, // revealed only after game ends
   };
 }
@@ -101,7 +102,7 @@ export async function reveal(userId: string, cell: number) {
   if (safe >= CELLS - g.mines) {
     // all safe tiles revealed → auto cash out at max
     const m = multiplier(g.mines, safe);
-    const win = Math.min(MAX_WIN, Math.floor(g.betAmount * m * 100) / 100);
+    const win = Math.floor(g.betAmount * m * 100) / 100;
     g.status = "cashed"; g.winAmount = win; await g.save();
     await User.updateOne({ _id: g.userId }, { $inc: { balance: win } });
     await GameResult.updateOne({ _id: g.resultId }, { $set: { outcome: "win", winAmount: win, resultData: `${g.mines} mines · cleared all @ ${m}x` } });
@@ -116,7 +117,7 @@ export async function cashOut(userId: string) {
   const g = await MinesGame.findOneAndUpdate({ userId: oid(userId), status: "active", "revealed.0": { $exists: true } }, { $set: { status: "cashed" } }, { returnDocument: "after" });
   if (!g) return { error: "Kam az kam ek gem kholen." };
   const m = multiplier(g.mines, g.revealed.length);
-  const win = Math.min(MAX_WIN, Math.floor(g.betAmount * m * 100) / 100);
+  const win = Math.floor(g.betAmount * m * 100) / 100;
   g.winAmount = win; await g.save();
   await User.updateOne({ _id: g.userId }, { $inc: { balance: win } });
   await GameResult.updateOne({ _id: g.resultId }, { $set: { outcome: "win", winAmount: win, resultData: `${g.mines} mines · cashed out after ${g.revealed.length} @ ${m}x` } });

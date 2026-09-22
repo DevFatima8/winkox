@@ -1,6 +1,7 @@
 "use client";
 
 import { localApi } from "@/lib/client";
+import { playGameSound, speakGameVoice } from "@/lib/gameAudio";
 
 import { useCallback, useEffect, useState } from "react";
 
@@ -30,13 +31,14 @@ export function MinesGame() {
   useEffect(() => { load(); }, [load]);
   const post = async (body: unknown) => { const r = await localApi("/api/mines", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }); if (r.status === 401) { window.location.href = "/login"; return null; } return r.json(); };
 
-  const start = async () => { setBusy(true); setErr(null); setBanner(null); setFlash(null); const j = await post({ action: "start", amount: Number(amount), mines }); setBusy(false); if (!j) return; if (j.error) { setErr(j.error); return; } setSt((s) => (s ? { ...s, game: j.game, balance: s.balance - Number(amount) } : s)); };
-  const cashout = useCallback(async () => { setBusy(true); const j = await post({ action: "cashout" }); setBusy(false); if (!j) return; if (j.error) { setErr(j.error); return; } setBanner({ mult: j.multiplier, win: j.win }); setSt((s) => (s ? { ...s, game: j.game } : s)); load(); }, [load]);
+  const start = async () => { setBusy(true); setErr(null); setBanner(null); setFlash(null); const j = await post({ action: "start", amount: Number(amount), mines }); setBusy(false); if (!j) return; if (j.error) { setErr(j.error); return; } playGameSound("launch"); setSt((s) => (s ? { ...s, game: j.game, balance: s.balance - Number(amount) } : s)); };
+  const cashout = useCallback(async () => { setBusy(true); const j = await post({ action: "cashout" }); setBusy(false); if (!j) return; if (j.error) { setErr(j.error); return; } playGameSound("cashout"); speakGameVoice("gemFound"); setBanner({ mult: j.multiplier, win: j.win }); setSt((s) => (s ? { ...s, game: j.game } : s)); load(); }, [load]);
   const reveal = async (cell: number) => {
     if (!st?.game || st.game.status !== "active" || busy || st.game.revealed.includes(cell)) return;
     setBusy(true); const j = await post({ action: "reveal", cell }); setBusy(false); if (!j) return;
     if (j.error) { setErr(j.error); return; }
     setFlash({ cell, kind: j.event === "mine" ? "mine" : "star" });
+    if (j.event === "mine") { playGameSound("crash"); speakGameVoice("mineHit"); } else { playGameSound("coin"); speakGameVoice("gemFound"); }
     setSt((s) => (s ? { ...s, game: j.game } : s));
     if (j.event === "cleared") { setBanner({ mult: j.game.multiplier, win: j.game.win }); load(); }
     if (j.event === "mine") setTimeout(load, 300);

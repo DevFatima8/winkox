@@ -2,11 +2,12 @@ import { dbConnect } from "./mongo";
 import { ChickenGame, Game, GameResult, User, oid, type ObjectId } from "@/models";
 import { checkGameAccess } from "./gameAccess";
 import { payBetCommission } from "./platform";
+import { MAX_MULTIPLIER } from "./outcomes";
 
 
 export const MIN_BET = 10;
 export const MAX_BET = 50000;
-export const MAX_WIN = 2_000;
+export const MAX_WIN = Number.MAX_SAFE_INTEGER;
 const CELLS = 25; // like the original: 25 cells, N of them have cars
 const RTP = 0.98; // 2% house edge
 
@@ -26,7 +27,7 @@ export function multiplierAt(d: Difficulty, k: number) {
   const lanes = lanesFor(d);
   let p = 1;
   for (let i = 0; i < k; i++) p *= (lanes - i) / (CELLS - i);
-  return Math.max(1, Math.floor((RTP / p) * 100) / 100);
+  return Math.min(MAX_MULTIPLIER, Math.max(1, Math.floor((RTP / p) * 100) / 100));
 }
 
 export const multiplierTable = (d: Difficulty) => Array.from({ length: lanesFor(d) }, (_, i) => multiplierAt(d, i + 1));
@@ -69,7 +70,7 @@ function publicState(g: GameLike) {
   };
 }
 
-const winFor = (bet: number, m: number) => Math.min(MAX_WIN, Math.floor(bet * m * 100) / 100);
+const winFor = (bet: number, m: number) => Math.floor(bet * Math.min(MAX_MULTIPLIER, m) * 100) / 100;
 
 export async function getState(userId: string | null) {
   await dbConnect();

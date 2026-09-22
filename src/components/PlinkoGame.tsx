@@ -1,6 +1,7 @@
 "use client";
 
 import { localApi } from "@/lib/client";
+import { playGameSound, speakGameVoice } from "@/lib/gameAudio";
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -106,6 +107,7 @@ export function PlinkoGame() {
     if (!st || inflightRef.current >= 10) return;
     inflightRef.current++; setInflight(inflightRef.current);
     setMsg(null);
+    playGameSound("ballDrop"); speakGameVoice("ballDrop");
     setBalance((b) => b - amount);
     const r = await localApi("/api/plinko/drop", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ amount, risk, rows }) });
     const j = await r.json();
@@ -119,6 +121,7 @@ export function PlinkoGame() {
     visRef.current.balls.push({ path: j.path, rows, start: performance.now(), col: j.bucket, id, flashed: new Set() });
     setTimeout(() => {
       setResults((rs) => [{ id, m: j.multiplier, payout: j.payout }, ...rs].slice(0, 6));
+      if (j.multiplier >= 1.5) { playGameSound("coin"); speakGameVoice("cardWin"); }
       setBalance(j.balance);
       inflightRef.current--; setInflight(inflightRef.current);
       if (inflightRef.current === 0) refresh();

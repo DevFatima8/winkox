@@ -2,11 +2,12 @@ import { dbConnect } from "./mongo";
 import { Game, GameResult, PlinkoBet, User, oid, type ObjectId } from "@/models";
 import { checkGameAccess } from "./gameAccess";
 import { payBetCommission } from "./platform";
+import { MAX_MULTIPLIER } from "./outcomes";
 
 
 export const MIN_BET = 10;
 export const MAX_BET = 50000;
-export const MAX_WIN = 2_000;
+export const MAX_WIN = Number.MAX_SAFE_INTEGER;
 export const ROWS = [8, 9, 10, 11, 12, 13, 14, 15, 16] as const;
 export type Risk = "low" | "medium" | "high";
 export const isRisk = (r: string): r is Risk => r === "low" || r === "medium" || r === "high";
@@ -49,7 +50,7 @@ export const TABLES: Record<Risk, Record<number, number[]>> = {
 };
 
 export function multipliersFor(risk: Risk, rows: number) {
-  return TABLES[risk][rows];
+  return TABLES[risk][rows].map((multiplier) => Math.min(MAX_MULTIPLIER, multiplier));
 }
 
 /** Binomial probability of landing in bucket k for n rows. */
@@ -64,7 +65,7 @@ async function gameId() {
   if (cachedGameId) return cachedGameId;
   const g = await Game.findOneAndUpdate(
     { slug: "plinko" },
-    { $setOnInsert: { name: "Plinko", slug: "plinko", icon: "🔴", category: "original", description: "Ball girao, pegs se takra kar multiplier bucket mein — 1000x tak!", isActive: true } },
+    { $setOnInsert: { name: "Plinko", slug: "plinko", icon: "🔴", category: "original", description: "Ball girao, pegs se takra kar multiplier bucket mein — 100x tak!", isActive: true } },
     { upsert: true, returnDocument: "after" },
   ).lean();
   cachedGameId = g!._id;
@@ -120,7 +121,7 @@ export async function drop(userId: string, amount: number, risk: string, rows: n
     path.push(dir);
   }
   const multiplier = table[bucket];
-  const payout = Math.min(MAX_WIN, r2(amount * multiplier));
+  const payout = r2(amount * Math.min(MAX_MULTIPLIER, multiplier));
 
   if (payout > 0) await User.updateOne({ _id: uid }, { $inc: { balance: payout } });
   void payBetCommission(uid, amount);

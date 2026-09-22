@@ -3,18 +3,19 @@ import { ChickenDash, Game, GameResult, User, oid, type ObjectId, type ChickenDa
 import type { Doc } from "./localdb";
 import { checkGameAccess } from "./gameAccess";
 import { payBetCommission } from "./platform";
+import { MAX_MULTIPLIER } from "./outcomes";
 
 
 export const MIN_BET = 10;
 export const MAX_BET = 50000;
-export const MAX_WIN = 2_000;
+export const MAX_WIN = Number.MAX_SAFE_INTEGER;
 export const RTP = 0.9685; // official Chicken Dash RTP 96.85%
 
 // Official level specs: tiles, first-step multiplier, max multiplier
 export const LEVELS = {
   easy: { label: "Easy", steps: 28, first: 1.01, max: 14.54, bag: [0.1, 0.6] as const },
   normal: { label: "Normal", steps: 24, first: 1.05, max: 43.15, bag: [0.3, 2] as const },
-  hard: { label: "Hard", steps: 20, first: 1.21, max: 19659.1, bag: [1, 8] as const },
+  hard: { label: "Hard", steps: 20, first: 1.21, max: 100, bag: [1, 8] as const },
 } as const;
 export type Level = keyof typeof LEVELS;
 export const isLevel = (l: string): l is Level => l in LEVELS;
@@ -50,13 +51,13 @@ function buildLevel(level: Level) {
     ladder.push(Math.round((RTP / surv[k]) * 100) / 100);
   }
   ladder[0] = first;
-  ladder[steps - 1] = max;
+  ladder[steps - 1] = Math.min(MAX_MULTIPLIER, max);
   return { ladder, surv };
 }
 const BUILT = Object.fromEntries((Object.keys(LEVELS) as Level[]).map((l) => [l, buildLevel(l)])) as Record<Level, { ladder: number[]; surv: number[] }>;
 
 export const ladderFor = (l: Level) => BUILT[l].ladder;
-export const multiplierAt = (l: Level, k: number) => (k <= 0 ? 1 : BUILT[l].ladder[Math.min(k, LEVELS[l].steps) - 1]);
+export const multiplierAt = (l: Level, k: number) => (k <= 0 ? 1 : Math.min(MAX_MULTIPLIER, BUILT[l].ladder[Math.min(k, LEVELS[l].steps) - 1]));
 
 function rollCrashLane(l: Level) {
   const steps = LEVELS[l].steps;
@@ -73,7 +74,7 @@ async function gameId() {
   if (cachedGameId) return cachedGameId;
   const g = await Game.findOneAndUpdate(
     { slug: "chicken-dash" },
-    { $setOnInsert: { name: "Chicken Dash", slug: "chicken-dash", icon: "🐤", category: "original", description: "Busy highway cross karein — Dash boost aur Bonus Bag ke saath 19,659x tak!", isActive: true } },
+    { $setOnInsert: { name: "Chicken Dash", slug: "chicken-dash", icon: "🐤", category: "original", description: "Busy highway cross karein — Dash boost aur Bonus Bag ke saath 100x tak!", isActive: true } },
     { upsert: true, returnDocument: "after" },
   ).lean();
   cachedGameId = g!._id;
@@ -99,7 +100,7 @@ function pub(g: GameLike) {
     win: g.winAmount,
     multiplier: m,
     nextMultiplier: g.position < g.lanes ? multiplierAt(level, g.position + 1) : null,
-    potential: r2(Math.min(MAX_WIN, g.betAmount * m + g.betAmount * bonus)),
+    potential: r2(g.betAmount * Math.min(MAX_MULTIPLIER, m + bonus)),
     bagLane: g.bagLane || null,
     bagMult: g.bagLane ? g.bagMult : 0,
     bagCollected: g.bagCollected,
@@ -108,7 +109,7 @@ function pub(g: GameLike) {
   };
 }
 
-const winFor = (bet: number, m: number, bonus: number) => Math.min(MAX_WIN, r2(bet * m + bet * bonus));
+const winFor = (bet: number, m: number, bonus: number) => r2(bet * Math.min(MAX_MULTIPLIER, m + bonus));
 
 export async function getState(userId: string | null) {
   await dbConnect();

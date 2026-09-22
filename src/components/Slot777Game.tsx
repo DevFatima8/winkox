@@ -1,6 +1,7 @@
 "use client";
 
 import { localApi } from "@/lib/client";
+import { playGameSound, speakGameVoice } from "@/lib/gameAudio";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -97,13 +98,14 @@ export function Slot777Game() {
     if (j.error) { setErr(j.error); setAuto(false); return; }
     setSt((s) => (s ? { ...s, balance: s.balance - amount } : s));
     setReels(j.reels); setResult({ win: j.win, payout: j.payout, balance: j.balance }); setStopped(0); setSpinning(true);
+    playGameSound("launch");
   }, [spinning, st, amount]);
 
   const onStop = useCallback(() => setStopped((n) => n + 1), []);
   useEffect(() => {
     if (spinning && stopped >= 3) {
       setSpinning(false);
-      if (result) { setSt((s) => (s ? { ...s, balance: result.balance } : s)); if (result.win) setShow({ ...result.win, payout: result.payout }); }
+      if (result) { setSt((s) => (s ? { ...s, balance: result.balance } : s)); if (result.win) { playGameSound("coin"); speakGameVoice("slotWin"); setShow({ ...result.win, payout: result.payout }); } }
       if (auto) setTimeout(() => spin(), 900);
     }
   }, [stopped, spinning, result, auto, spin]);

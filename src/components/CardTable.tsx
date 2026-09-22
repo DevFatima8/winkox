@@ -1,6 +1,7 @@
 "use client";
 
 import { localApi } from "@/lib/client";
+import { playGameSound, speakGameVoice } from "@/lib/gameAudio";
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -150,6 +151,7 @@ export function CardTable({ table }: { table: Table }) {
     shownRef.current = round.roundNo;
     if (st.myTotal > 0) {
       const win = st.myExpected > 0;
+      if (win) { playGameSound("coin"); speakGameVoice("cardWin"); } else { playGameSound("crash"); }
       setToast({ roundNo: round.roundNo, text: win ? `Aap jeete ${money(st.myExpected)}` : `${money(st.myTotal)} haar gaye`, win });
     }
     const id = setTimeout(() => setToast(null), 5500);

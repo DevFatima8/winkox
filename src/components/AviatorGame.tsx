@@ -1,7 +1,7 @@
 "use client";
 
 import { localApi } from "@/lib/client";
-import { playGameSound } from "@/lib/gameAudio";
+import { playGameSound, speakGameVoice } from "@/lib/gameAudio";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -100,7 +100,7 @@ export function AviatorGame({ table = "aviator" }: { table?: Table }) {
     const j = await api("/api/aviator/cashout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ table, slot: i }) });
     setPanel(i, { busy: false });
     if (!j) return;
-    if (j.error) showToast("err", j.error); else { if (sound) playGameSound("cashout"); showToast("ok", `You have cashed out! ${fmt2(j.multiplier)}x`, `Win PKR ${fmt2(j.win)}`); }
+    if (j.error) showToast("err", j.error); else { if (sound) { playGameSound("cashout"); speakGameVoice("planeWin"); } showToast("ok", `You have cashed out! ${fmt2(j.multiplier)}x`, `Win PKR ${fmt2(j.win)}`); }
     await refresh();
   }, [api, table, refresh, setPanel, showToast, sound]);
 
@@ -151,13 +151,13 @@ export function AviatorGame({ table = "aviator" }: { table?: Table }) {
       // lost toast
       if (ph === "crashed" && lastCrashShown.current !== s.round.id) {
         lastCrashShown.current = s.round.id;
-        if (sound) playGameSound("crash");
+        if (sound) { playGameSound("crash"); speakGameVoice("planeCrash"); }
         const lost = s.myBets.filter((b) => b.outcome === "lose");
         if (lost.length) showToast("err", `Flew away at ${fmt2(s.round.crashPoint ?? m)}x`, `Lost PKR ${fmt2(lost.reduce((a, b) => a + b.bet, 0))}`);
       }
       if (ph === "running" && lastRoundSound.current !== s.round.id) {
         lastRoundSound.current = s.round.id;
-        if (sound) playGameSound("launch");
+        if (sound) { playGameSound("launch"); speakGameVoice("planeLaunch"); }
       }
       draw(canvas, sizeRef.current, T, ph, m, now, s);
     };
@@ -259,7 +259,7 @@ export function AviatorGame({ table = "aviator" }: { table?: Table }) {
 
           {/* bet panels */}
           <div className="pb-1" style={{ background: T.panel2 }}>
-            <div className={`grid min-w-0 gap-2 p-2 ${slots === 3 ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" : "grid-cols-1 sm:grid-cols-2"}`}>
+            <div className={`grid min-w-0 gap-2 p-2 ${slots === 3 ? "grid-cols-1 sm:grid-cols-2 2xl:grid-cols-3" : "grid-cols-1 sm:grid-cols-2"}`}>
               {Array.from({ length: slots }, (_, i) => {
                 const p = panels[i];
                 const mine = state.myBets.find((b) => b.slot === i) ?? null;
@@ -279,7 +279,7 @@ export function AviatorGame({ table = "aviator" }: { table?: Table }) {
                 return (
                   <div key={i} className="min-w-0 rounded-xl p-2" style={{ background: T.panel, border: `1px solid ${border}` }}>
                     <div className="mb-1.5 flex justify-center"><div className="flex rounded-full p-0.5 text-[10px] font-semibold" style={{ background: T.panel2 }}><button onClick={() => setPanel(i, { tab: "bet" })} className={`rounded-full px-3 py-0.5 ${p.tab === "bet" ? "bg-[#2c2d30] text-white" : "text-slate-400"}`}>Bet</button><button onClick={() => setPanel(i, { tab: "auto" })} className={`rounded-full px-3 py-0.5 ${p.tab === "auto" ? "bg-[#2c2d30] text-white" : "text-slate-400"}`}>Auto</button></div></div>
-                    <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-[1fr_1.05fr]">
+                    <div className="grid grid-cols-1 gap-1.5 xl:grid-cols-[1fr_1.05fr]">
                       <div className={locked ? "pointer-events-none opacity-60" : ""}>
                         <div className="flex items-center gap-1 rounded-full bg-black px-1 py-0.5" style={{ border: `1px solid ${T.line}` }}>
                           <button onClick={() => setAmt(amount - 10)} className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-base leading-none text-slate-400" style={{ border: `1px solid #3c3e44` }}>−</button>
