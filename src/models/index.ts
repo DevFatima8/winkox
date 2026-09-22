@@ -16,6 +16,8 @@ export type UserDoc = Base & {
   balance: number; isActive: boolean; lastLoginAt: Date | null; totalDeposited: number; totalWithdrawn: number; vipLevel: number;
   blockedGames: string[]; referralCode: string | null; referredBy: string | null; assignedAccounts?: Record<string, string>; commissionEarned: number; agentCommissionPct: number | null;
 };
+export type LoginEventDoc = Base & { userId: string; ip: string | null; role: UserDoc["role"] };
+export const LoginEvent = new Model<LoginEventDoc>("LoginEvent", { collection: "loginevents", cap: 10000, defaults: () => ({ ip: null, role: "client" }) });
 export type PaymentAccountDoc = Base & {
   provider: Provider;
   accountTitle: string;      // account holder name shown to clients

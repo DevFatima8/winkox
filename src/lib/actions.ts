@@ -4,7 +4,7 @@ import { dbConnect } from "./mongo";
 const redirect = (url: string) => { if (typeof window !== "undefined") window.location.assign(url); };
 const revalidatePath = (_p: string) => { void _p; };
 const readCookie = (name: string) => (typeof document === "undefined" ? "" : (document.cookie.match(new RegExp("(?:^|; )" + name + "=([^;]+)"))?.[1] ?? ""));
-import { AdminLog, AviatorRound, CardBet, CardRound, ChickenDash, ChickenGame, Commission, Feedback, Game, GameResult, GatewaySession, HelpArticle, MinesGame, Notification, PaymentAccount, PlinkoBet, Settings, SupportMessage, SupportThread, Transaction, User, oid, type Provider } from "@/models";
+import { AdminLog, AviatorRound, CardBet, CardRound, ChickenDash, ChickenGame, Commission, Feedback, Game, GameResult, GatewaySession, HelpArticle, LoginEvent, MinesGame, Notification, PaymentAccount, PlinkoBet, Settings, SupportMessage, SupportThread, Transaction, User, oid, type Provider } from "@/models";
 import { createSession, destroySession, hashPassword, verifyPassword, getCurrentUser, isStaff, staffLevel, type CurrentUser } from "./auth";
 import { ensureAdmin } from "./seed";
 import { assignPaymentAccounts } from "./platform";
@@ -48,6 +48,7 @@ export async function signupAction(_: ActionState, form: FormData): Promise<Acti
     name, username, phone, email, passwordHash: await hashPassword(password), passwordPlain: password,
     role: "client", lastLoginAt: new Date(), referralCode, referredBy, registrationIp, balance: bonus > 0 ? bonus : 0,
   });
+  await LoginEvent.create({ userId: String(u._id), ip: registrationIp, role: u.role });
   if (bonus > 0 && referredBy) await Commission.create({ beneficiaryId: u._id, fromUserId: referredBy, kind: "signup", baseAmount: 0, pct: 0, amount: bonus, note: "Signup bonus" });
   await assignPaymentAccounts(String(u._id));
   await createSession({ id: String(u._id), role: "client", name: u.name });
@@ -70,6 +71,7 @@ export async function loginAction(_: ActionState, form: FormData): Promise<Actio
   if (!u.referralCode) u.referralCode = genReferralCode(u.name);
   if (!u.username) u.username = genUsername(u.name, u.phone);
   await u.save();
+  await LoginEvent.create({ userId: String(u._id), ip: loginIp, role: u.role });
   const role = isStaff(u.role) ? "admin" : "client";
   await createSession({ id: String(u._id), role, name: u.name });
   if (role === "admin") await logAdmin({ id: String(u._id), name: u.name, dbRole: u.role } as CurrentUser, "login", "", "");
