@@ -206,10 +206,23 @@ export function BottomNav({ viewer, active }: { viewer: Viewer; active: "home" |
 export function Lobby({ viewer, cat, links = {} }: { viewer: Viewer; cat: string; links?: Links }) {
   const { t, locale } = useI18n();
   const [showDemoWinners, setShowDemoWinners] = useState(true);
+  const [winnerIndex, setWinnerIndex] = useState(0);
+  const [wheelRotation, setWheelRotation] = useState(0);
+  const [wheelSpinning, setWheelSpinning] = useState(false);
   useEffect(() => {
     const timer = window.setInterval(() => setShowDemoWinners(true), 3 * 60 * 1000);
     return () => window.clearInterval(timer);
   }, []);
+
+  const spinWinnersWheel = () => {
+    if (wheelSpinning) return;
+    const next = Math.floor(Math.random() * DEMO_WINNERS.length);
+    const step = 360 / DEMO_WINNERS.length;
+    setWinnerIndex(next);
+    setWheelSpinning(true);
+    setWheelRotation((rotation) => rotation + 1800 + (360 - next * step));
+    window.setTimeout(() => setWheelSpinning(false), 4200);
+  };
   const wa = links.whatsapp || BRAND.whatsapp; const tg = links.telegram || BRAND.telegram;
   const slides: Slide[] = SLIDES.map((sl, i) => ({ ...sl, kicker: t(`b${i + 1}k` as "b1k"), title: t(`b${i + 1}t` as "b1t"), sub: t(`b${i + 1}s` as "b1s"), cta: [t("registerNow"), t("playNow"), t("joinTable"), t("viewPromo")][i] }));
   const tabLabel: Record<string, string> = { Hot: t("hotLabel"), Recent: t("recent"), Demo: t("demo"), Cards: t("cards"), "Mini Games": t("miniGames"), Live: t("live"), Slot: t("slot"), Fishing: t("fishing"), Sports: t("sports"), Lottery: t("lottery") };
@@ -424,13 +437,29 @@ export function Lobby({ viewer, cat, links = {} }: { viewer: Viewer; cat: string
       <BottomNav viewer={viewer} active="home" />
       {showDemoWinners && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/75 p-4" role="dialog" aria-modal="true" aria-labelledby="demo-winners-title">
-          <div className="w-full max-w-md overflow-hidden rounded-2xl border border-[#3a2470] bg-[#140c2a] shadow-2xl">
-            <div className="flex items-center justify-between border-b border-[#3a2470] px-4 py-3">
-              <div><h2 id="demo-winners-title" className="text-lg font-black text-white">Winners</h2><p className="text-[11px] text-[#b8a7e6]">Lot of winners this week</p></div>
-              <button type="button" onClick={() => setShowDemoWinners(false)} aria-label="Close demo winners" className="flex h-8 w-8 items-center justify-center rounded-full border border-[#3a2470] text-lg text-[#c4b5fd] hover:text-white">×</button>
+          <div className="wx-prize-modal w-full max-w-3xl overflow-hidden rounded-[24px] border border-[#73552a] shadow-2xl">
+            <div className="flex items-center justify-between border-b border-[#5b4527] px-5 py-4">
+              <div><div className="mb-1 text-[10px] font-black uppercase tracking-[0.28em] text-[#d6a84e]">Weekly jackpot ceremony</div><h2 id="demo-winners-title" className="text-2xl font-black tracking-tight text-white">Winners</h2><p className="text-xs text-[#c9bda9]">Lot of winners this week</p></div>
+              <button type="button" onClick={() => setShowDemoWinners(false)} aria-label="Close demo winners" className="flex h-9 w-9 items-center justify-center rounded-full border border-[#70552d] text-xl text-[#d6c7ae] transition hover:border-[#d6a84e] hover:text-white">×</button>
             </div>
-            <div className="max-h-[65vh] space-y-2 overflow-y-auto p-3">
-              {DEMO_WINNERS.map(([name, amount, game]) => <div key={`${name}-${game}`} className="flex items-center justify-between rounded-xl border border-[#3a2470] bg-black/20 px-3 py-2.5"><div><div className="text-sm font-bold text-white">{name}</div><div className="text-[11px] text-[#b8a7e6]">{game}</div></div><span className="text-sm font-black text-[#ffb800]">{amount}</span></div>)}
+            <div className="grid gap-5 p-5 md:grid-cols-[minmax(250px,330px)_1fr]">
+              <div className="flex flex-col items-center justify-center">
+                <div className="wx-wheel-pointer" />
+                <div className={`wx-prize-wheel ${wheelSpinning ? "is-spinning" : ""}`} style={{ transform: `rotate(${wheelRotation}deg)` }}>
+                  {DEMO_WINNERS.map(([name], i) => <span key={`${name}-${i}`} className="wx-wheel-label" style={{ transform: `rotate(${i * (360 / DEMO_WINNERS.length)}deg) translateY(-112px) rotate(90deg)` }}>{name}</span>)}
+                  <div className="wx-wheel-center"><span>WIN</span><small>SPIN</small></div>
+                </div>
+                <button type="button" onClick={spinWinnersWheel} disabled={wheelSpinning} className="mt-5 rounded-full border border-[#ffe29a] bg-gradient-to-b from-[#ffe49b] via-[#d7a73e] to-[#8f641b] px-8 py-2.5 text-xs font-black uppercase tracking-[0.18em] text-[#241604] shadow-[0_8px_25px_rgba(214,168,78,.25)] transition hover:brightness-110 disabled:cursor-wait disabled:opacity-70">{wheelSpinning ? "Spinning..." : "Spin the wheel"}</button>
+              </div>
+              <div className="min-w-0">
+                <div className="mb-2 flex items-center justify-between"><span className="text-xs font-black uppercase tracking-[0.2em] text-[#d6a84e]">Prize board</span><span className="text-[10px] text-[#a99c87]">{DEMO_WINNERS.length} winners</span></div>
+                <div className="wx-prize-list max-h-[360px] overflow-hidden rounded-2xl border border-[#51432d] bg-black/25 p-2">
+                  <div className="wx-prize-list-track">
+                    {[...DEMO_WINNERS, ...DEMO_WINNERS].map(([name, amount, game], i) => <div key={`${name}-${game}-${i}`} className={`flex items-center gap-3 rounded-xl border px-3 py-2.5 ${i % DEMO_WINNERS.length === winnerIndex ? "border-[#d6a84e] bg-[#d6a84e]/15" : "border-transparent bg-white/[.025]"}`}><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#ffe39b] to-[#a8741f] text-xs font-black text-[#2b1a05]">{(i % DEMO_WINNERS.length) + 1}</span><div className="min-w-0 flex-1"><div className="truncate text-sm font-bold text-white">{name}</div><div className="text-[11px] text-[#b8ad99]">{game}</div></div><span className="shrink-0 text-sm font-black text-[#f1ca69]">{amount}</span></div>)}
+                  </div>
+                </div>
+                <div className="mt-3 flex items-center justify-between rounded-xl border border-[#51432d] bg-[#211b12] px-4 py-3"><div><div className="text-[10px] uppercase tracking-widest text-[#a99c87]">Selected winner</div><div className="mt-1 text-base font-black text-white">{DEMO_WINNERS[winnerIndex][0]} <span className="ml-1 text-xs font-semibold text-[#b8ad99]">· {DEMO_WINNERS[winnerIndex][2]}</span></div></div><span className="text-lg font-black text-[#f1ca69]">{DEMO_WINNERS[winnerIndex][1]}</span></div>
+              </div>
             </div>
           </div>
         </div>
