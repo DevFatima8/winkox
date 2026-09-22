@@ -197,7 +197,7 @@ export function CardTable({ table }: { table: Table }) {
           <div className={`relative overflow-hidden rounded-[28px] border-[6px] shadow-2xl ${table === "dragon-tiger" ? "border-[#7a5a1e] bg-[#120809]" : "border-[#5b3a1a] bg-[radial-gradient(ellipse_at_center,#1e4fa3_0%,#12336f_60%,#0b2350_100%)]"}`}>
             {table === "dragon-tiger" && (
               <>
-                <div className="pointer-events-none absolute inset-y-0 left-0 w-1/2 bg-[url('/games/dragon.jpg')] bg-cover bg-[center_30%] opacity-90" />
+                <div className="pointer-events-none absolute inset-y-0 left-0 w-1/2 bg-[url('/games/dragon-tiger.jpg')] bg-cover bg-[center_30%] opacity-90" />
                 <div className="pointer-events-none absolute inset-y-0 right-0 w-1/2 bg-[url('/games/tiger.jpg')] bg-cover bg-[center_30%] opacity-90" />
                 <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(60,8,12,.55)_0%,rgba(20,6,8,.85)_50%,rgba(60,30,5,.55)_100%)]" />
                 <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,.55)_0%,rgba(0,0,0,0)_35%,rgba(0,0,0,0)_60%,rgba(0,0,0,.6)_100%)]" />
