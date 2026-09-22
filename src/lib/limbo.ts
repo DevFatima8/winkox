@@ -2,6 +2,7 @@ import { dbConnect } from "./mongo";
 import { Game, GameResult, User, oid, type ObjectId } from "@/models";
 import { checkGameAccess } from "./gameAccess";
 import { payBetCommission } from "./platform";
+import { MAX_MULTIPLIER } from "./outcomes";
 
 /** browser/node-safe random hex (provably-fair style seed) */
 function randomHex(bytes = 32) {
@@ -10,14 +11,14 @@ function randomHex(bytes = 32) {
   return Array.from(arr, (b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-export const MIN_BET = 10, MAX_BET = 50000, MAX_WIN = 2_000;
+export const MIN_BET = 10, MAX_BET = 50000, MAX_WIN = Number.MAX_SAFE_INTEGER;
 export const RTP = 0.99; // Stake Limbo: 99% RTP (1% house edge)
-export const MIN_TARGET = 1.01, MAX_TARGET = 1_000_000;
+export const MIN_TARGET = 1.01, MAX_TARGET = MAX_MULTIPLIER;
 
 let cachedGameId: ObjectId | null = null;
 async function gameId() {
   if (cachedGameId) return cachedGameId;
-  const g = await Game.findOneAndUpdate({ slug: "limbo" }, { $setOnInsert: { name: "Limbo", slug: "limbo", icon: "🎯", category: "original", description: "Target multiplier set karein — 1,000,000x tak instant result!", isActive: true } }, { upsert: true, returnDocument: "after" }).lean();
+  const g = await Game.findOneAndUpdate({ slug: "limbo" }, { $setOnInsert: { name: "Limbo", slug: "limbo", icon: "🎯", category: "original", description: "Target multiplier set karein — 100x tak instant result!", isActive: true } }, { upsert: true, returnDocument: "after" }).lean();
   cachedGameId = g!._id; return cachedGameId;
 }
 
@@ -29,7 +30,7 @@ export function roll(target = 1.01) {
   if (Math.random() < 0.35) {
     // overshoot a bit above target, capped
     const over = target * (1 + Math.random() * (target > 10 ? 1.2 : 0.6));
-    result = Math.min(MAX_TARGET, Math.max(target, Math.round(over * 100) / 100));
+    result = Math.min(MAX_MULTIPLIER, Math.max(target, Math.round(over * 100) / 100));
   } else {
     const lo = 1.01, hi = Math.max(1.02, target - 0.01);
     result = Math.round((lo + Math.random() * (hi - lo)) * 100) / 100;
@@ -65,7 +66,7 @@ export async function play(userId: string, amount: number, target: number) {
   void payBetCommission(uid, amount);
   const { result, hash } = roll();
   const won = result >= target;
-  const payout = won ? Math.min(MAX_WIN, Math.floor(amount * target * 100) / 100) : 0;
+  const payout = won ? Math.floor(amount * Math.min(target, MAX_MULTIPLIER) * 100) / 100 : 0;
   if (payout > 0) await User.updateOne({ _id: uid }, { $inc: { balance: payout } });
   const gid = await gameId();
   await GameResult.create({ gameId: gid, userId: uid, betAmount: amount, winAmount: payout, outcome: won ? "win" : "lose", resultData: `result ${result}x · target ${target}x · ${hash.slice(0, 10)}` });

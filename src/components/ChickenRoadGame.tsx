@@ -1,7 +1,7 @@
 "use client";
 
 import { localApi } from "@/lib/client";
-import { playGameSound } from "@/lib/gameAudio";
+import { playGameSound, speakGameVoice } from "@/lib/gameAudio";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -393,7 +393,7 @@ export function ChickenRoadGame() {
     const j = await post("/api/chicken/start", { amount, difficulty: diff });
     if (j.error) { setMsg({ t: "err", m: j.error }); setBusyBoth(false); return; }
     const v = newVis(s.tables[diff], visRef.current); v.status = "active"; visRef.current = v;
-    playGameSound("launch");
+    playGameSound("launch"); speakGameVoice("chickenJump");
     setGame(j.game); setPhase("active"); setBusyBoth(false);
     refresh();
   };
@@ -402,7 +402,7 @@ export function ChickenRoadGame() {
     const v = visRef.current;
     if (!v || busyRef.current || v.status !== "active" || v.hop) return;
     setBusyBoth(true); setMsg(null);
-    playGameSound("jump");
+    playGameSound("jump"); speakGameVoice("chickenJump");
     const j = await post("/api/chicken/step");
     if (j.error) { setMsg({ t: "err", m: j.error }); setBusyBoth(false); return; }
     const g: G = j.game; setGame(g);
@@ -412,7 +412,7 @@ export function ChickenRoadGame() {
       hopTo(v, target, () => {
         v.killer = {
           lane: target, y: -120, type: pick(CAR_TYPES), hit: false, done: () => {
-            playGameSound("crash");
+            playGameSound("crash"); speakGameVoice("chickenCrash");
             v.status = "dead"; setPhase("idle"); setBusyBoth(false);
             setMsg({ t: "err", m: `Gaari se takra gayi! ${money(g.bet)} haar gaye.` }); refresh();
           }
@@ -423,7 +423,7 @@ export function ChickenRoadGame() {
       hopTo(v, target, () => {
         if (j.event === "finished") {
           hopTo(v, target + 1, () => {
-            playGameSound("coin");
+            playGameSound("coin"); speakGameVoice("chickenWin");
             v.status = "finished"; burst(v, v.cx, MANHOLE_Y); setPhase("idle"); setBusyBoth(false);
             setMsg({ t: "ok", m: `Poori road cross! ${money(g.win)} jeete!` }); refresh();
           });
@@ -439,7 +439,7 @@ export function ChickenRoadGame() {
     setBusyBoth(true);
     const j = await post("/api/chicken/cashout");
     if (j.error) setMsg({ t: "err", m: j.error });
-    else { playGameSound("cashout"); v.status = "cashed"; burst(v, v.cx, MANHOLE_Y); setGame(j.game); setPhase("idle"); setMsg({ t: "ok", m: `Cashed out @ ${fmtMult(j.multiplier)} — ${money(j.win)} jeete!` }); }
+    else { playGameSound("cashout"); speakGameVoice("chickenWin"); v.status = "cashed"; burst(v, v.cx, MANHOLE_Y); setGame(j.game); setPhase("idle"); setMsg({ t: "ok", m: `Cashed out @ ${fmtMult(j.multiplier)} — ${money(j.win)} jeete!` }); }
     setBusyBoth(false); refresh();
   };
 

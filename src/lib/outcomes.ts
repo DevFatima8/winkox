@@ -9,6 +9,8 @@ export function isWinOutcome(): boolean {
   return Math.random() < 0.35;
 }
 
+export const MAX_MULTIPLIER = 100;
+
 /** Uniform float in [a,b) */
 export const urand = (a: number, b: number) => a + Math.random() * (b - a);
 
@@ -23,7 +25,7 @@ export function winMultiplier(minWin = 1.5, maxWin = 50): number {
   else if (r < 0.88) m = urand(3.0, 8.0);
   else if (r < 0.98) m = urand(8.0, 25);
   else m = urand(25, maxWin);
-  return Math.max(1.01, Math.round(m * 100) / 100);
+  return Math.min(MAX_MULTIPLIER, Math.max(1.01, Math.round(m * 100) / 100));
 }
 
 /** Multiplier in the LOSS band (1.01 .. below 1.5 or a hazard before the player can profit). */

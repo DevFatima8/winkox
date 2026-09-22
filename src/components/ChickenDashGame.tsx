@@ -1,6 +1,7 @@
 "use client";
 
 import { localApi } from "@/lib/client";
+import { playGameSound, speakGameVoice } from "@/lib/gameAudio";
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -577,6 +578,7 @@ export function ChickenDashGame() {
     const g: G = j.game; setGame(g);
     const target = g.position;
     if (j.event === "dead") {
+      playGameSound("crash"); speakGameVoice("chickenCrash");
       v.traffic[target] = v.traffic[target].filter((c) => c.y >= ROW_Y + 60);
       hopTo(v, target, false, () => {
         v.passed[target] = false;
@@ -595,6 +597,7 @@ export function ChickenDashGame() {
     hopTo(v, target, dash, () => {
       if (j.bagNow) { v.bagVisible = false; v.bagCollected = true; burst(v, v.cx, ROW_Y - 10, "coin", 12); float(v, v.cx, ROW_Y - 60, `+${g.bagMult}x BONUS`, "#fbbf24"); }
       if (j.event === "finished") {
+        playGameSound("coin"); speakGameVoice("chickenWin");
         hopTo(v, target + 1, false, () => {
           v.status = "finished"; burst(v, v.cx, ROW_Y, "coin", 22); setPhase("idle"); setBusyBoth(false);
           setMsg({ t: "ok", m: `Highway cross! ${money(g.win)} jeete!` }); refresh();
@@ -610,7 +613,7 @@ export function ChickenDashGame() {
     setBusyBoth(true);
     const j = await post("/api/chickendash/cashout");
     if (j.error) setMsg({ t: "err", m: j.error });
-    else { v.status = "cashed"; burst(v, v.cx, ROW_Y, "coin", 18); setGame(j.game); setPhase("idle"); setMsg({ t: "ok", m: `Cashed out @ ${fmtMult(j.multiplier)} — ${money(j.win)} jeete!` }); }
+    else { playGameSound("cashout"); speakGameVoice("chickenWin"); v.status = "cashed"; burst(v, v.cx, ROW_Y, "coin", 18); setGame(j.game); setPhase("idle"); setMsg({ t: "ok", m: `Cashed out @ ${fmtMult(j.multiplier)} — ${money(j.win)} jeete!` }); }
     setBusyBoth(false); refresh();
   };
 

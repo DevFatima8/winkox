@@ -1,6 +1,7 @@
 "use client";
 
 import { localApi } from "@/lib/client";
+import { playGameSound, speakGameVoice } from "@/lib/gameAudio";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -52,6 +53,7 @@ export function LimboGame() {
     if (j.error) { setErr(j.error); setBusy(false); autoRef.current.on = false; setAutoLeft(0); return; }
     setSt((s) => (s ? { ...s, balance: j.balance } : s));
     await animateTo(j.result);
+    if (j.won) { playGameSound("coin"); speakGameVoice("limboWin"); } else { playGameSound("crash"); }
     setLast({ result: j.result, won: j.won, payout: j.payout });
     setHist((h) => [...h.slice(-11), { result: j.result, won: j.won }]);
     setBusy(false);

@@ -2,6 +2,7 @@ import { dbConnect } from "./mongo";
 import { CardBet, CardRound, Game, GameResult, User, oid, type CardRoundDoc, type ObjectId } from "@/models";
 import { checkGameAccess } from "./gameAccess";
 import { payBetCommission } from "./platform";
+import { MAX_MULTIPLIER } from "./outcomes";
 
 
 export const MIN_BET = 10;
@@ -80,7 +81,7 @@ export function payoutFor(result: Result, option: string, amount: number) {
   } else if (option === result.winner) {
     raw = option === "andar" ? amount * 1.9 : amount * 2;
   }
-  return Math.min(MAX_SINGLE_WIN, raw);
+  return Math.min(MAX_MULTIPLIER * amount, raw);
 }
 
 const RANKS = ["", "A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
