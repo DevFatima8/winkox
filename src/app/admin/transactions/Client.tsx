@@ -114,6 +114,7 @@ export default function TransactionsPageClient({ type, params, searchParams }: {
                             <div>To: <b className="text-white">{t.paymentAccountId?.accountTitle ?? "-"}</b> ({t.paymentAccountId?.accountNumber ?? "-"})</div>
                             <div>From: {t.senderNumber}</div>
                             <div className="font-mono text-yellow-400">TID: {t.referenceId}</div>
+                            {t.proofImage && <a href={t.proofImage} target="_blank" rel="noreferrer" className="mt-1 inline-block text-yellow-400 underline">Open payment screenshot</a>}
                           </>
                         ) : (
                           <div>

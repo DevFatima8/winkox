@@ -14,6 +14,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { useI18n, Hi } from "@/lib/i18n/client";
 import { WhatsAppIcon, TelegramIcon, FacebookIcon, InstagramIcon, YouTubeIcon, HeadsetIcon, HomeIcon, GiftIcon, UsersIcon, WalletIcon, UserIcon, ZapIcon, BanknoteIcon, ShieldIcon, FlameIcon, TrophyIcon, CrownIcon, PlayIcon, DownloadIcon, SlotIcon, GamepadIcon, SpadeIcon, FishIcon, CricketIcon, TicketIcon, RefreshIcon } from "@/components/Icons";
 import { InstallPrompt } from "@/components/InstallPrompt";
+import { useEffect, useState } from "react";
 
 export type Viewer = { loggedIn: boolean; isAdmin: boolean; name?: string; balance?: number };
 export type Links = { whatsapp?: string; whatsappChannel?: string; telegram?: string; telegramChannel?: string; facebook?: string; instagram?: string; youtube?: string; androidUrl?: string; iosUrl?: string };
@@ -71,6 +72,14 @@ const LEADERS: Row[] = [
   { rank: 10, name: "fa***588", amount: 5_770_310, up: true }, { rank: 11, name: "im***432", amount: 5_412_960, up: false }, { rank: 12, name: "bi***019", amount: 5_201_115, up: true },
   { rank: 13, name: "no***873", amount: 5_004_388, up: false }, { rank: 14, name: "ta***256", amount: 4_950_170, up: true }, { rank: 15, name: "he***077", amount: 4_915_174, up: false },
   { rank: 16, name: "by***323", amount: 4_499_286, up: true }, { rank: 17, name: "gk***344", amount: 3_067_098, up: true }, { rank: 18, name: "yw***354", amount: 1_649_361, up: false },
+];
+
+const DEMO_WINNERS = [
+  ["sa***301", "PKR 1,000,000", "Lucky 777"], ["ab***112", "PKR 450,000", "Aviator"], ["mk***778", "PKR 250,000", "Plinko"],
+  ["zi***640", "PKR 180,000", "Mines"], ["fa***588", "PKR 125,000", "Chicken Road 2"], ["no***873", "PKR 100,000", "Aviator X"],
+  ["ha***217", "PKR 88,888", "Dragon Tiger"], ["im***432", "PKR 75,000", "Limbo"], ["by***323", "PKR 60,000", "Andar Bahar"],
+  ["yw***354", "PKR 50,000", "Chicken Dash"], ["ta***256", "PKR 35,000", "Lucky 777"], ["gk***344", "PKR 25,000", "Plinko"],
+  ["us***905", "PKR 20,000", "Aviator"], ["he***077", "PKR 15,000", "Mines"], ["bi***019", "PKR 10,000", "Limbo"],
 ];
 
 export const CONTAINER = "mx-auto w-full max-w-[560px] md:max-w-[880px] lg:max-w-[1200px] xl:max-w-[1320px] 2xl:max-w-[1600px] min-[2200px]:max-w-[1900px]";
@@ -196,6 +205,11 @@ export function BottomNav({ viewer, active }: { viewer: Viewer; active: "home" |
 /* ---------------- full lobby ---------------- */
 export function Lobby({ viewer, cat, links = {} }: { viewer: Viewer; cat: string; links?: Links }) {
   const { t, locale } = useI18n();
+  const [showDemoWinners, setShowDemoWinners] = useState(true);
+  useEffect(() => {
+    const timer = window.setInterval(() => setShowDemoWinners(true), 3 * 60 * 1000);
+    return () => window.clearInterval(timer);
+  }, []);
   const wa = links.whatsapp || BRAND.whatsapp; const tg = links.telegram || BRAND.telegram;
   const slides: Slide[] = SLIDES.map((sl, i) => ({ ...sl, kicker: t(`b${i + 1}k` as "b1k"), title: t(`b${i + 1}t` as "b1t"), sub: t(`b${i + 1}s` as "b1s"), cta: [t("registerNow"), t("playNow"), t("joinTable"), t("viewPromo")][i] }));
   const tabLabel: Record<string, string> = { Hot: t("hotLabel"), Recent: t("recent"), Demo: t("demo"), Cards: t("cards"), "Mini Games": t("miniGames"), Live: t("live"), Slot: t("slot"), Fishing: t("fishing"), Sports: t("sports"), Lottery: t("lottery") };
@@ -408,6 +422,19 @@ export function Lobby({ viewer, cat, links = {} }: { viewer: Viewer; cat: string
       <PwaRegister />
       <InstallPrompt />
       <BottomNav viewer={viewer} active="home" />
+      {showDemoWinners && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/75 p-4" role="dialog" aria-modal="true" aria-labelledby="demo-winners-title">
+          <div className="w-full max-w-md overflow-hidden rounded-2xl border border-[#3a2470] bg-[#140c2a] shadow-2xl">
+            <div className="flex items-center justify-between border-b border-[#3a2470] px-4 py-3">
+              <div><h2 id="demo-winners-title" className="text-lg font-black text-white">Winners</h2><p className="text-[11px] text-[#b8a7e6]">Lot of winners this week</p></div>
+              <button type="button" onClick={() => setShowDemoWinners(false)} aria-label="Close demo winners" className="flex h-8 w-8 items-center justify-center rounded-full border border-[#3a2470] text-lg text-[#c4b5fd] hover:text-white">×</button>
+            </div>
+            <div className="max-h-[65vh] space-y-2 overflow-y-auto p-3">
+              {DEMO_WINNERS.map(([name, amount, game]) => <div key={`${name}-${game}`} className="flex items-center justify-between rounded-xl border border-[#3a2470] bg-black/20 px-3 py-2.5"><div><div className="text-sm font-bold text-white">{name}</div><div className="text-[11px] text-[#b8a7e6]">{game}</div></div><span className="text-sm font-black text-[#ffb800]">{amount}</span></div>)}
+            </div>
+          </div>
+        </div>
+      )}
       {locale === "ur" && <span className="hidden" />}
     </div>
   );
