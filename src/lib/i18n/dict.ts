@@ -60,6 +60,7 @@ const en = {
   howToPlay: "How to play:", allGames: "← All games",
   promoTitle: "Promotions", depositNow: "Deposit now", registerToClaim: "Register to claim", promoNote: "Bonuses are added to wallet after admin approval. Terms apply.",
   language: "Language",
+  admin: "Admin", superAdmin: "Super Admin", dashboard: "Dashboard", liveSupportAdmin: "Live Support", usersAdmin: "Users", depositsAdmin: "Deposits", withdrawalsAdmin: "Withdrawals", feedbackAdmin: "Feedback", gamesAdmin: "Games", gamesOnOff: "Games On/Off", gameResultsAdmin: "Game Results", recordsAdmin: "Records", agentsAdmin: "Agents & Referrals", notificationsAdmin: "Notifications", staffAdmin: "Admins / Staff", activityLogs: "Activity Logs", historyCleanup: "History Cleanup", vipLevelsAdmin: "VIP Levels", helpCenterAdmin: "Help Center", paymentAccountsAdmin: "Payment Accounts", settingsAdmin: "Settings", myAccountAdmin: "My Account",
 };
 
 export type Dict = typeof en;
@@ -115,6 +116,7 @@ const ur: Dict = {
   howToPlay: "کیسے کھیلیں:", allGames: "→ تمام گیمز",
   promoTitle: "پروموشنز", depositNow: "ابھی ڈپازٹ کریں", registerToClaim: "کلیم کرنے کے لیے رجسٹر کریں", promoNote: "بونس ایڈمن کی منظوری کے بعد والٹ میں شامل ہوتے ہیں۔ شرائط لاگو ہیں۔",
   language: "زبان",
+  admin: "ایڈمن", superAdmin: "سپر ایڈمن", dashboard: "ڈیش بورڈ", liveSupportAdmin: "لائیو سپورٹ", usersAdmin: "یوزرز", depositsAdmin: "ڈپازٹس", withdrawalsAdmin: "وِدڈرا", feedbackAdmin: "فیڈبیک", gamesAdmin: "گیمز", gamesOnOff: "گیمز آن/آف", gameResultsAdmin: "گیم رزلٹس", recordsAdmin: "ریکارڈز", agentsAdmin: "ایجنٹس اور ریفرلز", notificationsAdmin: "نوٹیفکیشنز", staffAdmin: "ایڈمنز / اسٹاف", activityLogs: "ایکٹیویٹی لاگز", historyCleanup: "ہسٹری کلین اَپ", vipLevelsAdmin: "VIP لیولز", helpCenterAdmin: "ہیلپ سینٹر", paymentAccountsAdmin: "پیمنٹ اکاؤنٹس", settingsAdmin: "سیٹنگز", myAccountAdmin: "میرا اکاؤنٹ",
 };
 
 export const DICTS: Record<Locale, Dict> = { en, ur };

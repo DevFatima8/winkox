@@ -11,15 +11,15 @@ function randomHex(bytes = 32) {
 }
 
 export const TABLES = {
-  aviator: { name: "Aviator", waitMs: 6000, pauseMs: 3500, growth: 0.06, houseEdge: 0.03, maxMult: 20, slots: 2, minBet: 10, maxBet: 50000, maxWin: 2_000 },
-  "aviator-x": { name: "Aviator X", waitMs: 6000, pauseMs: 3500, growth: 0.075, houseEdge: 0.03, maxMult: 20, slots: 3, minBet: 10, maxBet: 50000, maxWin: 2_000 },
+  aviator: { name: "Aviator", waitMs: 6000, pauseMs: 3500, growth: 0.06, houseEdge: 0.03, maxMult: 100, slots: 2, minBet: 10, maxBet: 50000 },
+  "aviator-x": { name: "Aviator X", waitMs: 6000, pauseMs: 3500, growth: 0.075, houseEdge: 0.03, maxMult: 100, slots: 3, minBet: 10, maxBet: 50000 },
 } as const;
 export type Table = keyof typeof TABLES;
 export const isTable = (t: string): t is Table => t in TABLES;
 
 export function multiplierAt(table: Table, startsAt: Date, now: Date = new Date()) {
   const t = Math.max(0, (now.getTime() - startsAt.getTime()) / 1000);
-  return Math.floor(Math.exp(TABLES[table].growth * t) * 100) / 100;
+  return Math.min(TABLES[table].maxMult, Math.floor(Math.exp(TABLES[table].growth * t) * 100) / 100);
 }
 
 /**
@@ -141,7 +141,7 @@ export async function getState(userId: string | null, table: Table) {
   return {
     serverNow: Date.now(),
     table,
-    config: { name: cfg.name, slots: cfg.slots, minBet: cfg.minBet, maxBet: cfg.maxBet, waitMs: cfg.waitMs, growth: cfg.growth, maxWin: cfg.maxWin },
+    config: { name: cfg.name, slots: cfg.slots, minBet: cfg.minBet, maxBet: cfg.maxBet, waitMs: cfg.waitMs, growth: cfg.growth, maxMult: cfg.maxMult },
     round: {
       id: round.roundNo,
       status: round.status as "waiting" | "running" | "crashed",
@@ -203,7 +203,7 @@ export async function cashOut(userId: string, table: Table, slot = 0) {
     if (m >= round.crashPoint) return { error: "Flew away!" };
     const b = await GameResult.findOne({ gameId, roundNo: round.roundNo, userId: oid(userId), betSlot: slot, outcome: "pending" });
     if (!b) return { error: "No active bet." };
-    const win = Math.min(cfg.maxWin, Math.floor(b.betAmount * m * 100) / 100);
+    const win = Math.floor(b.betAmount * m * 100) / 100;
     const upd = await GameResult.updateOne({ _id: b._id, outcome: "pending" }, { $set: { outcome: "win", winAmount: win, resultData: `Cashed out @ ${m.toFixed(2)}x` } });
     if (upd.modifiedCount === 0) return { error: "Already processed." };
     await User.updateOne({ _id: oid(userId) }, { $inc: { balance: win } });
