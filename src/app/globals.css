@@ -196,6 +196,119 @@ html.light .wx-particles {
   border-color: rgba(0, 194, 255, 0.7);
 }
 
+/* Limbo's compact space-flight playfield. */
+.limbo-stage {
+  background:
+    radial-gradient(circle at 50% 58%, rgba(93, 103, 111, .18), transparent 22%),
+    radial-gradient(circle at 18% 22%, rgba(255, 255, 255, .08) 0 1px, transparent 2px),
+    radial-gradient(circle at 78% 30%, rgba(255, 255, 255, .12) 0 1px, transparent 2px),
+    linear-gradient(180deg, #111315 0%, #1b1e22 62%, #0f1113 100%);
+  isolation: isolate;
+}
+
+.limbo-stage::after {
+  position: absolute;
+  inset: 58% 0 0;
+  z-index: -1;
+  background: linear-gradient(180deg, rgba(71, 76, 81, .18), rgba(8, 9, 10, .8));
+  clip-path: polygon(0 36%, 12% 20%, 24% 38%, 39% 7%, 53% 32%, 67% 11%, 82% 35%, 100% 19%, 100% 100%, 0 100%);
+  content: "";
+}
+
+.limbo-moon {
+  position: absolute;
+  z-index: -1;
+  border-radius: 999px;
+  background: rgba(218, 225, 228, .12);
+  box-shadow: 0 0 30px rgba(215, 225, 230, .08);
+}
+
+.limbo-moon-one {
+  top: 17%;
+  left: 13%;
+  width: 74px;
+  height: 74px;
+}
+
+.limbo-moon-two {
+  right: 15%;
+  bottom: 27%;
+  width: 36px;
+  height: 36px;
+  background: rgba(218, 225, 228, .2);
+}
+
+.limbo-mountains {
+  position: absolute;
+  right: 7%;
+  bottom: 20%;
+  left: 7%;
+  z-index: -1;
+  height: 23%;
+  background: #292d31;
+  clip-path: polygon(0 100%, 9% 52%, 18% 72%, 28% 20%, 38% 65%, 49% 42%, 59% 78%, 73% 28%, 84% 68%, 94% 45%, 100% 73%, 100% 100%);
+  opacity: .85;
+}
+
+.limbo-rocket {
+  position: absolute;
+  top: 43%;
+  left: 50%;
+  z-index: 1;
+  width: clamp(42px, 7vw, 68px);
+  aspect-ratio: .58;
+  transform: translate(-50%, -50%) rotate(3deg);
+  border: 2px solid #d9e4e7;
+  border-radius: 55% 55% 35% 35%;
+  background: linear-gradient(90deg, #b8c4c9, #f6faf9 48%, #aebbc0);
+  box-shadow: 0 0 24px rgba(255, 255, 255, .18);
+}
+
+.limbo-rocket::before,
+.limbo-rocket::after {
+  position: absolute;
+  bottom: 9%;
+  width: 42%;
+  height: 26%;
+  background: #58d12d;
+  content: "";
+}
+
+.limbo-rocket::before {
+  left: -30%;
+  clip-path: polygon(100% 0, 100% 100%, 0 100%, 48% 0);
+}
+
+.limbo-rocket::after {
+  right: -30%;
+  clip-path: polygon(0 0, 100% 100%, 0 100%);
+}
+
+.limbo-rocket-window {
+  position: absolute;
+  top: 19%;
+  left: 50%;
+  width: 38%;
+  aspect-ratio: 1;
+  transform: translateX(-50%);
+  border: 3px solid #4e5960;
+  border-radius: 50%;
+  background: #15202a;
+  box-shadow: inset 0 0 0 3px #92a0a7, 0 0 10px rgba(0, 209, 255, .25);
+}
+
+.limbo-rocket-flame {
+  position: absolute;
+  bottom: -31%;
+  left: 50%;
+  width: 30%;
+  height: 36%;
+  transform: translateX(-50%);
+  background: linear-gradient(#fff4b0, #ff9f1c 45%, transparent);
+  clip-path: polygon(50% 100%, 0 0, 100% 0);
+  filter: drop-shadow(0 0 8px #ff9f1c);
+}
+
 /* legacy purple palette → remap to new theme (used across components) */
 .text-\[\#b8a7e6\] {
   color: var(--wx-muted) !important;
