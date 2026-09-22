@@ -35,6 +35,7 @@ export type TransactionDoc = Base & {
   holderName?: string | null;       // client's JazzCash/Easypaisa account holder name (withdrawals)
   senderNumber: string | null;
   referenceId: string | null;
+  proofImage?: string | null;
   method: "manual" | "gateway";
   status: TxnStatus;
   adminNote: string | null;
@@ -67,7 +68,7 @@ export type HelpArticleDoc = Base & { title: string; category: string; order: nu
 export type CommissionDoc = Base & { beneficiaryId: string; fromUserId: string; kind: "deposit" | "bet" | "signup"; baseAmount: number; pct: number; amount: number; note: string };
 export type AdminLogDoc = Base & { actorId: string; actorName: string; actorRole: string; action: string; target: string; details: string };
 export type FeedbackDoc = Base & { userId: string | null; name: string; phone: string; type: "reward" | "complaint" | "suggestion" | "other"; message: string; status: "new" | "reviewed" | "resolved"; adminNote: string };
-export type GatewaySessionDoc = Base & { userId: string; kind: "deposit" | "withdraw"; provider: Provider; amount: number; accountNumber: string; holderName?: string; status: "created" | "otp" | "paid" | "failed" | "expired" | "cancelled"; otpAttempts: number; txnRef: string | null; transactionId: string | null; expiresAt: Date };
+export type GatewaySessionDoc = Base & { userId: string; kind: "deposit" | "withdraw"; provider: Provider; amount: number; accountNumber: string; holderName?: string; proofImage?: string | null; status: "created" | "otp" | "pending" | "paid" | "failed" | "expired" | "cancelled"; otpAttempts: number; txnRef: string | null; transactionId: string | null; expiresAt: Date };
 export type MinesGameDoc = Base & { userId: string; resultId: string; betAmount: number; mines: number; mineCells: number[]; revealed: number[]; status: "active" | "cashed" | "dead"; winAmount: number };
 
 export const User = new Model<UserDoc>("User", { collection: "users", unique: [["phone"]], defaults: () => ({ username: null, email: null, passwordPlain: null, withdrawPin: null, registrationIp: null, lastLoginIp: null, historicalIps: [], paymentDepositLimit: 0, role: "client", adminId: null, createdBy: null, adminNote: "", balance: 0, isActive: true, lastLoginAt: null, totalDeposited: 0, totalWithdrawn: 0, vipLevel: 0, blockedGames: [], referralCode: null, referredBy: null, commissionEarned: 0, agentCommissionPct: null }) });

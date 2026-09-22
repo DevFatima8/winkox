@@ -20,7 +20,7 @@ export function GatewayCheckout({ id }: { id: string }) {
   const [err, setErr] = useState<string | null>(null);
   const [left, setLeft] = useState(0);
   const [result, setResult] = useState<{ txnRef: string; balance: number } | null>(null);
-  const [step, setStep] = useState<"confirm" | "otp" | "processing" | "done" | "failed">("confirm");
+  const [step, setStep] = useState<"confirm" | "otp" | "processing" | "pending" | "done" | "failed">("confirm");
   const otpRef = useRef<HTMLInputElement>(null);
 
   const load = useCallback(async () => {
@@ -30,6 +30,7 @@ export function GatewayCheckout({ id }: { id: string }) {
     setS(j);
     if (j.status === "otp") setStep("otp");
     if (j.status === "paid") setStep("done");
+    if (j.status === "pending") setStep("pending");
     if (["failed", "expired", "cancelled"].includes(j.status)) setStep("failed");
   }, [id]);
   useEffect(() => { load(); }, [load]);
@@ -56,7 +57,7 @@ export function GatewayCheckout({ id }: { id: string }) {
     const j = await post({ action: "verify", id, otp });
     setBusy(false);
     if (j.error) { setErr(j.error); setStep(j.failed ? "failed" : "otp"); setOtp(""); return; }
-    setResult({ txnRef: j.txnRef, balance: j.balance }); setStep("done");
+    setResult({ txnRef: j.txnRef, balance: j.balance }); setStep(j.pending ? "pending" : "done");
   };
   const cancel = async () => { await post({ action: "cancel", id }); setStep("failed"); setErr("Payment cancel kar di gayi."); };
 
@@ -128,6 +129,15 @@ export function GatewayCheckout({ id }: { id: string }) {
                 <Link href="/client" className="rounded-xl py-3 text-sm font-black text-white" style={{ background: b.accent }}>Play games</Link>
                 <Link href="/client/wallet" className="rounded-xl border border-slate-200 py-3 text-sm font-bold text-slate-700">Back to wallet</Link>
               </div>
+            </div>
+          )}
+          {step === "pending" && (
+            <div className="space-y-3 text-center">
+              <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-amber-100 text-amber-600">!</span>
+              <div className="text-xl font-black text-slate-900">Request submitted for review</div>
+              <p className="text-sm text-slate-600">Admin proof verify karega. Approval ke baad deposit balance mein add hoga ya withdrawal process hogi.</p>
+              <div className="rounded-xl bg-slate-50 p-3 text-left text-sm"><div className="flex justify-between"><span className="text-slate-500">Amount</span><b>Rs. {s.amount.toLocaleString()}</b></div><div className="flex justify-between"><span className="text-slate-500">Reference</span><b className="font-mono">{result?.txnRef ?? s.txnRef}</b></div><div className="flex justify-between"><span className="text-slate-500">Status</span><b className="text-amber-600">Pending admin approval</b></div></div>
+              <Link href="/client/wallet" className="block rounded-xl py-3 text-sm font-black text-white" style={{ background: b.accent }}>Back to wallet</Link>
             </div>
           )}
           {step === "failed" && (
