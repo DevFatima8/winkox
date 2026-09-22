@@ -162,6 +162,7 @@ export function CardTable({ table }: { table: Table }) {
 
   const opts = Object.keys(st.config.options);
   const winner = result && revealDone ? result.winner : null;
+  const hasRoundBet = st.myTotal > 0;
   const myBy = (o: string) => st.myBets.filter((b) => b.option === o).reduce((s, b) => s + b.amount, 0);
   const histTotal = st.history.length || 1;
 
@@ -228,7 +229,7 @@ export function CardTable({ table }: { table: Table }) {
                 </div>
               ) : (
                 <div className="rounded-full bg-black/40 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-white">
-                  {winner ? "Result" : "No more bets — dealing…"}
+                  {winner && hasRoundBet ? "Result" : winner ? "Round complete" : "No more bets — dealing…"}
                 </div>
               )}
             </div>
@@ -243,7 +244,7 @@ export function CardTable({ table }: { table: Table }) {
             </div>
 
             {/* winner banner */}
-            {winner && (
+            {winner && hasRoundBet && (
               <div className="pointer-events-none absolute inset-x-0 top-1/2 flex -translate-y-1/2 justify-center">
                 <div className={`animate-[pop_.4s_ease-out] rounded-2xl bg-gradient-to-r px-8 py-3 text-2xl font-black uppercase tracking-wider text-white shadow-2xl ${ZONE[winner].bg}`}>
                   {winner === "tie" ? "TIE!" : `${st.config.options[winner].label} wins!`}
@@ -264,13 +265,13 @@ export function CardTable({ table }: { table: Table }) {
           <div className={`grid gap-2 ${opts.length === 3 ? "grid-cols-3" : "grid-cols-2"}`}>
             {opts.map((o) => {
               const z = ZONE[o]; const cfg = st.config.options[o]; const tot = st.totals[o]; const mine = myBy(o);
-              const isWin = winner === o;
+              const isWin = hasRoundBet && winner === o;
               return (
                 <button
                   key={o}
                   disabled={!inBetting || busy}
                   onClick={() => bet(o)}
-                  className={`relative overflow-hidden rounded-2xl bg-gradient-to-b p-3 text-left text-white shadow-lg transition ${z.bg} ${inBetting ? "hover:brightness-110 active:scale-[.98]" : "opacity-90"} ${isWin ? `ring-4 ${z.ring}` : ""} ${winner && !isWin ? "opacity-50" : ""} disabled:cursor-not-allowed`}
+                  className={`relative overflow-hidden rounded-2xl bg-gradient-to-b p-3 text-left text-white shadow-lg transition ${z.bg} ${inBetting ? "hover:brightness-110 active:scale-[.98]" : "opacity-90"} ${isWin ? `ring-4 ${z.ring}` : ""} ${hasRoundBet && winner && !isWin ? "opacity-50" : ""} disabled:cursor-not-allowed`}
                 >
                   <div className="flex items-baseline justify-between">
                     <span className="text-lg font-black uppercase">{cfg.label}</span>
