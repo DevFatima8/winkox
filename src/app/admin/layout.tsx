@@ -2,37 +2,39 @@
 import { useEffect, type ReactNode } from "react";
 import { Shell } from "@/components/Shell";
 import { useSession } from "@/lib/useDb";
+import { useI18n } from "@/lib/i18n/client";
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const { user, loading } = useSession();
   useEffect(() => { if (!loading && (!user || user.role !== "admin")) window.location.replace("/login"); }, [user, loading]);
   if (loading || !user || user.role !== "admin") return <div className="wx-bg flex min-h-screen items-center justify-center text-sm text-[#b8a7e6]"><span className="h-8 w-8 animate-spin rounded-full border-2 border-[#00e5a0] border-t-transparent" /></div>;
   const superNav = user.level >= 2;
+  const { t } = useI18n();
   const nav = [
-    { href: "/admin", label: "Dashboard", icon: "📊" },
-    { href: "/admin/support", label: "Live Support", icon: "💬" },
-    { href: "/admin/users", label: "Users", icon: "👥" },
-    { href: "/admin/deposits", label: "Deposits", icon: "💳" },
-    { href: "/admin/withdrawals", label: "Withdrawals", icon: "💳" },
-    { href: "/admin/feedback", label: "Feedback", icon: "📢" },
-    { href: "/admin/games", label: superNav ? "Games On/Off" : "Games", icon: "🎮" },
-    { href: "/admin/results", label: "Game Results", icon: "🎯" },
-    { href: "/admin/records", label: "Records", icon: "📒" },
-    { href: "/admin/agents", label: "Agents & Referrals", icon: "🤝" },
-    { href: "/admin/notifications", label: "Notifications", icon: "🔔" },
+    { href: "/admin", label: t("dashboard"), icon: "📊" },
+    { href: "/admin/support", label: t("liveSupportAdmin"), icon: "💬" },
+    { href: "/admin/users", label: t("usersAdmin"), icon: "👥" },
+    { href: "/admin/deposits", label: t("depositsAdmin"), icon: "💳" },
+    { href: "/admin/withdrawals", label: t("withdrawalsAdmin"), icon: "💳" },
+    { href: "/admin/feedback", label: t("feedbackAdmin"), icon: "📢" },
+    { href: "/admin/games", label: superNav ? t("gamesOnOff") : t("gamesAdmin"), icon: "🎮" },
+    { href: "/admin/results", label: t("gameResultsAdmin"), icon: "🎯" },
+    { href: "/admin/records", label: t("recordsAdmin"), icon: "📒" },
+    { href: "/admin/agents", label: t("agentsAdmin"), icon: "🤝" },
+    { href: "/admin/notifications", label: t("notificationsAdmin"), icon: "🔔" },
     ...(superNav ? [
-      { href: "/admin/staff", label: "Admins / Staff", icon: "🛡️" },
-      { href: "/admin/logs", label: "Activity Logs", icon: "📜" },
-      { href: "/admin/cleanup", label: "History Cleanup", icon: "🧹" },
-      { href: "/admin/vip", label: "VIP Levels", icon: "👑" },
-      { href: "/admin/help", label: "Help Center", icon: "📘" },
-      { href: "/admin/payments", label: "Payment Accounts", icon: "🏦" },
-      { href: "/admin/settings", label: "Settings", icon: "⚙️" },
+      { href: "/admin/staff", label: t("staffAdmin"), icon: "🛡️" },
+      { href: "/admin/logs", label: t("activityLogs"), icon: "📜" },
+      { href: "/admin/cleanup", label: t("historyCleanup"), icon: "🧹" },
+      { href: "/admin/vip", label: t("vipLevelsAdmin"), icon: "👑" },
+      { href: "/admin/help", label: t("helpCenterAdmin"), icon: "📘" },
+      { href: "/admin/payments", label: t("paymentAccountsAdmin"), icon: "🏦" },
+      { href: "/admin/settings", label: t("settingsAdmin"), icon: "⚙️" },
     ] : []),
-    { href: "/admin/account", label: "My Account", icon: "👤" },
+    { href: "/admin/account", label: t("myAccountAdmin"), icon: "👤" },
   ];
   return (
-    <Shell title={superNav ? "Super Admin" : "Admin"} nav={nav} userName={`${user.name}${user.adminId ? ` · ${user.adminId}` : ""}`} support={false} showInstallPrompt={false} badge={<span className="btn-violet rounded-lg px-3 py-1 text-xs font-bold">{superNav ? "SUPER ADMIN" : "ADMIN"}</span>}>
+    <Shell title={superNav ? t("superAdmin") : t("admin")} nav={nav} userName={`${user.name}${user.adminId ? ` · ${user.adminId}` : ""}`} support={false} showInstallPrompt={false} badge={<span className="btn-violet rounded-lg px-3 py-1 text-xs font-bold">{superNav ? t("superAdmin") : t("admin")}</span>}>
       {children}
     </Shell>
   );

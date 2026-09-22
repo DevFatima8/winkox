@@ -9,7 +9,7 @@ type Table = "aviator" | "aviator-x";
 type Bet = { id: string; slot: number; bet: number; win: number; outcome: string; data: string | null };
 type State = {
   serverNow: number; table: Table;
-  config: { name: string; slots: number; minBet: number; maxBet: number; waitMs: number; growth: number; maxWin: number };
+  config: { name: string; slots: number; minBet: number; maxBet: number; waitMs: number; growth: number; maxMult: number };
   round: { id: number; status: "waiting" | "running" | "crashed"; startsAt: number; endedAt: number | null; crashPoint: number | null };
   history: { id: number; crashPoint: number }[];
   bets: { id: string; name: string; bet: number; win: number; outcome: string; data: string | null; mult: number | null }[];
@@ -127,7 +127,7 @@ export function AviatorGame({ table = "aviator" }: { table?: Table }) {
       const now = Date.now() + offset;
       let ph = s.round.status; let m = 1;
       if (ph === "waiting") { setCountdown(Math.max(0, (s.round.startsAt - now) / 1000)); if (now >= s.round.startsAt) ph = "running"; }
-      if (ph === "running") m = Math.floor(Math.exp(s.config.growth * Math.max(0, (now - s.round.startsAt) / 1000)) * 100) / 100;
+      if (ph === "running") m = Math.min(s.config.maxMult, Math.floor(Math.exp(s.config.growth * Math.max(0, (now - s.round.startsAt) / 1000)) * 100) / 100);
       if (ph === "crashed") m = s.round.crashPoint ?? m;
       setMult(m); setPhase(ph);
       // auto-bet: at waiting phase, place once per round if enabled and no bet yet
@@ -251,15 +251,15 @@ export function AviatorGame({ table = "aviator" }: { table?: Table }) {
           </div>
 
           {/* bet panels */}
-          <div className="overflow-x-auto pb-1" style={{ background: T.panel2 }}>
-            <div className={`grid min-w-[680px] gap-2 p-2 ${slots === 3 ? "grid-cols-3" : "grid-cols-2"} lg:min-w-0`}>
+          <div className="pb-1" style={{ background: T.panel2 }}>
+            <div className={`grid min-w-0 gap-2 p-2 ${slots === 3 ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" : "grid-cols-1 sm:grid-cols-2"}`}>
               {Array.from({ length: slots }, (_, i) => {
                 const p = panels[i];
                 const mine = state.myBets.find((b) => b.slot === i) ?? null;
                 const queued = state.queued.find((q) => q.slot === i) ?? null;
                 const amount = Number(p.amount) || 0;
                 const pending = mine?.outcome === "pending";
-                const potential = Math.min(state.config.maxWin, Math.floor((mine?.bet ?? amount) * mult * 100) / 100);
+                const potential = Math.floor((mine?.bet ?? amount) * mult * 100) / 100;
                 const setAmt = (v: number) => setPanel(i, { amount: Math.max(state.config.minBet, Math.min(state.config.maxBet, v)).toFixed(2) });
                 let mode: "bet" | "cancel" | "cashout" | "queued" | "next";
                 if (pending && (phase === "running")) mode = "cashout";
@@ -270,9 +270,9 @@ export function AviatorGame({ table = "aviator" }: { table?: Table }) {
                 const locked = pending || !!queued;
                 const border = mine?.outcome === "win" ? "#427f00" : pending || queued ? T.accent : T.line;
                 return (
-                  <div key={i} className="min-w-[220px] rounded-xl p-2 lg:min-w-0" style={{ background: T.panel, border: `1px solid ${border}` }}>
+                  <div key={i} className="min-w-0 rounded-xl p-2" style={{ background: T.panel, border: `1px solid ${border}` }}>
                     <div className="mb-1.5 flex justify-center"><div className="flex rounded-full p-0.5 text-[10px] font-semibold" style={{ background: T.panel2 }}><button onClick={() => setPanel(i, { tab: "bet" })} className={`rounded-full px-3 py-0.5 ${p.tab === "bet" ? "bg-[#2c2d30] text-white" : "text-slate-400"}`}>Bet</button><button onClick={() => setPanel(i, { tab: "auto" })} className={`rounded-full px-3 py-0.5 ${p.tab === "auto" ? "bg-[#2c2d30] text-white" : "text-slate-400"}`}>Auto</button></div></div>
-                    <div className="grid grid-cols-[1fr_1.05fr] gap-1.5">
+                    <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-[1fr_1.05fr]">
                       <div className={locked ? "pointer-events-none opacity-60" : ""}>
                         <div className="flex items-center gap-1 rounded-full bg-black px-1 py-0.5" style={{ border: `1px solid ${T.line}` }}>
                           <button onClick={() => setAmt(amount - 10)} className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-base leading-none text-slate-400" style={{ border: `1px solid #3c3e44` }}>−</button>
@@ -285,7 +285,7 @@ export function AviatorGame({ table = "aviator" }: { table?: Table }) {
                           <button onClick={() => setAmt(Number(p.customAmount) || state.config.minBet)} className={`shrink-0 rounded-md px-2 py-1 text-[8px] font-black ${amount === (Number(p.customAmount) || state.config.minBet) ? "bg-[#28a909] text-white" : "text-slate-300"}`} style={amount === (Number(p.customAmount) || state.config.minBet) ? {} : { background: T.panel }}>Custom</button>
                         </div>
                       </div>
-                      <div className="flex min-h-[68px]">
+                      <div className="flex min-h-[72px]">
                         {mode === "bet" && <button data-action="bet" disabled={p.busy} onClick={() => placeBet(i)} className="flex w-full flex-col items-center justify-center rounded-2xl bg-[#28a909] text-white shadow-[inset_0_-3px_0_rgba(0,0,0,.25)] transition hover:bg-[#36cb12] disabled:opacity-60"><span className="text-base font-semibold uppercase leading-none">Bet</span><span className="mt-1 text-sm font-bold">{fmt2(amount)} <span className="text-[9px]">PKR</span></span></button>}
                         {mode === "next" && <button data-action="bet-next" disabled={p.busy} onClick={() => placeBet(i)} className="flex w-full flex-col items-center justify-center rounded-2xl bg-[#28a909] text-white shadow-[inset_0_-3px_0_rgba(0,0,0,.25)] transition hover:bg-[#36cb12] disabled:opacity-60"><span className="text-base font-semibold uppercase leading-none">Bet</span><span className="mt-1 text-sm font-bold">{fmt2(amount)} <span className="text-[9px]">PKR</span></span></button>}
                         {mode === "queued" && <div className="flex w-full flex-col items-center justify-center gap-1"><span className="text-[9px] text-slate-400">Next round</span><button data-action="cancel" disabled={p.busy} onClick={() => cancelBet(i)} className="w-full rounded-2xl bg-[#cb011a] py-2 text-base font-semibold uppercase text-white shadow-[inset_0_-3px_0_rgba(0,0,0,.25)]">Cancel</button></div>}
@@ -317,7 +317,7 @@ export function AviatorGame({ table = "aviator" }: { table?: Table }) {
               <li><b className="text-white">Watch</b> the plane take off — the multiplier grows from 1.00x.</li>
               <li><b className="text-white">Cash out</b> before the plane flies away. Win = bet × multiplier.</li>
               <li><b className="text-white">Auto</b> — Auto Bet repeats your bet every round; Auto Cash Out cashes out at your target.</li>
-              <li>Min {state.config.minBet} PKR · Max {state.config.maxBet.toLocaleString()} PKR · Max win {state.config.maxWin.toLocaleString()} PKR per bet · RTP 97% · Provably fair.</li>
+              <li>Min {state.config.minBet} PKR · Max {state.config.maxBet.toLocaleString()} PKR per bet · Up to 100x · RTP 97% · Provably fair.</li>
             </ol>
           </div>
         </div>
@@ -385,12 +385,12 @@ function draw(canvas: HTMLCanvasElement, size: { w: number; h: number; dpr: numb
   if (phase === "waiting") { px = cx + 6; py = cy - 6; }
   if (phase === "crashed") { const dt = s.round.endedAt ? (now - s.round.endedAt) / 1000 : 0; px = px + dt * 460; py = py - dt * 280; }
   // keep plane visible: scale down on very short canvases
-  const planeScale = Math.min(1.1, Math.max(0.62, Math.min(W / 430, H / 300)));
+  const planeScale = Math.min(1.25, Math.max(0.62, Math.min(W / 390, H / 270)));
   ctx.save(); ctx.translate(px, py); ctx.rotate(phase === "waiting" ? 0 : -0.32); ctx.scale(planeScale, planeScale); drawPlane(ctx, now, phase === "crashed", T.plane); ctx.restore();
 }
 function drawPlane(ctx: CanvasRenderingContext2D, now: number, crashed: boolean, color: string) {
   const red = color, dark = "#8b0a1a";
-  ctx.save(); ctx.scale(1.2, 1.2);
+  ctx.save(); ctx.scale(1.3, 1.3);
   ctx.shadowColor = crashed ? "rgba(0,0,0,.4)" : `${red}88`; ctx.shadowBlur = 16;
   ctx.fillStyle = dark; ctx.beginPath(); ctx.moveTo(-26, 2); ctx.lineTo(-34, -14); ctx.lineTo(-22, -12); ctx.lineTo(-14, 0); ctx.closePath(); ctx.fill();
   ctx.beginPath(); ctx.moveTo(-24, 4); ctx.lineTo(-36, 10); ctx.lineTo(-30, 12); ctx.lineTo(-16, 6); ctx.closePath(); ctx.fill();
