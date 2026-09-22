@@ -91,11 +91,11 @@ export async function payBetCommission(bettorId: ObjectId, betAmount: number) {
     if (c < 0.01) return;
     await User.updateOne({ _id: dep.referredBy, isActive: true }, { $inc: { balance: c, commissionEarned: c } });
     await Commission.create({ beneficiaryId: dep.referredBy, fromUserId: bettorId, kind: "bet", baseAmount: betAmount, pct, amount: c, note: `Bet commission from ${dep.name}` });
-  } catch {}
+  } catch { }
 }
 
 export function genReferralCode(name: string) {
-  const base = name.replace(/[^a-zA-Z]/g, "").slice(0, 4).toUpperCase() || "WINX";
+  const base = name.replace(/[^a-zA-Z]/g, "").slice(0, 4).toUpperCase() || "WINKOX";
   return base + Math.random().toString(36).slice(2, 6).toUpperCase();
 }
 
