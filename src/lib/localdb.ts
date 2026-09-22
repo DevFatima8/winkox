@@ -9,7 +9,7 @@ export type ObjectId = string;
 type AnyDoc = Record<string, any> & { _id: string; createdAt?: Date; updatedAt?: Date };
 type DB = Record<string, AnyDoc[]>;
 
-const KEY = "winx555_db_v1";
+const KEY = "winxkox_db_v1";
 const isBrowser = () => typeof window !== "undefined" && typeof localStorage !== "undefined";
 const ISO = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/;
 
