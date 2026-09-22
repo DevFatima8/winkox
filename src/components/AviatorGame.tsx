@@ -1,6 +1,7 @@
 "use client";
 
 import { localApi } from "@/lib/client";
+import { playGameSound } from "@/lib/gameAudio";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -54,6 +55,7 @@ export function AviatorGame({ table = "aviator" }: { table?: Table }) {
   const sizeRef = useRef({ w: 640, h: 380, dpr: 1 });
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastCrashShown = useRef(0);
+  const lastRoundSound = useRef(0);
 
   const showToast = useCallback((t: "ok" | "err", m: string, sub?: string) => { setToast({ t, m, sub }); if (toastTimer.current) clearTimeout(toastTimer.current); toastTimer.current = setTimeout(() => setToast(null), 3000); }, []);
 
@@ -98,9 +100,9 @@ export function AviatorGame({ table = "aviator" }: { table?: Table }) {
     const j = await api("/api/aviator/cashout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ table, slot: i }) });
     setPanel(i, { busy: false });
     if (!j) return;
-    if (j.error) showToast("err", j.error); else showToast("ok", `You have cashed out! ${fmt2(j.multiplier)}x`, `Win PKR ${fmt2(j.win)}`);
+    if (j.error) showToast("err", j.error); else { if (sound) playGameSound("cashout"); showToast("ok", `You have cashed out! ${fmt2(j.multiplier)}x`, `Win PKR ${fmt2(j.win)}`); }
     await refresh();
-  }, [api, table, refresh, setPanel, showToast]);
+  }, [api, table, refresh, setPanel, showToast, sound]);
 
   const sizeCanvas = useCallback(() => {
     const wrap = wrapRef.current, canvas = canvasRef.current; if (!wrap || !canvas) return;
@@ -149,14 +151,19 @@ export function AviatorGame({ table = "aviator" }: { table?: Table }) {
       // lost toast
       if (ph === "crashed" && lastCrashShown.current !== s.round.id) {
         lastCrashShown.current = s.round.id;
+        if (sound) playGameSound("crash");
         const lost = s.myBets.filter((b) => b.outcome === "lose");
         if (lost.length) showToast("err", `Flew away at ${fmt2(s.round.crashPoint ?? m)}x`, `Lost PKR ${fmt2(lost.reduce((a, b) => a + b.bet, 0))}`);
+      }
+      if (ph === "running" && lastRoundSound.current !== s.round.id) {
+        lastRoundSound.current = s.round.id;
+        if (sound) playGameSound("launch");
       }
       draw(canvas, sizeRef.current, T, ph, m, now, s);
     };
     raf = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(raf);
-  }, [offset, T, placeBet, cashOut, showToast]);
+  }, [offset, T, placeBet, cashOut, showToast, sound]);
 
   if (!state) return <div className="flex h-[60vh] items-center justify-center rounded-2xl text-slate-400" style={{ background: T.bg }}>Loading {T.title}…</div>;
   const slots = state.config.slots;
