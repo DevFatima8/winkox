@@ -18,7 +18,7 @@ npm run dev      # http://localhost:3000
 ## Default login accounts (auto-created on first visit)
 | Role | Login ID / phone / username | Password |
 |---|---|---|
-| Owner (hidden / mysterious admin) | `WX-SYS-0000` · `03999999999` · `system` | `owner@winx555` |
+| Owner (hidden / mysterious admin) | `WX-SYS-0000` · `03999999999` · `system` | `owner@winkox` |
 | Super Admin | `WX-ADM-0001` · `03000000000` · `superadmin` | `admin123` |
 | Sub Admin | `WX-ADM-0002` · `03000000001` | `subadmin123` |
 | Client (Rs. 50,000, PIN 1234) | `demo` · `03001234567` | `client123` |
@@ -28,7 +28,7 @@ npm run dev      # http://localhost:3000
 Login page has a "Demo accounts" panel that fills these in with one tap.
 
 ## Reset data
-Browser DevTools → Application → Local Storage → delete key `winx555_db_v1` (or clear site data).
+Browser DevTools → Application → Local Storage → delete key `winkox_db_v1` (or clear site data).
 
 ## Connecting a real database later
 `src/lib/localdb.ts` implements the Mongoose query subset used by the app. The original Mongoose schema is

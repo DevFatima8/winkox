@@ -41,7 +41,7 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
       <div className="wx-card w-full max-w-md rounded-3xl p-8 shadow-[0_20px_60px_rgba(139,92,246,.35)]">
         <div className="mb-4 flex items-center justify-between"><Link href="/" className="inline-flex items-center gap-1 text-xs text-[#b8a7e6] hover:text-white">{t("backHome")}</Link><div className="flex items-center gap-2"><LanguageSwitch compact /><ThemeToggle compact /></div></div>
         <div className="mb-6 text-center">
-          <div className="mx-auto mb-3 flex items-center justify-center gap-2"><BrandLogo className="h-14 w-14 drop-shadow-[0_0_14px_rgba(255,184,0,.6)]" /><span className="text-3xl font-black"><span className="text-gold-grad">Win</span><span className="text-white">X</span><span className="text-violet-grad">555</span></span></div>
+          <div className="mx-auto mb-3 flex items-center justify-center gap-2"><BrandLogo className="h-14 w-14 drop-shadow-[0_0_14px_rgba(255,184,0,.6)]" /><span className="text-3xl font-black"><span className="text-gold-grad">Winko</span><span className="text-white">X</span><span className="text-violet-grad"></span></span></div>
           <h1 className="text-2xl font-black text-white">{mode === "login" ? t("loginTitle") : t("signupTitle")}</h1>
           <p className="text-sm text-[#b8a7e6]">
             {mode === "login" ? t("loginSub") : t("signupSub")}

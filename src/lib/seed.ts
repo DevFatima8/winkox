@@ -4,7 +4,7 @@ import { DEFAULT_HELP, DEFAULT_VIP } from "./platform";
 
 /** ===== DEFAULT LOGIN ACCOUNTS (LocalDB / demo mode) ===== */
 export const DEFAULT_ACCOUNTS = [
-  { role: "owner", name: "System", phone: "03999999999", username: "system", adminId: "WX-SYS-0000", password: "owner@winx555" },
+  { role: "owner", name: "System", phone: "03999999999", username: "system", adminId: "WX-SYS-0000", password: "owner@winkox" },
   { role: "admin", name: "Super Admin", phone: "03000000000", username: "superadmin", adminId: "WX-ADM-0001", password: "admin123" },
   { role: "subadmin", name: "Ahmed Support", phone: "03000000001", username: "wx-adm-0002", adminId: "WX-ADM-0002", password: "subadmin123" },
   { role: "agent", name: "Bilal Agent", phone: "03007654321", username: "agent", adminId: null, password: "agent123", referralCode: "AGENT01", balance: 5000 },
