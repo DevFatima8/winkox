@@ -3,8 +3,10 @@
 import { localApi } from "@/lib/client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useRef } from "react";
 import { useI18n } from "@/lib/i18n/client";
 import { BellIcon, XIcon, GiftIcon, MegaphoneIcon, CheckIcon, ShieldIcon } from "@/components/Icons";
+import { playGameSound } from "@/lib/gameAudio";
 
 type N = { id: string; title: string; body: string; type: string; at: string; read: boolean };
 
@@ -13,6 +15,7 @@ export function NotificationBell({ loggedIn }: { loggedIn: boolean }) {
   const [unread, setUnread] = useState(0);
   const [open, setOpen] = useState(false);
   const [toast, setToast] = useState<N | null>(null);
+  const latestIdRef = useRef<string | null>(null);
   const { t } = useI18n();
   const load = useCallback(async () => {
     const r = await localApi("/api/notifications", { cache: "no-store" });
@@ -20,11 +23,14 @@ export function NotificationBell({ loggedIn }: { loggedIn: boolean }) {
     const j = await r.json();
     setItems(j.items);
     setUnread(j.unread);
+    const latest = j.items[0] as N | undefined;
+    if (latest && latestIdRef.current && latest.id !== latestIdRef.current && loggedIn) playGameSound("coin");
+    if (latest) latestIdRef.current = latest.id;
     // popup latest unread once
-    const latest = j.items.find((n: N) => !n.read);
-    if (latest && loggedIn) {
-      const key = "wx_seen_" + latest.id;
-      if (!sessionStorage.getItem(key)) { sessionStorage.setItem(key, "1"); setToast(latest); setTimeout(() => setToast(null), 7000); }
+    const latestUnread = j.items.find((n: N) => !n.read);
+    if (latestUnread && loggedIn) {
+      const key = "wx_seen_" + latestUnread.id;
+      if (!sessionStorage.getItem(key)) { sessionStorage.setItem(key, "1"); setToast(latestUnread); setTimeout(() => setToast(null), 7000); }
     }
   }, [loggedIn]);
   useEffect(() => { load(); const id = setInterval(load, 5000); return () => clearInterval(id); }, [load]);

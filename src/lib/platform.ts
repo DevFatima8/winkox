@@ -23,6 +23,11 @@ export async function getSettings(): Promise<SettingsDoc> {
     await Settings.updateOne({ key: "main" }, { $set: { vipLevels: DEFAULT_VIP } });
     s = { ...s, vipLevels: DEFAULT_VIP as SettingsDoc["vipLevels"] };
   }
+  if (s.referral?.referralDepositBonus == null) {
+    const referral = { ...(s.referral ?? {}), depositCommissionPct: 2, referralDepositBonus: 288 };
+    await Settings.updateOne({ key: "main" }, { $set: { referral } });
+    s = { ...s, referral: { ...s.referral, ...referral } as SettingsDoc["referral"] };
+  }
   return s;
 }
 
@@ -71,7 +76,13 @@ export async function payDepositCommission(depositorId: ObjectId, amount: number
   const ref = await User.findById(dep.referredBy, "role agentCommissionPct isActive").lean();
   if (!ref || !ref.isActive) return;
   const s = await getSettings();
-  const pct = ref.role === "agent" ? (ref.agentCommissionPct ?? s.referral?.agentDepositCommissionPct ?? 8) : (s.referral?.depositCommissionPct ?? 4);
+  const pct = ref.role === "agent" ? (ref.agentCommissionPct ?? s.referral?.agentDepositCommissionPct ?? 8) : (s.referral?.depositCommissionPct ?? 2);
+  const approvedDeposits = await Transaction.countDocuments({ userId: depositorId, type: "deposit", status: "approved" });
+  const referralBonus = s.referral?.referralDepositBonus ?? 288;
+  if (approvedDeposits === 1 && referralBonus > 0) {
+    await User.updateOne({ _id: ref._id }, { $inc: { balance: referralBonus, commissionEarned: referralBonus } });
+    await Commission.create({ beneficiaryId: ref._id, fromUserId: depositorId, kind: "referral", baseAmount: amount, pct: 0, amount: referralBonus, note: `Referral deposit bonus from ${dep.name}` });
+  }
   if (pct <= 0) return;
   const c = Math.round(amount * pct) / 100;
   if (c <= 0) return;

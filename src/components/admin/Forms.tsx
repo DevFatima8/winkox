@@ -49,7 +49,7 @@ export type SettingsShape = {
   support: { enabled: boolean; is247: boolean; startHour: number; endHour: number; offlineMessage: string; welcomeMessage: string };
   links: { whatsapp: string; whatsappChannel: string; telegram: string; telegramChannel: string; facebook: string; instagram: string; youtube: string };
   app: { androidUrl: string; iosUrl: string; version: string };
-  referral: { depositCommissionPct: number; betCommissionPct: number; signupBonus: number; agentDepositCommissionPct: number };
+  referral: { depositCommissionPct: number; betCommissionPct: number; signupBonus: number; referralDepositBonus: number; agentDepositCommissionPct: number };
   wallet: { minDeposit: number; minWithdraw: number };
   fakeGateway: { enabled: boolean; autoWithdraw: boolean; testOtp: string; maxPerTxn: number; dailyLimit: number; label: string };
 };
@@ -99,6 +99,7 @@ export function SettingsForm({ s }: { s: SettingsShape }) {
           <label className="block"><span className={label}>User deposit commission %</span><input name="refDeposit" type="number" step="0.1" defaultValue={s.referral.depositCommissionPct} className={input} /></label>
           <label className="block"><span className={label}>Bet commission %</span><input name="refBet" type="number" step="0.1" defaultValue={s.referral.betCommissionPct} className={input} /></label>
           <label className="block"><span className={label}>Agent deposit commission %</span><input name="agentDeposit" type="number" step="0.1" defaultValue={s.referral.agentDepositCommissionPct} className={input} /></label>
+          <label className="block"><span className={label}>First deposit referral bonus (Rs.)</span><input name="referralBonus" type="number" defaultValue={s.referral.referralDepositBonus} className={input} /></label>
           <label className="block"><span className={label}>Signup bonus (Rs.)</span><input name="signupBonus" type="number" defaultValue={s.referral.signupBonus} className={input} /></label>
         </div>
       </section>

@@ -75,7 +75,7 @@ export function Shell({ title, nav, userName, badge, children, support = true, s
         </div>
         <div className="flex shrink-0 items-center gap-1.5">
           <span className="hidden min-[420px]:inline-flex">{badge}</span>
-          {support && <NotificationBell loggedIn />}
+          <NotificationBell loggedIn />
           <button type="button" title="Reload page" aria-label="Reload page" onClick={() => window.location.reload()} className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#3a2470] text-[#b8a7e6] transition hover:border-[#00e5a0] hover:text-[#00e5a0]"><RefreshIcon size={16} /></button>
           <button className="rounded-lg border border-[#3a2470] px-2 py-1.5 text-[11px] text-[#b8a7e6]" onClick={logout}>{t("logout")}</button>
         </div>
@@ -85,7 +85,7 @@ export function Shell({ title, nav, userName, badge, children, support = true, s
       <main className="wx-main min-w-0 flex-1 p-3 pb-28 sm:p-4 md:pb-6 lg:p-8 2xl:px-12">
         <div className="mx-auto w-full max-w-[1600px] 2xl:max-w-[1800px]">
           {support && <div className="mb-3 hidden items-center justify-end gap-2 md:flex"><ThemeToggle /><NotificationBell loggedIn /></div>}
-          {!support && <div className="mb-3 hidden items-center justify-end gap-2 md:flex"><ThemeToggle /><LanguageSwitch compact /></div>}
+          {!support && <div className="mb-3 hidden items-center justify-end gap-2 md:flex"><ThemeToggle /><LanguageSwitch compact /><NotificationBell loggedIn /></div>}
           {children}
         </div>
       </main>
