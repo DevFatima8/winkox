@@ -5,6 +5,7 @@ import { getLocale } from "@/lib/i18n/server";
 import { I18nProvider } from "@/lib/i18n/client";
 import { getTheme } from "@/lib/theme";
 import { ParticlesBackground } from "@/components/ParticlesBackground";
+import { PromoPopups } from "@/components/PromoPopups";
 
 export const metadata: Metadata = {
   title: "winkox — Khelo aur Kamao | winkox.shop",
@@ -34,7 +35,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
       <body className="wx-bg min-h-screen text-slate-100 antialiased">
         <ParticlesBackground />
         <div className="relative z-[1]">
-          <I18nProvider locale={locale}>{children}</I18nProvider>
+          <I18nProvider locale={locale}>{children}<PromoPopups /></I18nProvider>
         </div>
       </body>
     </html>
