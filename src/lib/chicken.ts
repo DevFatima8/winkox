@@ -2,7 +2,7 @@ import { dbConnect } from "./mongo";
 import { ChickenGame, Game, GameResult, User, oid, type ObjectId } from "@/models";
 import { checkGameAccess } from "./gameAccess";
 import { payBetCommission } from "./platform";
-import { isWinOutcome, MAX_MULTIPLIER } from "./outcomes";
+import { capWinAmount, isWinOutcome, MAX_MULTIPLIER } from "./outcomes";
 
 
 export const MIN_BET = 10;
@@ -70,7 +70,7 @@ function publicState(g: GameLike) {
   };
 }
 
-const winFor = (bet: number, m: number) => Math.floor(bet * Math.min(MAX_MULTIPLIER, m) * 100) / 100;
+const winFor = (bet: number, m: number) => Math.floor(capWinAmount(bet, bet * Math.min(MAX_MULTIPLIER, m)) * 100) / 100;
 
 export async function getState(userId: string | null) {
   await dbConnect();

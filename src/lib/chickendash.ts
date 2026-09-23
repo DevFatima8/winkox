@@ -3,7 +3,7 @@ import { ChickenDash, Game, GameResult, User, oid, type ObjectId, type ChickenDa
 import type { Doc } from "./localdb";
 import { checkGameAccess } from "./gameAccess";
 import { payBetCommission } from "./platform";
-import { isWinOutcome, MAX_MULTIPLIER } from "./outcomes";
+import { capWinAmount, isWinOutcome, MAX_MULTIPLIER } from "./outcomes";
 
 
 export const MIN_BET = 10;
@@ -109,7 +109,7 @@ function pub(g: GameLike) {
   };
 }
 
-const winFor = (bet: number, m: number, bonus: number) => r2(bet * Math.min(MAX_MULTIPLIER, m + bonus));
+const winFor = (bet: number, m: number, bonus: number) => r2(capWinAmount(bet, bet * Math.min(MAX_MULTIPLIER, m + bonus)));
 
 export async function getState(userId: string | null) {
   await dbConnect();

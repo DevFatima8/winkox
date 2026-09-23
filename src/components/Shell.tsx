@@ -9,6 +9,8 @@ import { LanguageSwitch } from "./LanguageSwitch";
 import { ThemeToggle } from "./ThemeToggle";
 import { BrandLogo } from "./BrandLogo";
 import { MobileNavDrawer, ActiveLink } from "./MobileNavDrawer";
+import { ReferralCommissionPopup } from "./ReferralCommissionPopup";
+import { GameResultPopup } from "./GameResultPopup";
 import { useI18n } from "@/lib/i18n/client";
 import { GamepadIcon, WalletIcon, UsersIcon, HistoryIcon, UserIcon, BellIcon, BookIcon, HomeIcon, TargetIcon, ShieldIcon, CrownIcon, MegaphoneIcon, BanknoteIcon, HeadsetIcon, PackageIcon, PercentIcon, CalendarIcon, CircleHelpIcon, RefreshIcon } from "./Icons";
 import type { ReactNode } from "react";
@@ -20,45 +22,46 @@ const ico = (i: string) => ICONS[i] ?? <span className="text-lg leading-none">{i
 const linkBase = "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[#e9ddff] transition hover:bg-[#8b5cf6]/20 hover:text-white md:justify-center xl:justify-start";
 const linkActive = "bg-[#8b5cf6]/20 text-white ring-1 ring-[#8b5cf6]/40";
 
-export function Shell({ title, nav, userName, badge, children, support = true, showInstallPrompt = true }: { title: string; nav: NavItem[]; userName: string; badge?: ReactNode; children: ReactNode; support?: boolean; showInstallPrompt?: boolean }) {
+export function Shell({ title, nav, userName, badge, children, support = true, showInstallPrompt = true, hideSidebar = false }: { title: string; nav: NavItem[]; userName: string; badge?: ReactNode; children: ReactNode; support?: boolean; showInstallPrompt?: boolean; hideSidebar?: boolean }) {
   const { t } = useI18n();
   const logout = async () => { await destroySession(); window.location.assign("/login"); };
   const mobileItems = [...nav.map((n) => ({ href: n.href, label: n.label, icon: ico(n.icon) })), { href: "/", label: t("home"), icon: <HomeIcon size={20} /> }];
   const tabs = nav.slice(0, 4);
 
   return (
-    <div className="wx-shell-root wx-bg flex min-h-[100dvh] flex-col md:flex-row">
-      {/* ===== Desktop / tablet sidebar: icons-only (md–lg), full (xl+), SCROLLABLE ===== */}
-      <aside className="wx-sidebar-desktop hidden shrink-0 flex-col border-r border-[#3a2470] bg-[#140c2a]/90 backdrop-blur rtl:border-l rtl:border-r-0 md:sticky md:top-0 md:flex md:h-[100dvh] md:w-[4.5rem] xl:w-64 2xl:w-72">
-        {/* header (fixed) */}
-        <Link href="/" className="flex shrink-0 items-center gap-3 border-b border-[#3a2470]/60 px-3 py-4 xl:px-5">
-          <BrandLogo className="h-10 w-10 shrink-0 drop-shadow-[0_0_10px_rgba(255,184,0,.5)]" />
-          <div className="hidden min-w-0 xl:block">
-            <div className="truncate font-black text-white"><span className="text-gold-grad">winkox</span> <span className="text-xs font-semibold text-[#b8a7e6]">{title}</span></div>
-            <div className="truncate text-xs text-[#b8a7e6]">{userName}</div>
-          </div>
-        </Link>
-        {/* nav (scrolls independently) */}
-        <nav className="wx-scroll flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto overscroll-contain px-2 py-3 xl:px-3">
-          {nav.map((n) => (
-            <ActiveLink key={n.href} href={n.href} exact={n.href === "/admin" || n.href === "/client"} className={linkBase} activeClassName={linkActive}>
-              <span className="shrink-0 text-[#c4b5fd]" title={n.label}>{ico(n.icon)}</span>
-              <span className="hidden truncate xl:inline">{n.label}</span>
-            </ActiveLink>
-          ))}
-          <Link href="/" title={t("home")} className={linkBase}>
-            <span className="shrink-0 text-[#c4b5fd]"><HomeIcon size={20} /></span><span className="hidden xl:inline">{t("home")}</span>
+    <div className={`wx-shell-root wx-bg flex min-h-[100dvh] ${hideSidebar ? "flex-col" : "flex-col md:flex-row"}`}>
+      {!hideSidebar && (
+        <aside className="wx-sidebar-desktop hidden shrink-0 flex-col border-r border-[#3a2470] bg-[#140c2a]/90 backdrop-blur rtl:border-l rtl:border-r-0 md:sticky md:top-0 md:flex md:h-[100dvh] md:w-[4.5rem] xl:w-64 2xl:w-72">
+          {/* header (fixed) */}
+          <Link href="/" className="flex shrink-0 items-center gap-3 border-b border-[#3a2470]/60 px-3 py-4 xl:px-5">
+            <BrandLogo className="h-10 w-10 shrink-0 drop-shadow-[0_0_10px_rgba(255,184,0,.5)]" />
+            <div className="hidden min-w-0 xl:block">
+              <div className="truncate font-black text-white"><span className="text-gold-grad">winkox</span> <span className="text-xs font-semibold text-[#b8a7e6]">{title}</span></div>
+              <div className="truncate text-xs text-[#b8a7e6]">{userName}</div>
+            </div>
           </Link>
-        </nav>
-        {/* footer (fixed) */}
-        <div className="shrink-0 border-t border-[#3a2470]/60 p-2 xl:p-4">
-          <div className="hidden xl:block">{badge}</div>
-          <div className="mt-2 flex flex-col items-center gap-2 xl:mt-3 xl:flex-row xl:justify-start"><LanguageSwitch compact /><ThemeToggle compact /></div>
-          <button title={t("logout")} className="mt-2 w-full rounded-xl border border-[#3a2470] py-2 text-sm text-[#b8a7e6] hover:border-[#ff3b5c] hover:text-[#ff3b5c] xl:mt-3" onClick={logout}>
-            <span className="xl:hidden">⎋</span><span className="hidden xl:inline">{t("logout")}</span>
-          </button>
-        </div>
-      </aside>
+          {/* nav (scrolls independently) */}
+          <nav className="wx-scroll flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto overscroll-contain px-2 py-3 xl:px-3">
+            {nav.map((n) => (
+              <ActiveLink key={n.href} href={n.href} exact={n.href === "/admin" || n.href === "/client"} className={linkBase} activeClassName={linkActive}>
+                <span className="shrink-0 text-[#c4b5fd]" title={n.label}>{ico(n.icon)}</span>
+                <span className="hidden truncate xl:inline">{n.label}</span>
+              </ActiveLink>
+            ))}
+            <Link href="/" title={t("home")} className={linkBase}>
+              <span className="shrink-0 text-[#c4b5fd]"><HomeIcon size={20} /></span><span className="hidden xl:inline">{t("home")}</span>
+            </Link>
+          </nav>
+          {/* footer (fixed) */}
+          <div className="shrink-0 border-t border-[#3a2470]/60 p-2 xl:p-4">
+            <div className="hidden xl:block">{badge}</div>
+            <div className="mt-2 flex flex-col items-center gap-2 xl:mt-3 xl:flex-row xl:justify-start"><LanguageSwitch compact /><ThemeToggle compact /></div>
+            <button title={t("logout")} className="mt-2 w-full rounded-xl border border-[#3a2470] py-2 text-sm text-[#b8a7e6] hover:border-[#ff3b5c] hover:text-[#ff3b5c] xl:mt-3" onClick={logout}>
+              <span className="xl:hidden">⎋</span><span className="hidden xl:inline">{t("logout")}</span>
+            </button>
+          </div>
+        </aside>
+      )}
 
       {/* ===== Mobile top bar ===== */}
       <div className="sticky top-0 z-40 flex items-center justify-between gap-2 border-b border-[#3a2470] bg-[#140c2a]/95 px-2 py-2 backdrop-blur md:hidden">
@@ -82,14 +85,16 @@ export function Shell({ title, nav, userName, badge, children, support = true, s
       </div>
 
       {/* ===== Main ===== */}
-      <main className="wx-main min-w-0 flex-1 p-3 pb-28 sm:p-4 md:pb-6 lg:p-8 2xl:px-12">
-        <div className="mx-auto w-full max-w-[1600px] 2xl:max-w-[1800px]">
+      <main className={`wx-main min-w-0 flex-1 p-3 pb-28 sm:p-4 md:pb-6 lg:p-8 2xl:px-12 ${hideSidebar ? "md:pb-8" : ""}`}>
+        <div className={`mx-auto w-full ${hideSidebar ? "max-w-[1300px]" : "max-w-[1600px] 2xl:max-w-[1800px]"}`}>
           {support && <div className="mb-3 hidden items-center justify-end gap-2 md:flex"><ThemeToggle /><NotificationBell loggedIn /></div>}
           {!support && <div className="mb-3 hidden items-center justify-end gap-2 md:flex"><ThemeToggle /><LanguageSwitch compact /><NotificationBell loggedIn /></div>}
           {children}
         </div>
       </main>
       {support && <SupportWidget userName={userName} />}
+      <ReferralCommissionPopup />
+      <GameResultPopup />
       <PwaRegister />
       {showInstallPrompt && <InstallPrompt />}
 

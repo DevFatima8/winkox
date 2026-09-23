@@ -158,7 +158,7 @@ export function GameCard({ slug, href }: { slug: string; href: string }) {
         <div className="absolute inset-0 bg-gradient-to-t from-[#0b0716] via-transparent to-transparent" />
         <span className={`absolute left-2 top-1.5 text-[10px] font-black uppercase drop-shadow ${PROVIDER_STYLE[m.provider]}`}>{m.provider}</span>
         {m.badge && <span className={`absolute right-1.5 top-1.5 rounded-md px-1.5 py-0.5 text-[9px] font-black text-white shadow ${BADGE_STYLE[m.badge]}`}>{m.badge}</span>}
-        <span className="btn-gold absolute bottom-2 left-1/2 flex -translate-x-1/2 items-center gap-1 rounded-full px-3.5 py-1 text-[10px] font-black opacity-0 transition group-hover:opacity-100"><PlayIcon size={10} /> PLAY</span>
+        <span className="btn-gold absolute bottom-2 left-1/2 flex min-w-[58px] -translate-x-1/2 items-center justify-center gap-1 whitespace-nowrap rounded-full px-3.5 py-1 text-[10px] font-black opacity-0 transition group-hover:opacity-100"><PlayIcon size={10} /> PLAY</span>
       </div>
     </span>
       <div className="flex items-center justify-between bg-[#140c2a] px-2 py-1.5">
@@ -195,7 +195,7 @@ export function BottomNav({ viewer, active }: { viewer: Viewer; active: "home" |
 }
 
 /* ---------------- full lobby ---------------- */
-export function Lobby({ viewer, cat, links = {} }: { viewer: Viewer; cat: string; links?: Links }) {
+export function Lobby({ viewer, cat, links = {}, showHeader = true }: { viewer: Viewer; cat: string; links?: Links; showHeader?: boolean }) {
   const { t, locale } = useI18n();
   const wa = links.whatsapp || BRAND.whatsapp; const tg = links.telegram || BRAND.telegram;
   const slides: Slide[] = SLIDES.map((sl, i) => ({ ...sl, kicker: t(`b${i + 1}k` as "b1k"), title: t(`b${i + 1}t` as "b1t"), sub: t(`b${i + 1}s` as "b1s"), cta: [t("registerNow"), t("playNow"), t("joinTable"), t("viewPromo")][i] }));
@@ -209,7 +209,7 @@ export function Lobby({ viewer, cat, links = {} }: { viewer: Viewer; cat: string
 
   return (
     <div className="wx-lobby wx-bg min-h-[100dvh] text-white">
-      <Header viewer={viewer} active="home" />
+      {showHeader && <Header viewer={viewer} active="home" />}
       <main className={`${CONTAINER} space-y-3 px-2 pb-28 pt-3 md:space-y-5 md:px-4 md:pb-12 lg:px-6`}>
         <BannerCarousel slides={slides} />
 

@@ -27,7 +27,7 @@ type State = {
 
 const RANKS = ["", "A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
 const SUITS = ["♠", "♥", "♦", "♣"];
-const CHIPS = [100, 300, 500, 1000];
+const CHIPS = [50, 100, 150, 200];
 const money = (n: number) => "Rs. " + n.toLocaleString("en-PK", { maximumFractionDigits: 2 });
 
 const ZONE: Record<string, { bg: string; ring: string; text: string; bead: string; short: string }> = {
@@ -152,6 +152,7 @@ export function CardTable({ table }: { table: Table }) {
     if (st.myTotal > 0) {
       const win = st.myExpected > 0;
       if (win) { playGameSound("coin"); speakGameVoice("cardWin"); } else { playGameSound("crash"); }
+      window.dispatchEvent(new CustomEvent("wx:game-result", { detail: { game: table === "dragon-tiger" ? "Dragon Tiger" : "Andar Bahar", bet: st.myTotal, win: st.myExpected, won: win } }));
       setToast({ roundNo: round.roundNo, text: win ? `Aap jeete ${money(st.myExpected)}` : `${money(st.myTotal)} haar gaye`, win });
     }
     const id = setTimeout(() => setToast(null), 5500);

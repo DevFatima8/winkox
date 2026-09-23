@@ -15,7 +15,9 @@ import { usePage, NOT_FOUND, REDIRECT } from "@/lib/useDb";
 export default function WalletPageClient({ params, searchParams }: { params?: Record<string, string>; searchParams?: Record<string, string> }) {
   const { t, locale } = useI18n();
   void locale;
-  void params; void searchParams;
+  void params;
+  const requestedAmount = Number(searchParams?.amount);
+  const initialDepositAmount = Number.isFinite(requestedAmount) && requestedAmount > 0 ? requestedAmount : undefined;
   return usePage(async () => {
     const me = (await getCurrentUser())!;
     await dbConnect();
@@ -39,11 +41,11 @@ export default function WalletPageClient({ params, searchParams }: { params?: Re
             {gw.enabled ? (
               <WalletTabs
                 tabs={[
-                  { key: "instant", label: gw.label, badge: "TEST", content: <InstantPayForm kind="deposit" min={gw.minDeposit} max={gw.maxPerTxn} label={gw.label} hasPin={me.hasPin} accounts={accounts} /> },
-                  { key: "manual", label: "Manual (TID)", content: <DepositForm accounts={accounts} /> },
+                  { key: "instant", label: gw.label, badge: "TEST", content: <InstantPayForm kind="deposit" min={gw.minDeposit} max={gw.maxPerTxn} initialAmount={initialDepositAmount} label={gw.label} hasPin={me.hasPin} accounts={accounts} /> },
+                  { key: "manual", label: "Manual (TID)", content: <DepositForm accounts={accounts} initialAmount={initialDepositAmount} /> },
                 ]}
               />
-            ) : <DepositForm accounts={accounts} />}
+            ) : <DepositForm accounts={accounts} initialAmount={initialDepositAmount} />}
           </Card>
           <Card title={t("withdrawTitle")}>
             {gw.enabled && gw.autoWithdraw ? (

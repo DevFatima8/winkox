@@ -121,6 +121,7 @@ export function PlinkoGame() {
     visRef.current.balls.push({ path: j.path, rows, start: performance.now(), col: j.bucket, id, flashed: new Set() });
     setTimeout(() => {
       setResults((rs) => [{ id, m: j.multiplier, payout: j.payout }, ...rs].slice(0, 6));
+      window.dispatchEvent(new CustomEvent("wx:game-result", { detail: { game: "Plinko", bet: amount, win: j.payout, won: j.payout > 0 } }));
       if (j.multiplier >= 1.5) { playGameSound("coin"); speakGameVoice("cardWin"); }
       setBalance(j.balance);
       inflightRef.current--; setInflight(inflightRef.current);
@@ -171,7 +172,7 @@ export function PlinkoGame() {
               <button disabled={auto} onClick={() => setAmount((a) => Math.min(max, a * 2))} className="border-l border-[#213743] bg-[#2f4553] px-3 text-xs font-bold text-white hover:bg-[#3d5564]">2×</button>
             </div>
           </label>
-          <div className="grid grid-cols-4 gap-1">{[100, 300, 500, 1000].map((v) => <button key={v} disabled={auto} onClick={() => setAmount(v)} className={`rounded-md py-1.5 text-[11px] font-bold ${amount === v ? "bg-[#00e701] text-slate-950" : "bg-[#0f212e] text-slate-300 ring-1 ring-[#2f4553]"}`}>{v}</button>)}</div>
+          <div className="grid grid-cols-4 gap-1">{[50, 100, 150, 200].map((v) => <button key={v} disabled={auto} onClick={() => setAmount(v)} className={`rounded-md py-1.5 text-[11px] font-bold ${amount === v ? "bg-[#00e701] text-slate-950" : "bg-[#0f212e] text-slate-300 ring-1 ring-[#2f4553]"}`}>{v}</button>)}</div>
           <div className="flex items-center gap-2 rounded-md border border-[#2f4553] bg-[#0f212e] px-2 py-1.5">
             <input type="number" min={min} max={max} value={customAmount} disabled={auto} onChange={(e) => setCustomAmount(Math.max(min, Math.min(max, Number(e.target.value) || min)))} className="w-16 bg-transparent text-center text-[11px] font-bold text-white outline-none" />
             <button disabled={auto} onClick={() => setAmount(customAmount)} className={`rounded-md px-2 py-1 text-[10px] font-black ${amount === customAmount ? "bg-[#00e701] text-slate-950" : "bg-[#2f4553] text-white"}`}>Custom</button>

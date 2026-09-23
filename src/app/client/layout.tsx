@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, type ReactNode } from "react";
+import { usePathname } from "next/navigation";
 import { Shell, fmt } from "@/components/Shell";
 import { useSession } from "@/lib/useDb";
 import { useI18n } from "@/lib/i18n/client";
@@ -8,6 +9,8 @@ import { SupportWidget } from "@/components/SupportWidget";
 export default function ClientLayout({ children }: { children: ReactNode }) {
   const { user, loading } = useSession();
   const { t } = useI18n();
+  const pathname = usePathname();
+  const hideSidebar = pathname.startsWith("/client/games/");
   useEffect(() => {
     if (loading) return;
     if (!user) window.location.replace("/login");
@@ -37,7 +40,7 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
     { href: "/help", label: t("helpCenter"), icon: "📘" },
   ];
   return (
-    <Shell title="Player" nav={nav} userName={user.name} badge={<div className="btn-gold rounded-xl px-3 py-2"><div className="text-[10px] font-semibold uppercase">{t("balance")}</div><div className="text-lg font-black">{fmt(user.balance)}</div></div>}>
+    <Shell title="Player" nav={nav} userName={user.name} badge={<div className="btn-gold rounded-xl px-3 py-2"><div className="text-[10px] font-semibold uppercase">{t("balance")}</div><div className="text-lg font-black">{fmt(user.balance)}</div></div>} hideSidebar={hideSidebar}>
       {children}
     </Shell>
   );
