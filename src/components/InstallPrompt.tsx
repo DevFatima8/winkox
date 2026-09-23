@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { DownloadIcon, XIcon, AppleIcon, AndroidIcon, LaptopIcon, ShareIcon, CheckIcon } from "./Icons";
 
 type BIPEvent = Event & { prompt: () => Promise<void>; userChoice: Promise<{ outcome: string }> };
@@ -16,7 +16,7 @@ function detect() {
 }
 
 export function InstallPrompt() {
-  const [deferred, setDeferred] = useState<BIPEvent | null>(null);
+  const deferredRef = useRef<BIPEvent | null>(null);
   const [installed, setInstalled] = useState(false);
   const [popup, setPopup] = useState(false);
   const [showBtn, setShowBtn] = useState(false);
@@ -29,14 +29,17 @@ export function InstallPrompt() {
     setD(detect());
     const sd = window.matchMedia?.("(display-mode: standalone)").matches || (window.navigator as unknown as { standalone?: boolean }).standalone;
     if (sd) { setInstalled(true); return; }
-    const onPrompt = (e: Event) => { e.preventDefault(); setDeferred(e as BIPEvent); setShowBtn(true); };
+    const onPrompt = (e: Event) => { e.preventDefault(); deferredRef.current = e as BIPEvent; setShowBtn(true); };
     const onOpen = () => { setShowBtn(true); setPopup(true); };
+    // Google Play badge — open the popup and immediately try the install, same outcome as pressing "Create shortcut"
+    const onInstallNow = () => { setShowBtn(true); setPopup(true); create(); };
     const onInstalled = () => { setInstalled(true); setShowBtn(false); setPopup(false); setBusy(false); };
     window.addEventListener("beforeinstallprompt", onPrompt);
     window.addEventListener("wx:open-install", onOpen);
+    window.addEventListener("wx:install-now", onInstallNow);
     window.addEventListener("appinstalled", onInstalled);
     const t = setTimeout(() => setShowBtn(true), 900);
-    return () => { window.removeEventListener("beforeinstallprompt", onPrompt); window.removeEventListener("wx:open-install", onOpen); window.removeEventListener("appinstalled", onInstalled); clearTimeout(t); };
+    return () => { window.removeEventListener("beforeinstallprompt", onPrompt); window.removeEventListener("wx:open-install", onOpen); window.removeEventListener("wx:install-now", onInstallNow); window.removeEventListener("appinstalled", onInstalled); clearTimeout(t); };
   }, []);
 
   const close = () => { setPopup(false); setBusy(false); setWarnChrome(false); };
@@ -45,11 +48,11 @@ export function InstallPrompt() {
     setBusy(true);
     const dev = detect();
     // 1) NATIVE install — Android Chrome/Edge, desktop Chrome/Edge/Opera/Samsung: creates the home screen icon
-    if (deferred) {
+    if (deferredRef.current) {
       try {
-        await deferred.prompt();
-        const { outcome } = await deferred.userChoice;
-        setDeferred(null);
+        await deferredRef.current.prompt();
+        const { outcome } = await deferredRef.current.userChoice;
+        deferredRef.current = null;
         if (outcome === "accepted") { setInstalled(true); setPopup(false); }
         setBusy(false); return;
       } catch { /* fall through */ }
