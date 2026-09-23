@@ -19,24 +19,26 @@ export function MobileNavDrawer({ items, title, footer }: { items: MobileNavItem
   }, [open]);
   return (
     <>
-      <button onClick={() => setOpen(true)} aria-label="Menu" className="flex h-9 w-9 items-center justify-center rounded-lg bg-black/30 text-white ring-1 ring-[#3a2470]"><MenuIcon size={20} /></button>
+      <button onClick={() => setOpen(true)} aria-label="Menu" className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#8b5cf6]/30 to-[#d946ef]/20 text-white ring-1 ring-[#8b5cf6]/50 shadow-lg shadow-[#8b5cf6]/10 transition hover:ring-[#ffb800]/60"><MenuIcon size={21} /></button>
       <Panel open={open} onClose={() => setOpen(false)} side="left" showClose={false}>
-        <div className="flex items-center justify-between border-b wx-drawer-border px-4 py-3">
-          <span className="font-black text-gold-grad">winkox · {title}</span>
-          <button onClick={() => setOpen(false)} aria-label="Close menu" className="flex h-9 w-9 items-center justify-center rounded-full bg-white/5 text-slate-300 ring-1 ring-white/10">✕</button>
+        <div className="border-b wx-drawer-border bg-gradient-to-br from-[#241044] via-[#180d31] to-[#0e0920] px-4 pb-4 pt-5">
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0"><div className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#b8a7e6]">Navigation</div><span className="block truncate text-lg font-black text-gold-grad">{title}</span></div>
+            <button onClick={() => setOpen(false)} aria-label="Close menu" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/10 text-slate-200 ring-1 ring-white/15 transition hover:bg-[#ff3b5c]/20 hover:text-white">×</button>
+          </div>
         </div>
-        <nav className="space-y-0.5 p-2">
+        <nav className="space-y-1 p-3">
           {items.map((n) => {
             const active = path === n.href || (n.href !== "/admin" && n.href !== "/client" && path.startsWith(n.href));
             return (
-              <Link key={n.href} href={n.href} className={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold ${active ? "bg-[#8b5cf6]/15 wx-rowtext ring-1 ring-[#8b5cf6]/40" : "wx-rowtext hover:wx-row"}`}>
-                <span className="wx-rowicon">{n.icon}</span>{n.label}
+              <Link key={n.href} href={n.href} className={`flex items-center gap-3 rounded-2xl px-3.5 py-3.5 text-sm font-semibold transition ${active ? "bg-gradient-to-r from-[#8b5cf6]/25 to-[#d946ef]/10 text-white ring-1 ring-[#8b5cf6]/60 shadow-lg shadow-[#8b5cf6]/10" : "wx-rowtext hover:bg-white/5 hover:text-white"}`}>
+                <span className={`flex h-9 w-9 items-center justify-center rounded-xl ${active ? "bg-[#ffb800]/15 text-[#ffcf4a]" : "bg-white/5 text-[#c4b5fd]"}`}>{n.icon}</span><span className="truncate">{n.label}</span>
               </Link>
             );
           })}
-          <Link href="/" className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold wx-rowtext hover:wx-row"><span className="wx-rowicon"><HomeIcon size={20} /></span>Home</Link>
+          <Link href="/" className="mt-2 flex items-center gap-3 rounded-2xl border border-white/10 px-3.5 py-3.5 text-sm font-semibold wx-rowtext transition hover:bg-white/5 hover:text-white"><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/5 text-[#c4b5fd]"><HomeIcon size={20} /></span>Home</Link>
         </nav>
-        {footer && <div className="border-t wx-drawer-border p-3">{footer}</div>}
+        {footer && <div className="mt-auto border-t wx-drawer-border bg-black/10 p-4">{footer}</div>}
       </Panel>
     </>
   );

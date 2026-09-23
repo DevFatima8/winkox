@@ -57,7 +57,7 @@ export default function ProfilePageClient({ params, searchParams }: { params?: R
         </Card>
 
         <Card title={t("inviteEarn")}>
-          <p className="mb-2 text-sm text-[#b8a7e6]">{t("inviteText", { d: settings.referral?.depositCommissionPct ?? 4, b: settings.referral?.betCommissionPct ?? 1.5 })} <b className="font-mono text-white">{me.referralCode}</b></p>
+          <p className="mb-2 text-sm text-[#b8a7e6]">{t("inviteText", { d: settings.referral?.depositCommissionPct ?? 2, b: settings.referral?.betCommissionPct ?? 1.5 })} <b className="font-mono text-white">{me.referralCode}</b></p>
           <CopyLink link={link} />
         </Card>
 

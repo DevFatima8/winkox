@@ -14,7 +14,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { useI18n, Hi } from "@/lib/i18n/client";
 import { WhatsAppIcon, TelegramIcon, FacebookIcon, InstagramIcon, YouTubeIcon, HeadsetIcon, HomeIcon, GiftIcon, UsersIcon, WalletIcon, UserIcon, ZapIcon, BanknoteIcon, ShieldIcon, FlameIcon, TrophyIcon, CrownIcon, PlayIcon, DownloadIcon, SlotIcon, GamepadIcon, SpadeIcon, FishIcon, CricketIcon, TicketIcon, RefreshIcon } from "@/components/Icons";
 import { InstallPrompt } from "@/components/InstallPrompt";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 export type Viewer = { loggedIn: boolean; isAdmin: boolean; name?: string; balance?: number };
 export type Links = { whatsapp?: string; whatsappChannel?: string; telegram?: string; telegramChannel?: string; facebook?: string; instagram?: string; youtube?: string; androidUrl?: string; iosUrl?: string };
@@ -72,14 +72,6 @@ const LEADERS: Row[] = [
   { rank: 10, name: "fa***588", amount: 5_770_310, up: true }, { rank: 11, name: "im***432", amount: 5_412_960, up: false }, { rank: 12, name: "bi***019", amount: 5_201_115, up: true },
   { rank: 13, name: "no***873", amount: 5_004_388, up: false }, { rank: 14, name: "ta***256", amount: 4_950_170, up: true }, { rank: 15, name: "he***077", amount: 4_915_174, up: false },
   { rank: 16, name: "by***323", amount: 4_499_286, up: true }, { rank: 17, name: "gk***344", amount: 3_067_098, up: true }, { rank: 18, name: "yw***354", amount: 1_649_361, up: false },
-];
-
-const DEMO_WINNERS = [
-  ["sa***301", "PKR 1,000,000", "Lucky 777"], ["ab***112", "PKR 450,000", "Aviator"], ["mk***778", "PKR 250,000", "Plinko"],
-  ["zi***640", "PKR 180,000", "Mines"], ["fa***588", "PKR 125,000", "Chicken Road 2"], ["no***873", "PKR 100,000", "Aviator X"],
-  ["ha***217", "PKR 88,888", "Dragon Tiger"], ["im***432", "PKR 75,000", "Limbo"], ["by***323", "PKR 60,000", "Andar Bahar"],
-  ["yw***354", "PKR 50,000", "Chicken Dash"], ["ta***256", "PKR 35,000", "Lucky 777"], ["gk***344", "PKR 25,000", "Plinko"],
-  ["us***905", "PKR 20,000", "Aviator"], ["he***077", "PKR 15,000", "Mines"], ["bi***019", "PKR 10,000", "Limbo"],
 ];
 
 export const CONTAINER = "mx-auto w-full max-w-[560px] md:max-w-[880px] lg:max-w-[1200px] xl:max-w-[1320px] 2xl:max-w-[1600px] min-[2200px]:max-w-[1900px]";
@@ -205,24 +197,6 @@ export function BottomNav({ viewer, active }: { viewer: Viewer; active: "home" |
 /* ---------------- full lobby ---------------- */
 export function Lobby({ viewer, cat, links = {} }: { viewer: Viewer; cat: string; links?: Links }) {
   const { t, locale } = useI18n();
-  const [showDemoWinners, setShowDemoWinners] = useState(true);
-  const [winnerIndex, setWinnerIndex] = useState(0);
-  const [wheelRotation, setWheelRotation] = useState(0);
-  const [wheelSpinning, setWheelSpinning] = useState(false);
-  useEffect(() => {
-    const timer = window.setInterval(() => setShowDemoWinners(true), 3 * 60 * 1000);
-    return () => window.clearInterval(timer);
-  }, []);
-
-  const spinWinnersWheel = () => {
-    if (wheelSpinning) return;
-    const next = Math.floor(Math.random() * DEMO_WINNERS.length);
-    const step = 360 / DEMO_WINNERS.length;
-    setWinnerIndex(next);
-    setWheelSpinning(true);
-    setWheelRotation((rotation) => rotation + 1800 + (360 - next * step));
-    window.setTimeout(() => setWheelSpinning(false), 4200);
-  };
   const wa = links.whatsapp || BRAND.whatsapp; const tg = links.telegram || BRAND.telegram;
   const slides: Slide[] = SLIDES.map((sl, i) => ({ ...sl, kicker: t(`b${i + 1}k` as "b1k"), title: t(`b${i + 1}t` as "b1t"), sub: t(`b${i + 1}s` as "b1s"), cta: [t("registerNow"), t("playNow"), t("joinTable"), t("viewPromo")][i] }));
   const tabLabel: Record<string, string> = { Hot: t("hotLabel"), Recent: t("recent"), Demo: t("demo"), Cards: t("cards"), "Mini Games": t("miniGames"), Live: t("live"), Slot: t("slot"), Fishing: t("fishing"), Sports: t("sports"), Lottery: t("lottery") };
@@ -341,55 +315,14 @@ export function Lobby({ viewer, cat, links = {} }: { viewer: Viewer; cat: string
                       {x.rank === 1 && <span className="absolute -right-2 -top-2 animate-bounce text-xl">{x.med}</span>}
                     </div>
                     <div className="mb-1 max-w-full truncate rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-bold text-white sm:text-xs">{x.n}</div>
-                    <div className={`w-full ${x.h} rounded-t-2xl bg-gradient-to-b ${x.from} p-2 text-center shadow-inner`}>
-                      <div className="flex h-full flex-col items-center justify-end gap-0.5">
-                        <span className="text-[9px] font-black text-slate-900/80 sm:text-[10px]">#{x.rank}</span>
-                        <span className="text-[10px] font-black leading-tight text-slate-900 sm:text-xs">Rs. {(x.a / 1000000).toFixed(2)}M</span>
-                      </div>
-                    </div>
+                    <div className={`w-full ${x.h} rounded-t-2xl bg-gradient-to-b ${x.from} p-2 text-center shadow-inner`}><div className="flex h-full flex-col items-center justify-end gap-0.5"><span className="text-[9px] font-black text-slate-900/80 sm:text-[10px]">#{x.rank}</span><span className="text-[10px] font-black leading-tight text-slate-900 sm:text-xs">Rs. {(x.a / 1000000).toFixed(2)}M</span></div></div>
                   </div>
                 ));
               })()}
             </div>
-            {/* rows — continuously scrolling top → bottom */}
-            <div className="mt-5">
-              <div className="on-image mb-1 grid grid-cols-[44px_1fr_auto] gap-2 px-3 pb-1 text-[10px] font-black uppercase tracking-widest text-[#b8a7e6] sm:text-xs"><span>{t("rank")}</span><span>{t("username")}</span><span className="text-right">{t("winnings")}</span></div>
-              <div className="wx-winners-clip relative h-44 overflow-hidden rounded-xl sm:h-52">
-                <div className="wx-winners absolute inset-x-0">
-                  {[...LEADERS, ...LEADERS].map((r, i) => (
-                    <div key={i} className="grid grid-cols-[44px_1fr_auto] items-center gap-2 px-3 py-[7px] text-xs" style={{ background: i % 2 ? "rgba(255,255,255,.03)" : "transparent" }}>
-                      <span className="flex items-center gap-1 font-black text-white/90">
-                        <span className={`flex h-6 w-6 items-center justify-center rounded-lg text-[10px] ${r.rank <= 3 ? "bg-gradient-to-br from-[#ffd45a] to-[#ff8a00] text-[#2a1500]" : "bg-white/10 text-slate-300"}`}>{r.rank}</span>
-                        <span className={`text-[9px] ${r.up ? "text-emerald-400" : "text-rose-400"}`}>{r.up ? "▲" : "▼"}</span>
-                      </span>
-                      <span className="flex items-center gap-2 truncate font-semibold text-slate-200">
-                        <span className="h-5 w-5 shrink-0 rounded-full" style={{ background: `hsl(${(r.rank * 47) % 360} 70% 55%)` }} />
-                        <span className="truncate">{r.name}</span>
-                      </span>
-                      <span className="text-right font-black text-amber-300">Rs. {r.amount.toLocaleString("en-US")}</span>
-                    </div>
-                  ))}
-                </div>
-                {/* fade edges */}
-                <div className="pointer-events-none absolute inset-x-0 top-0 h-4 bg-gradient-to-b from-[#160d33] to-transparent" />
-                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-4 bg-gradient-to-t from-[#0b0720] to-transparent" />
-              </div>
-            </div>
+            <div className="mt-5"><div className="on-image mb-1 grid grid-cols-[44px_1fr_auto] gap-2 px-3 pb-1 text-[10px] font-black uppercase tracking-widest text-[#b8a7e6] sm:text-xs"><span>{t("rank")}</span><span>{t("username")}</span><span className="text-right">{t("winnings")}</span></div><div className="wx-winners-clip relative h-44 overflow-hidden rounded-xl sm:h-52"><div className="wx-winners absolute inset-x-0">{[...LEADERS, ...LEADERS].map((r, i) => (<div key={i} className="grid grid-cols-[44px_1fr_auto] items-center gap-2 px-3 py-[7px] text-xs" style={{ background: i % 2 ? "rgba(255,255,255,.03)" : "transparent" }}><span className="flex items-center gap-1 font-black text-white/90"><span className={`flex h-6 w-6 items-center justify-center rounded-lg text-[10px] ${r.rank <= 3 ? "bg-gradient-to-br from-[#ffd45a] to-[#ff8a00] text-[#2a1500]" : "bg-white/10 text-slate-300"}`}>{r.rank}</span><span className={`text-[9px] ${r.up ? "text-emerald-400" : "text-rose-400"}`}>{r.up ? "▲" : "▼"}</span></span><span className="flex items-center gap-2 truncate font-semibold text-slate-200"><span className="h-5 w-5 shrink-0 rounded-full" style={{ background: `hsl(${(r.rank * 47) % 360} 70% 55%)` }} /><span className="truncate">{r.name}</span></span><span className="text-right font-black text-amber-300">Rs. {r.amount.toLocaleString("en-US")}</span></div>))}</div><div className="pointer-events-none absolute inset-x-0 top-0 h-4 bg-gradient-to-b from-[#160d33] to-transparent" /><div className="pointer-events-none absolute inset-x-0 bottom-0 h-4 bg-gradient-to-t from-[#0b0720] to-transparent" /></div></div>
           </section>
-
-          <section className="space-y-2 lg:col-span-5">
-            <div className="flex items-center gap-2 px-1 text-sm font-bold"><DownloadIcon size={16} />{t("appDownload")}</div>
-            <div className="on-image relative overflow-hidden rounded-2xl border border-[#3a2470] bg-gradient-to-br from-[#3b0764] via-[#1b1038] to-[#0b0716] p-4 lg:flex lg:h-[calc(100%-2rem)] lg:items-center">
-              <div className="flex items-center gap-4 lg:w-full lg:gap-6">
-                <div className="relative h-36 w-20 shrink-0 overflow-hidden rounded-[14px] border-4 border-[#241546] bg-black shadow-xl"><img src="/lobby/jackpot.jpg" alt="" className="h-full w-full object-cover" /></div>
-                <div className="flex-1 space-y-2">
-                  <div className="text-sm font-black">{t("getApp")}</div>
-                  <p className="text-[11px] text-[#b8a7e6]">{t("getAppSub")}</p>
-                  <InstallApp androidUrl={links.androidUrl || undefined} iosUrl={links.iosUrl || undefined} />
-                </div>
-              </div>
-            </div>
-          </section>
+          <section className="space-y-2 lg:col-span-5"><div className="flex items-center gap-2 px-1 text-sm font-bold"><DownloadIcon size={16} />{t("appDownload")}</div><div className="on-image relative overflow-hidden rounded-2xl border border-[#3a2470] bg-gradient-to-br from-[#3b0764] via-[#1b1038] to-[#0b0716] p-4 lg:flex lg:h-[calc(100%-2rem)] lg:items-center"><div className="flex items-center gap-4 lg:w-full lg:gap-6"><div className="relative h-36 w-20 shrink-0 overflow-hidden rounded-[14px] border-4 border-[#241546] bg-black shadow-xl"><img src="/lobby/jackpot.jpg" alt="" className="h-full w-full object-cover" /></div><div className="flex-1 space-y-2"><div className="text-sm font-black">{t("getApp")}</div><p className="text-[11px] text-[#b8a7e6]">{t("getAppSub")}</p><InstallApp androidUrl={links.androidUrl || undefined} iosUrl={links.iosUrl || undefined} /></div></div></div></section>
         </div>
 
         {/* footer */}
@@ -428,45 +361,14 @@ export function Lobby({ viewer, cat, links = {} }: { viewer: Viewer; cat: string
             </div>
           </div>
           <p className="pb-2 text-[11px] text-[#6f5fa3]">© {new Date().getFullYear()} {BRAND.name} · {BRAND.domain} · {t("playResponsibly")}</p>
-        </footer>
-      </main>
+        </footer >
+      </main >
       <TopButton />
       <SupportWidget userName={viewer.name} />
       <PwaRegister />
       <InstallPrompt />
       <BottomNav viewer={viewer} active="home" />
-      {showDemoWinners && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/75 p-4" role="dialog" aria-modal="true" aria-labelledby="demo-winners-title">
-          <div className="wx-prize-modal flex max-h-[calc(100dvh-2rem)] w-full max-w-3xl flex-col overflow-hidden rounded-[24px] border border-[#73552a] shadow-2xl">
-            <div className="flex shrink-0 items-center justify-between border-b border-[#5b4527] px-5 py-4">
-              <div><div className="mb-1 text-[10px] font-black uppercase tracking-[0.28em] text-[#d6a84e]">Weekly jackpot ceremony</div><h2 id="demo-winners-title" className="text-2xl font-black tracking-tight text-white">Winners</h2><p className="text-xs text-[#c9bda9]">Lot of winners this week</p></div>
-              <button type="button" onClick={() => setShowDemoWinners(false)} aria-label="Close demo winners" className="flex h-9 w-9 items-center justify-center rounded-full border border-[#70552d] text-xl text-[#d6c7ae] transition hover:border-[#d6a84e] hover:text-white">×</button>
-            </div>
-            <div className="min-h-0 overflow-y-auto overscroll-contain p-5">
-              <div className="grid gap-5 md:grid-cols-[minmax(250px,330px)_1fr]">
-                <div className="flex flex-col items-center justify-center">
-                  <div className="wx-wheel-pointer" />
-                  <div className={`wx-prize-wheel ${wheelSpinning ? "is-spinning" : ""}`} style={{ transform: `rotate(${wheelRotation}deg)` }}>
-                    {DEMO_WINNERS.map(([name], i) => <span key={`${name}-${i}`} className="wx-wheel-label" style={{ transform: `rotate(${i * (360 / DEMO_WINNERS.length)}deg) translateY(-112px) rotate(90deg)` }}>{name}</span>)}
-                    <div className="wx-wheel-center"><span>WIN</span><small>SPIN</small></div>
-                  </div>
-                  <button type="button" onClick={spinWinnersWheel} disabled={wheelSpinning} className="mt-5 rounded-full border border-[#ffe29a] bg-gradient-to-b from-[#ffe49b] via-[#d7a73e] to-[#8f641b] px-8 py-2.5 text-xs font-black uppercase tracking-[0.18em] text-[#241604] shadow-[0_8px_25px_rgba(214,168,78,.25)] transition hover:brightness-110 disabled:cursor-wait disabled:opacity-70">{wheelSpinning ? "Spinning..." : "Spin the wheel"}</button>
-                </div>
-                <div className="min-w-0">
-                  <div className="mb-2 flex items-center justify-between"><span className="text-xs font-black uppercase tracking-[0.2em] text-[#d6a84e]">Prize board</span><span className="text-[10px] text-[#a99c87]">{DEMO_WINNERS.length} winners</span></div>
-                  <div className="wx-prize-list max-h-[360px] overflow-hidden rounded-2xl border border-[#51432d] bg-black/25 p-2">
-                    <div className="wx-prize-list-track">
-                      {[...DEMO_WINNERS, ...DEMO_WINNERS].map(([name, amount, game], i) => <div key={`${name}-${game}-${i}`} className={`flex items-center gap-3 rounded-xl border px-3 py-2.5 ${i % DEMO_WINNERS.length === winnerIndex ? "border-[#d6a84e] bg-[#d6a84e]/15" : "border-transparent bg-white/[.025]"}`}><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#ffe39b] to-[#a8741f] text-xs font-black text-[#2b1a05]">{(i % DEMO_WINNERS.length) + 1}</span><div className="min-w-0 flex-1"><div className="truncate text-sm font-bold text-white">{name}</div><div className="text-[11px] text-[#b8ad99]">{game}</div></div><span className="shrink-0 text-sm font-black text-[#f1ca69]">{amount}</span></div>)}
-                    </div>
-                  </div>
-                  <div className="mt-3 flex items-center justify-between rounded-xl border border-[#51432d] bg-[#211b12] px-4 py-3"><div><div className="text-[10px] uppercase tracking-widest text-[#a99c87]">Selected winner</div><div className="mt-1 text-base font-black text-white">{DEMO_WINNERS[winnerIndex][0]} <span className="ml-1 text-xs font-semibold text-[#b8ad99]">· {DEMO_WINNERS[winnerIndex][2]}</span></div></div><span className="text-lg font-black text-[#f1ca69]">{DEMO_WINNERS[winnerIndex][1]}</span></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
       {locale === "ur" && <span className="hidden" />}
-    </div>
+    </div >
   );
 }

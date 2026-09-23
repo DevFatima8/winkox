@@ -25,7 +25,7 @@ const en = {
   marquee: [
     "Welcome to winkox! Register and get PKR 1500 welcome bonus",
     "7% bonus on every deposit — up to PKR 60,000! JazzCash & Easypaisa instant",
-    "Invite 1 friend who tops up — 588 PKR bonus + 1.5% betting commission + 4% top-up commission",
+    "Invite 1 friend who deposits — 288 PKR bonus + 2% deposit commission",
     "Cashback on every bet — claim after 00:00 next day",
     "🆘 Up to PKR 100,000 weekly rescue fund!",
     "3 random red packets daily — chance to win up to PKR 888,888",
@@ -86,7 +86,7 @@ const ur: Dict = {
   marquee: [
     "winkox میں خوش آمدید! رجسٹر کریں اور PKR 1500 ویلکم بونس حاصل کریں",
     "ہر ڈپازٹ پر 7% بونس — PKR 60,000 تک! جاز کیش اور ایزی پیسہ فوری",
-    "1 دوست کو انوائٹ کریں جو ٹاپ اپ کرے — 588 PKR بونس + 1.5% بیٹنگ کمیشن + 4% ٹاپ اپ کمیشن",
+    "1 دوست کو انوائٹ کریں جو ڈپازٹ کرے — 288 PKR بونس + 2% ڈپازٹ کمیشن",
     "ہر بیٹ پر کیش بیک — اگلے دن 00:00 کے بعد کلیم کریں",
     "🆘 ہر ہفتے PKR 100,000 تک ریسکیو فنڈ!",
     "روزانہ 3 رینڈم ریڈ پیکٹس — PKR 888,888 تک جیتنے کا موقع",

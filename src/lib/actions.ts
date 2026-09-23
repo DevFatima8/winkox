@@ -9,7 +9,7 @@ import { createSession, destroySession, hashPassword, verifyPassword, getCurrent
 import { ensureAdmin } from "./seed";
 import { assignPaymentAccounts } from "./platform";
 import { genReferralCode, genUsername, getSettings, payDepositCommission, recomputeVip, vipInfo, withdrawnToday } from "./platform";
-import { notifyUser } from "./notifications";
+import { notifyAdmins, notifyUser } from "./notifications";
 
 export type ActionState = { error?: string; success?: string } | undefined;
 const str = (f: FormData, k: string) => String(f.get(k) ?? "").trim();
@@ -133,6 +133,7 @@ export async function depositAction(_: ActionState, form: FormData): Promise<Act
   if (!acc || !acc.isActive) return { error: "Invalid payment account." };
   await Transaction.create({ userId: oid(me.id), type: "deposit", provider: acc.provider, amount, paymentAccountId: acc._id, assignedAccountId: acc._id, accountName: acc.accountTitle, senderNumber, referenceId, method: "manual" });
   await notifyUser(me.id, "Purchase request received", `Your deposit request of Rs. ${amount.toLocaleString()} has been sent for admin verification.`, "info");
+  await notifyAdmins("New deposit request", `${me.name} requested a deposit of Rs. ${amount.toLocaleString()} via ${acc.provider}.`, "info");
   revalidatePath("/client/wallet"); revalidatePath("/admin");
   return { success: "Deposit request submit ho gayi. Admin verify kar ke balance add karega." };
 }
@@ -173,6 +174,7 @@ export async function withdrawAction(_: ActionState, form: FormData): Promise<Ac
     method: "manual",
   });
   await notifyUser(me.id, "Withdrawal request received", `Your withdrawal request of Rs. ${amount.toLocaleString()} is pending admin approval.`, "info");
+  await notifyAdmins("New withdrawal request", `${me.name} requested a withdrawal of Rs. ${amount.toLocaleString()} via ${provider}.`, "warning");
   revalidatePath("/client/wallet"); revalidatePath("/admin");
   return { success: "Withdraw request submit ho gayi. Amount 24 ghanton mein aapke account mein aa jayegi." };
 }
@@ -461,7 +463,7 @@ export async function saveSettingsAction(_: ActionState, form: FormData): Promis
     "links.facebook": str(form, "facebook"), "links.instagram": str(form, "instagram"), "links.youtube": str(form, "youtube"),
     "app.androidUrl": str(form, "androidUrl"), "app.iosUrl": str(form, "iosUrl"), "app.version": str(form, "appVersion") || "1.0.0",
     "referral.depositCommissionPct": num(form, "refDeposit") || 0, "referral.betCommissionPct": num(form, "refBet") || 0,
-    "referral.signupBonus": num(form, "signupBonus") || 0, "referral.agentDepositCommissionPct": num(form, "agentDeposit") || 0,
+    "referral.signupBonus": num(form, "signupBonus") || 0, "referral.referralDepositBonus": num(form, "referralBonus") || 0, "referral.agentDepositCommissionPct": num(form, "agentDeposit") || 0,
     "wallet.minDeposit": num(form, "minDeposit") || 100, "wallet.minWithdraw": num(form, "minWithdraw") || 500,
     "fakeGateway.enabled": form.get("fg_enabled") === "on",
     "fakeGateway.autoWithdraw": form.get("fg_autoWithdraw") === "on",
