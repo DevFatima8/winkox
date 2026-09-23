@@ -2,7 +2,7 @@ import { dbConnect } from "./mongo";
 import { Game, GameResult, User, oid, type ObjectId } from "@/models";
 import { checkGameAccess } from "./gameAccess";
 import { payBetCommission } from "./platform";
-import { isWinOutcome, MAX_MULTIPLIER } from "./outcomes";
+import { capWinAmount, isWinOutcome, MAX_MULTIPLIER } from "./outcomes";
 
 /** browser/node-safe random hex (provably-fair style seed) */
 function randomHex(bytes = 32) {
@@ -66,7 +66,7 @@ export async function play(userId: string, amount: number, target: number) {
   void payBetCommission(uid, amount);
   const { result, hash } = roll(target);
   const won = result >= target;
-  const payout = won ? Math.floor(amount * Math.min(target, MAX_MULTIPLIER) * 100) / 100 : 0;
+  const payout = won ? Math.floor(capWinAmount(amount, amount * Math.min(target, MAX_MULTIPLIER)) * 100) / 100 : 0;
   if (payout > 0) await User.updateOne({ _id: uid }, { $inc: { balance: payout } });
   const gid = await gameId();
   await GameResult.create({ gameId: gid, userId: uid, betAmount: amount, winAmount: payout, outcome: won ? "win" : "lose", resultData: `result ${result}x · target ${target}x · ${hash.slice(0, 10)}` });

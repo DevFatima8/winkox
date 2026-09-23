@@ -2,7 +2,7 @@ import { dbConnect } from "./mongo";
 import { CardBet, CardRound, Game, GameResult, User, oid, type CardRoundDoc, type ObjectId } from "@/models";
 import { checkGameAccess } from "./gameAccess";
 import { payBetCommission } from "./platform";
-import { isWinOutcome, MAX_MULTIPLIER } from "./outcomes";
+import { capWinAmount, isWinOutcome, MAX_MULTIPLIER } from "./outcomes";
 
 
 export const MIN_BET = 10;
@@ -81,7 +81,7 @@ export function payoutFor(result: Result, option: string, amount: number) {
   } else if (option === result.winner) {
     raw = option === "andar" ? amount * 1.9 : amount * 2;
   }
-  return Math.min(MAX_MULTIPLIER * amount, raw);
+  return capWinAmount(amount, Math.min(MAX_MULTIPLIER * amount, raw));
 }
 
 const RANKS = ["", "A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
@@ -168,7 +168,7 @@ async function settle(table: Table, r: CardRoundDoc) {
     if (payout > 0) await User.updateOne({ _id: oid(uid) }, { $inc: { balance: payout } });
     await GameResult.updateOne(
       { gameId: gid, roundNo: r.roundNo, userId: oid(uid) },
-      { $set: { winAmount: payout, outcome: payout >= u.bet && payout > 0 ? "win" : "lose", resultData: `${summary} · Bets: ${u.desc.join(", ")}` } },
+      { $set: { winAmount: payout, outcome: payout > 0 ? "win" : "lose", resultData: `${summary} · Bets: ${u.desc.join(", ")}` } },
     );
   }
 }

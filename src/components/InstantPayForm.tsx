@@ -10,11 +10,11 @@ import { ZapIcon } from "@/components/Icons";
 const input = "w-full rounded-xl border border-[#3a2470] bg-black/30 px-4 py-2.5 text-white outline-none placeholder:text-slate-500 focus:border-[#d946ef]";
 type Account = { provider: "jazzcash" | "easypaisa"; accountTitle: string; accountNumber: string };
 
-export function InstantPayForm({ kind, min, max, label, hasPin, accounts = [] }: { kind: "deposit" | "withdraw"; min: number; max: number; label: string; hasPin: boolean; accounts?: Account[] }) {
+export function InstantPayForm({ kind, min, max, label, hasPin, accounts = [], initialAmount }: { kind: "deposit" | "withdraw"; min: number; max: number; label: string; hasPin: boolean; accounts?: Account[]; initialAmount?: number }) {
   const { isUr } = useI18n();
   const router = useRouter();
   const [provider, setProvider] = useState<"jazzcash" | "easypaisa">("jazzcash");
-  const [amount, setAmount] = useState(kind === "deposit" ? 1000 : 500);
+  const [amount, setAmount] = useState(initialAmount ?? (kind === "deposit" ? 1000 : 500));
   const [acc, setAcc] = useState("");
   const [holder, setHolder] = useState("");
   const [referenceId, setReferenceId] = useState("");

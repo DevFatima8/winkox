@@ -8,7 +8,7 @@ type Account = { id: string; provider: "jazzcash" | "easypaisa"; accountTitle: s
 
 const input = "w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none placeholder:text-slate-600 focus:border-yellow-400";
 
-export function DepositForm({ accounts }: { accounts: Account[] }) {
+export function DepositForm({ accounts, initialAmount }: { accounts: Account[]; initialAmount?: number }) {
   const [state, action, pending] = useActionState<ActionState, FormData>(depositAction, undefined);
   const { t } = useI18n();
   const [selected, setSelected] = useState<string | null>(accounts[0]?.id ?? null);
@@ -46,7 +46,7 @@ export function DepositForm({ accounts }: { accounts: Account[] }) {
       )}
       <label className="block">
         <span className="mb-1 block text-sm font-medium text-slate-300">{t("amountMin", { n: 100 })}</span>
-        <input name="amount" type="number" min={100} required placeholder="1000" className={input} />
+        <input name="amount" type="number" min={100} required defaultValue={initialAmount} placeholder="1000" className={input} />
       </label>
       <label className="block">
         <span className="mb-1 block text-sm font-medium text-slate-300">{t("yourSenderNumber")}</span>

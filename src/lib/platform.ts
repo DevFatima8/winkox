@@ -1,5 +1,5 @@
 import { dbConnect } from "./mongo";
-import { Commission, HelpArticle, PaymentAccount, Settings, Transaction, User, type PaymentAccountDoc, type SettingsDoc, type UserDoc, type ObjectId } from "@/models";
+import { Commission, HelpArticle, Notification, PaymentAccount, Settings, Transaction, User, type PaymentAccountDoc, type SettingsDoc, type UserDoc, type ObjectId } from "@/models";
 
 // VIP defaults modelled on 9K-style tiers (PKR). Admin can edit in panel.
 export const DEFAULT_VIP = [
@@ -102,6 +102,14 @@ export async function payBetCommission(bettorId: ObjectId, betAmount: number) {
     if (c < 0.01) return;
     await User.updateOne({ _id: dep.referredBy, isActive: true }, { $inc: { balance: c, commissionEarned: c } });
     await Commission.create({ beneficiaryId: dep.referredBy, fromUserId: bettorId, kind: "bet", baseAmount: betAmount, pct, amount: c, note: `Bet commission from ${dep.name}` });
+    await Notification.create({
+      audience: "user",
+      userId: dep.referredBy,
+      type: "success",
+      title: "Congratulations! Referral earning received",
+      body: `You earned Rs. ${c.toLocaleString("en-PK")} from ${dep.name}'s bet. You will earn ${pct}% of this referral's bets.`,
+      isActive: true,
+    });
   } catch { }
 }
 

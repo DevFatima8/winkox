@@ -11,6 +11,9 @@ export function isWinOutcome(): boolean {
 
 export const MAX_MULTIPLIER = 100;
 
+/** Maximum credited win requested by the platform rule: 35% of the stake. */
+export const capWinAmount = (bet: number, payout: number) => Math.min(Math.max(0, payout), Math.max(0, bet) * 0.35);
+
 /** Uniform float in [a,b) */
 export const urand = (a: number, b: number) => a + Math.random() * (b - a);
 
