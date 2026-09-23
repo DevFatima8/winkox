@@ -17,6 +17,11 @@ export function useDb<T>(loader: () => Promise<T>, deps: unknown[] = []) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [...deps, tick]);
   useEffect(() => onDbChange(() => { if (timer.current) clearTimeout(timer.current); timer.current = setTimeout(() => setTick((t) => t + 1), 250); }), []);
+  useEffect(() => {
+    const refresh = () => setTick((t) => t + 1);
+    window.addEventListener("wx:admin-refresh", refresh);
+    return () => window.removeEventListener("wx:admin-refresh", refresh);
+  }, []);
   const reload = useCallback(() => setTick((t) => t + 1), []);
   return { data, error, reload };
 }

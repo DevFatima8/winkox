@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, type ReactNode } from "react";
 import { Shell } from "@/components/Shell";
+import { AdminLiveSync } from "@/components/AdminLiveSync";
 import { useSession } from "@/lib/useDb";
 import { useI18n } from "@/lib/i18n/client";
 
@@ -35,6 +36,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   ];
   return (
     <Shell title={superNav ? t("superAdmin") : t("admin")} nav={nav} userName={`${user.name}${user.adminId ? ` · ${user.adminId}` : ""}`} support={false} showInstallPrompt={false} badge={<span className="btn-violet rounded-lg px-3 py-1 text-xs font-bold">{superNav ? t("superAdmin") : t("admin")}</span>}>
+      <AdminLiveSync />
       {children}
     </Shell>
   );
