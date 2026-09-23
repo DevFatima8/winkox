@@ -10,7 +10,7 @@ import { PromoPopups } from "@/components/PromoPopups";
 export const metadata: Metadata = {
   title: "winkox — Khelo aur Kamao | winkox.shop",
   description: "winkox — Pakistan ka premium gaming & earning platform. Aviator, Chicken Dash, Plinko, Dragon Tiger aur bohot kuch. JazzCash & Easypaisa se instant deposit aur withdraw.",
-  icons: { icon: "/favicon.png", apple: "/apple-icon.png" },
+  icons: { icon: "/brand/logo-mark.png", apple: "/brand/logo-mark.png" },
   metadataBase: new URL("https://winkox.shop"),
   openGraph: { title: "winkox — Khelo aur Kamao", description: "Games khel kar earning karein. JazzCash & Easypaisa se instant deposit & withdraw.", url: "https://winkox.shop", siteName: "winkox", images: ["/lobby/hero.jpg"] },
 };
