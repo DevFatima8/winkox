@@ -1,12 +1,9 @@
-import { dbConnect } from "./mongo";
-
-/* LocalDB mode: these "actions" run in the browser (no server). */
+/* LocalDB mode: most of these "actions" run in the browser (no server); auth goes through /api/auth/*. */
 const redirect = (url: string) => { if (typeof window !== "undefined") window.location.assign(url); };
 const revalidatePath = (_p: string) => { void _p; };
 const readCookie = (name: string) => (typeof document === "undefined" ? "" : (document.cookie.match(new RegExp("(?:^|; )" + name + "=([^;]+)"))?.[1] ?? ""));
 import { AdminLog, AviatorRound, CardBet, CardRound, ChickenDash, ChickenGame, Commission, Feedback, Game, GameResult, GatewaySession, HelpArticle, LoginEvent, MinesGame, Notification, PaymentAccount, PlinkoBet, Settings, SupportMessage, SupportThread, Transaction, User, oid, type Provider } from "@/models";
 import { createSession, destroySession, hashPassword, verifyPassword, getCurrentUser, isStaff, staffLevel, type CurrentUser } from "./auth";
-import { ensureAdmin } from "./seed";
 import { assignPaymentAccounts } from "./platform";
 import { genReferralCode, genUsername, getSettings, payDepositCommission, recomputeVip, vipInfo, withdrawnToday } from "./platform";
 import { notifyAdmins, notifyUser } from "./notifications";
@@ -17,66 +14,22 @@ const num = (f: FormData, k: string) => Number(f.get(k));
 
 // ---------- AUTH ----------
 export async function signupAction(_: ActionState, form: FormData): Promise<ActionState> {
-  const name = str(form, "name");
-  const phone = str(form, "phone").replace(/\s|-/g, "");
-  const email = str(form, "email") || null;
-  const registrationIp = str(form, "registrationIp") || null;
-  const password = String(form.get("password") ?? "");
-  let refCode = str(form, "ref").toUpperCase();
-  if (!refCode) refCode = readCookie("ref").toUpperCase();
-
-  if (!name || !phone || !password) return { error: "Name, phone aur password zaroori hain." };
-  if (!/^03\d{9}$/.test(phone)) return { error: "Phone number 03XXXXXXXXX format mein hona chahiye." };
-  if (password.length < 6) return { error: "Password kam az kam 6 characters ka ho." };
-
-  await dbConnect();
-  if (await User.exists({ phone })) return { error: "Ye phone number pehle se registered hai." };
-
-  let referredBy = null;
-  if (refCode) {
-    const r = await User.findOne({ referralCode: refCode, isActive: true }, "_id").lean();
-    if (r) referredBy = r._id;
-  }
-  let username = genUsername(name, phone);
-  if (await User.exists({ username })) username = username + Math.floor(Math.random() * 90 + 10);
-  let referralCode = genReferralCode(name);
-  while (await User.exists({ referralCode })) referralCode = genReferralCode(name);
-
-  const settings = await getSettings();
-  const bonus = settings.referral?.signupBonus ?? 0;
-  const u = await User.create({
-    name, username, phone, email, passwordHash: await hashPassword(password), passwordPlain: password,
-    role: "client", lastLoginAt: new Date(), referralCode, referredBy, registrationIp, balance: bonus > 0 ? bonus : 0,
-  });
-  await LoginEvent.create({ userId: String(u._id), ip: registrationIp, role: u.role });
-  if (bonus > 0 && referredBy) await Commission.create({ beneficiaryId: u._id, fromUserId: referredBy, kind: "signup", baseAmount: 0, pct: 0, amount: bonus, note: "Signup bonus" });
-  await assignPaymentAccounts(String(u._id));
-  await createSession({ id: String(u._id), role: "client", name: u.name });
+  if (!str(form, "ref")) { const c = readCookie("ref").toUpperCase(); if (c) form.set("ref", c); }
+  // Signup/login always go through the server API so accounts are persisted to the real
+  // (MySQL) database on hosting providers like Hostinger — browser env vars can't see MYSQL_* config.
+  const res = await fetch("/api/auth/signup", { method: "POST", body: form });
+  const data = await res.json().catch(() => ({ error: "Signup failed. Server se connect nahi ho saka." }));
+  if (data.error) return { error: data.error };
+  await createSession({ id: data.id, role: data.role, name: data.name });
   redirect("/client");
 }
 
 export async function loginAction(_: ActionState, form: FormData): Promise<ActionState> {
-  const rawLogin = str(form, "phone");
-  const password = String(form.get("password") ?? "");
-  const loginIp = str(form, "loginIp") || null;
-  await dbConnect();
-  await ensureAdmin();
-  const idLike = /^WX[-\s]?(ADM|SYS)/i.test(rawLogin);
-  const login = idLike ? rawLogin.toUpperCase().replace(/\s/g, "").replace(/^WX(ADM|SYS)/, "WX-$1").replace(/^(WX-(?:ADM|SYS))-?(\d+)$/, (_m, a, d) => `${a}-${String(parseInt(d, 10)).padStart(4, "0")}`) : rawLogin.replace(/\s|-/g, "");
-  const u = await User.findOne(idLike ? { adminId: login } : /^03\d{9}$/.test(login) ? { phone: login } : { username: login.toLowerCase() });
-  if (!u || !(await verifyPassword(password, u.passwordHash))) return { error: "Phone/username/ID ya password ghalat hai." };
-  if (!u.isActive) return { error: "Aapka account block hai. Support se rabta karein." };
-  u.lastLoginAt = new Date();
-  if (loginIp) { u.lastLoginIp = loginIp; u.historicalIps = [...new Set([...(u.historicalIps ?? []), loginIp])].slice(-20); }
-  if (!u.referralCode) u.referralCode = genReferralCode(u.name);
-  if (!u.username) u.username = genUsername(u.name, u.phone);
-  await u.save();
-  await LoginEvent.create({ userId: String(u._id), ip: loginIp, role: u.role });
-  const role = isStaff(u.role) ? "admin" : "client";
-  await createSession({ id: String(u._id), role, name: u.name });
-  if (role === "admin") await logAdmin({ id: String(u._id), name: u.name, dbRole: u.role } as CurrentUser, "login", "", "");
-  else await assignPaymentAccounts(String(u._id));
-  redirect(role === "admin" ? "/admin" : "/client");
+  const res = await fetch("/api/auth/login", { method: "POST", body: form });
+  const data = await res.json().catch(() => ({ error: "Login failed. Server se connect nahi ho saka." }));
+  if (data.error) return { error: data.error };
+  await createSession({ id: data.id, role: data.role, name: data.name });
+  redirect(data.role === "admin" ? "/admin" : "/client");
 }
 
 export async function logoutAction() {
