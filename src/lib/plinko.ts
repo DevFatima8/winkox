@@ -61,7 +61,7 @@ export function bucketProb(rows: number, k: number) {
 }
 
 let cachedGameId: ObjectId | null = null;
-async function gameId() {
+async function gameId(): Promise<ObjectId> {
   if (cachedGameId) return cachedGameId;
   const g = await Game.findOneAndUpdate(
     { slug: "plinko" },
@@ -69,7 +69,7 @@ async function gameId() {
     { upsert: true, returnDocument: "after" },
   ).lean();
   cachedGameId = g!._id;
-  return cachedGameId;
+  return cachedGameId!;
 }
 
 const r2 = (n: number) => Math.round(n * 100) / 100;

@@ -59,10 +59,10 @@ export function theoreticalRtp() {
 }
 
 let cachedGameId: ObjectId | null = null;
-async function gameId() {
+async function gameId(): Promise<ObjectId> {
   if (cachedGameId) return cachedGameId;
   const g = await Game.findOneAndUpdate({ slug: "lucky-777" }, { $setOnInsert: { name: "Lucky 777", slug: "lucky-777", icon: "🎰", category: "original", description: "Classic 3-reel slot — 7 7 7 par jackpot!", isActive: true } }, { upsert: true, returnDocument: "after" }).lean();
-  cachedGameId = g!._id; return cachedGameId;
+  cachedGameId = g!._id; return cachedGameId!;
 }
 
 export async function getState(userId: string | null) {

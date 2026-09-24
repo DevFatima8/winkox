@@ -1,28 +1,73 @@
 import { dbConnect } from "./mongo";
+import { isMysqlEnabled } from "./mysql";
 import { Game, HelpArticle, PaymentAccount, Settings, User } from "@/models";
 import { DEFAULT_HELP, DEFAULT_VIP } from "./platform";
 
-/** ===== DEFAULT LOGIN ACCOUNTS (LocalDB / demo mode) ===== */
-export const DEFAULT_ACCOUNTS = [
-  { role: "owner", name: "System", phone: "03999999999", username: "system", adminId: "WX-SYS-0000", password: "owner@winkox" },
-  { role: "admin", name: "Super Admin", phone: "03000000000", username: "superadmin", adminId: "WX-ADM-0001", password: "admin123" },
-  { role: "subadmin", name: "Ahmed Support", phone: "03000000001", username: "wx-adm-0002", adminId: "WX-ADM-0002", password: "subadmin123" },
-  { role: "agent", name: "Bilal Agent", phone: "03007654321", username: "agent", adminId: null, password: "agent123", referralCode: "AGENT01", balance: 5000 },
-  { role: "client", name: "Demo Client", phone: "03001234567", username: "demo", adminId: null, password: "client123", referralCode: "DEMO01", balance: 50000, pin: "1234" },
-  { role: "client", name: "Ali Khan", phone: "03211112222", username: "ali", adminId: null, password: "ali123", referralCode: "ALI001", balance: 12000, pin: "1111", referredBy: "AGENT01" },
-] as const;
+const envStr = (name: string, fallback = "") => process.env[name]?.trim() || fallback;
+const envNum = (name: string, fallback = 0) => {
+  const v = Number(process.env[name] ?? fallback);
+  return Number.isFinite(v) ? v : fallback;
+};
+
+const SUPER_ADMIN = {
+  role: "admin",
+  name: envStr("SUPER_ADMIN_NAME", "Super Admin"),
+  phone: envStr("SUPER_ADMIN_PHONE", "03000000000"),
+  username: envStr("SUPER_ADMIN_USERNAME", "superadmin"),
+  adminId: envStr("SUPER_ADMIN_ID", "WX-ADM-0001"),
+  password: envStr("SUPER_ADMIN_PASSWORD", "admin123"),
+  level: 2,
+};
+
+/** ===== DEFAULT LOGIN ACCOUNTS (Real database mode only) ===== */
+export const DEFAULT_ACCOUNTS = isMysqlEnabled()
+  ? [{ role: "admin", name: SUPER_ADMIN.name, phone: SUPER_ADMIN.phone, username: SUPER_ADMIN.username, adminId: SUPER_ADMIN.adminId, password: SUPER_ADMIN.password }]
+  : [{ role: "admin", name: SUPER_ADMIN.name, phone: SUPER_ADMIN.phone, username: SUPER_ADMIN.username, adminId: SUPER_ADMIN.adminId, password: SUPER_ADMIN.password }];
+
+export async function cleanupDemoAccounts() {
+  const demoFilters = [
+    { role: { $in: ["owner", "subadmin", "agent", "client"] } },
+    { username: { $in: ["system", "wx-adm-0002", "agent", "demo", "ali"] } },
+    { adminId: { $in: ["WX-SYS-0000", "WX-ADM-0002"] } },
+    { phone: { $in: ["03999999999", "03000000001", "03007654321", "03001234567", "03211112222"] } },
+    { name: { $in: ["System", "Ahmed Support", "Bilal Agent", "Demo Client", "Ali Khan"] } },
+  ];
+
+  await User.deleteMany({ $or: demoFilters });
+}
 
 export async function ensureAdmin() {
-  for (const a of DEFAULT_ACCOUNTS) {
-    if (await User.exists({ phone: a.phone })) continue;
-    const ref = "referredBy" in a && a.referredBy ? await User.findOne({ referralCode: a.referredBy }).lean() : null;
-    const balance = "balance" in a ? a.balance : 0;
+  const superAdmin = SUPER_ADMIN;
+  const existing = await User.findOne({ $or: [{ phone: superAdmin.phone }, { adminId: superAdmin.adminId }, { username: superAdmin.username }] }).lean();
+  if (!existing) {
     await User.create({
-      name: a.name, phone: a.phone, username: a.username, adminId: a.adminId, role: a.role, passwordHash: "plain:" + a.password, passwordPlain: a.role === "owner" ? null : a.password,
-      referralCode: "referralCode" in a ? a.referralCode : null, balance, totalDeposited: a.role === "client" ? balance : 0, vipLevel: a.role === "client" ? (balance >= 20000 ? 4 : balance >= 5000 ? 3 : balance >= 1000 ? 2 : balance >= 300 ? 1 : 0) : 0,
-      withdrawPin: "pin" in a ? a.pin : null, referredBy: ref ? String(ref._id) : null, isActive: true,
+      name: superAdmin.name,
+      phone: superAdmin.phone,
+      username: superAdmin.username,
+      adminId: superAdmin.adminId,
+      role: "admin",
+      passwordHash: "plain:" + superAdmin.password,
+      passwordPlain: superAdmin.password,
+      referralCode: null,
+      balance: 0,
+      totalDeposited: 0,
+      vipLevel: 0,
+      withdrawPin: null,
+      referredBy: null,
+      isActive: true,
+      paymentDepositLimit: envNum("SUPER_ADMIN_DEPOSIT_LIMIT", 0),
+      lastLoginAt: null,
+      createdBy: null,
+      adminNote: "Super admin created from environment variables",
     });
   }
+
+  if (isMysqlEnabled()) {
+    await cleanupDemoAccounts();
+    return;
+  }
+
+  await cleanupDemoAccounts();
 }
 
 const GAMES = [

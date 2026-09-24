@@ -12,6 +12,21 @@ const sumOf = async (match: Record<string, unknown>, field: string) => {
 };
 import { usePage, NOT_FOUND, REDIRECT } from "@/lib/useDb";
 
+type RecentGameResult = {
+  _id: unknown;
+  gameId: { name: string; icon: string } | null;
+  userId: { name: string } | null;
+  betAmount: number;
+  outcome: string;
+};
+type PendingTransaction = {
+  _id: unknown;
+  userId: { name: string } | null;
+  type: string;
+  provider: string;
+  amount: number;
+};
+
 export default function AdminDashboardClient({ params, searchParams }: { params?: Record<string, string>; searchParams?: Record<string, string> }) {
   void params; void searchParams;
   return usePage(async () => {
@@ -71,9 +86,9 @@ export default function AdminDashboardClient({ params, searchParams }: { params?
     const [recentResults, recentUsers, pendingTx] = await Promise.all([
       GameResult.find().sort({ createdAt: -1 }).limit(8)
         .populate<{ gameId: { name: string; icon: string } | null }>("gameId", "name icon")
-        .populate<{ userId: { name: string } | null }>("userId", "name").lean(),
+        .populate<{ userId: { name: string } | null }>("userId", "name").lean<RecentGameResult[]>(),
       User.find({ role: { $in: ["client", "agent"] } }).sort({ createdAt: -1 }).limit(6).lean(),
-      Transaction.find({ status: "pending" }).sort({ createdAt: -1 }).limit(6).populate<{ userId: { name: string } | null }>("userId", "name").lean(),
+      Transaction.find({ status: "pending" }).sort({ createdAt: -1 }).limit(6).populate<{ userId: { name: string } | null }>("userId", "name").lean<PendingTransaction[]>(),
     ]);
 
     return (

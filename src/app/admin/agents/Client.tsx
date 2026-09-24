@@ -6,6 +6,15 @@ import { Card, StatCard, fmt, fmtDate } from "@/components/Shell";
 import { getSettings } from "@/lib/platform";
 import { usePage, NOT_FOUND, REDIRECT } from "@/lib/useDb";
 
+type RecentCommission = {
+  _id: unknown;
+  beneficiaryId: { name: string; role: string } | null;
+  fromUserId: { name: string } | null;
+  kind: string;
+  pct: number;
+  amount: number;
+};
+
 export default function AgentsPageClient({ params, searchParams }: { params?: Record<string, string>; searchParams?: Record<string, string> }) {
   void params; void searchParams;
   return usePage(async () => {
@@ -15,7 +24,7 @@ export default function AgentsPageClient({ params, searchParams }: { params?: Re
       User.find({ role: "agent" }).sort({ commissionEarned: -1 }).lean(),
       User.aggregate<{ _id: string; c: number; dep: number }>([{ $match: { referredBy: { $ne: null } } }, { $group: { _id: "$referredBy", c: { $sum: 1 }, dep: { $sum: "$totalDeposited" } } }]),
       Commission.aggregate<{ _id: string; s: number }>([{ $group: { _id: "$kind", s: { $sum: "$amount" } } }]),
-      Commission.find().sort({ createdAt: -1 }).limit(40).populate<{ beneficiaryId: { name: string; role: string } | null; fromUserId: { name: string } | null }>([{ path: "beneficiaryId", select: "name role" }, { path: "fromUserId", select: "name" }]).lean(),
+      Commission.find().sort({ createdAt: -1 }).limit(40).populate<{ beneficiaryId: { name: string; role: string } | null; fromUserId: { name: string } | null }>([{ path: "beneficiaryId", select: "name role" }, { path: "fromUserId", select: "name" }]).lean<RecentCommission[]>(),
     ]);
     const rm = new Map(refStats.map((r) => [String(r._id), r]));
     const topRef = await User.find({ _id: { $in: refStats.map((r) => r._id) }, role: "client" }).sort({ commissionEarned: -1 }).limit(15).lean();

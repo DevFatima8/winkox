@@ -1,5 +1,6 @@
 import { dbConnect } from "./mongo";
 import { Notification, User, oid } from "@/models";
+import type { NotificationDoc } from "@/models";
 import { getSessionSync } from "./auth";
 
 type NotificationType = "info" | "promo" | "warning" | "success";
@@ -25,7 +26,7 @@ export async function getNotifications() {
   if (role === "agent") aud.push("clients", "agents");
   if (role === "admin" || role === "owner" || role === "subadmin") aud.push("admins");
   const q: Record<string, unknown> = uid ? { isActive: true, $or: [{ audience: { $in: aud } }, { audience: "user", userId: uid }] } : { isActive: true, audience: "all" };
-  const list = await Notification.find(q).sort({ createdAt: -1 }).limit(30).lean();
+  const list = await Notification.find(q).sort({ createdAt: -1 }).limit(30).lean<NotificationDoc[]>();
   return {
     items: list.map((n) => ({ id: String(n._id), title: n.title, body: n.body, type: n.type, at: n.createdAt, read: uid ? (n.readBy ?? []).some((r) => String(r) === String(uid)) : false })),
     unread: uid ? list.filter((n) => !(n.readBy ?? []).some((r) => String(r) === String(uid))).length : 0,

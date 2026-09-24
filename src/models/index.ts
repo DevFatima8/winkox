@@ -1,8 +1,8 @@
 /**
- * Data models (LocalDB mode — browser localStorage, no server database).
- * The previous Mongoose schema is kept in ./mongoose-schema.bak for when a real MongoDB is connected again.
+ * Data models with MySQL-ready persistence and LocalDB fallback.
+ * The previous Mongoose schema is kept in ./mongoose-schema.bak for reference.
  */
-import { Model, type ObjectId as OId } from "@/lib/localdb";
+import { Model, type ObjectId as OId } from "@/lib/db-model";
 export type ObjectId = OId;
 export const oid = (id: string | ObjectId) => String(id);
 

@@ -8,14 +8,6 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { LanguageSwitch } from "@/components/LanguageSwitch";
 import { BrandLogo } from "@/components/BrandLogo";
 
-const DEMO_LOGINS = [
-  { role: "Super Admin", name: "full control", id: "WX-ADM-0001", pw: "admin123" },
-  { role: "Sub Admin", name: "Ahmed Support", id: "WX-ADM-0002", pw: "subadmin123" },
-  { role: "Client", name: "Demo Client · Rs. 50,000", id: "demo", pw: "client123" },
-  { role: "Client", name: "Ali Khan · Rs. 12,000", id: "ali", pw: "ali123" },
-  { role: "Agent", name: "Bilal Agent", id: "agent", pw: "agent123" },
-];
-
 export function AuthForm({ mode }: { mode: "login" | "signup" }) {
   const action = mode === "login" ? loginAction : signupAction;
   const [state, formAction, pending] = useActionState<ActionState, FormData>(action, undefined);
@@ -23,7 +15,6 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
   const [ref, setRef] = useState("");
   const [login, setLogin] = useState("");
   const [pw, setPw] = useState("");
-  const [showDemo, setShowDemo] = useState(false);
   const [registrationIp, setRegistrationIp] = useState("");
   const [loginIp, setLoginIp] = useState("");
   useEffect(() => {
@@ -65,21 +56,6 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
             {pending ? t("pleaseWait") : mode === "login" ? t("login") : t("register")}
           </button>
         </form>
-        {mode === "login" && (
-          <div className="mt-4 rounded-xl border border-dashed border-[#ffb800]/50 bg-[#ffb800]/10 p-3 text-xs">
-            <button type="button" onClick={() => setShowDemo((v) => !v)} className="flex w-full items-center justify-between font-bold text-[#ffe0a3]"><span>Demo accounts (tap to fill)</span><span>{showDemo ? "▴" : "▾"}</span></button>
-            {showDemo && (
-              <ul className="mt-2 space-y-1.5">
-                {DEMO_LOGINS.map((d) => (
-                  <li key={d.id}><button type="button" onClick={() => { setLogin(d.id); setPw(d.pw); }} className="flex w-full items-center justify-between gap-2 rounded-lg bg-black/30 px-2.5 py-1.5 text-left hover:bg-black/40">
-                    <span><b className="text-white">{d.role}</b> <span className="text-[#b8a7e6]">— {d.name}</span></span>
-                    <span className="shrink-0 font-mono text-[11px] text-[#ffb800]">{d.id} / {d.pw}</span>
-                  </button></li>
-                ))}
-              </ul>
-            )}
-          </div>
-        )}
         <p className="mt-5 text-center text-sm text-slate-400">
           {mode === "login" ? (
             <>
