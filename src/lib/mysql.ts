@@ -41,13 +41,23 @@ let mysqlModule: Promise<typeof import("mysql2/promise")> | null = null;
 function loadMysql() {
     // The current app still imports its model layer from client components. Hide this
     // server-only dependency from the client bundler; it is invoked only on the server.
-    mysqlModule ??= Function("return import('mysql2/promise')")() as Promise<typeof import("mysql2/promise")>;
+    if (!mysqlModule) {
+        mysqlModule = (Function("return import('mysql2/promise')")() as Promise<typeof import("mysql2/promise")>).catch((error) => {
+            mysqlModule = null;
+            const msg = error instanceof Error ? error.message : String(error);
+            if (/mysql2/.test(msg) && /module|package|find/i.test(msg)) {
+                throw new Error("Database driver missing on server. Install production dependency 'mysql2' and redeploy.");
+            }
+            throw error;
+        });
+    }
     return mysqlModule;
 }
 
 function parseMysqlUrl(url: string): MysqlConfig | null {
     try {
         const u = new URL(url);
+        if (u.protocol !== "mysql:" && u.protocol !== "mariadb:") return null;
         if (!u.hostname || !u.username || !u.pathname || u.pathname === "/") return null;
         return {
             host: u.hostname,
