@@ -56,6 +56,17 @@ export function toCurrentUser(u: UserDoc): CurrentUser {
 export async function getCurrentUser(): Promise<CurrentUser | null> {
   const s = getSessionSync();
   if (!s) return null;
+  if (isBrowser()) {
+    // Fetch from the server API — client-side model access can't see server env vars (MYSQL_*).
+    try {
+      const res = await fetch(`/api/auth/me?id=${encodeURIComponent(s.id)}`, { cache: "no-store" });
+      const data = await res.json();
+      if (!data.user) { await destroySession(); return null; }
+      return data.user as CurrentUser;
+    } catch {
+      return null;
+    }
+  }
   await dbConnect();
   const u = await User.findById(s.id).lean();
   if (!u) { await destroySession(); return null; }
