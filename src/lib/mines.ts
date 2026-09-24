@@ -21,10 +21,10 @@ export function nextMultipliers(mines: number, safe: number) {
 }
 
 let cachedGameId: ObjectId | null = null;
-async function gameId() {
+async function gameId(): Promise<ObjectId> {
   if (cachedGameId) return cachedGameId;
   const g = await Game.findOneAndUpdate({ slug: "mines" }, { $setOnInsert: { name: "Mines", slug: "mines", icon: "💎", category: "original", description: "5×5 grid, mines choose karein, gems kholen aur cash out — 10,000x tak!", isActive: true } }, { upsert: true, returnDocument: "after" }).lean();
-  cachedGameId = g!._id; return cachedGameId;
+  cachedGameId = g!._id; return cachedGameId!;
 }
 
 function pub(g: { _id: ObjectId; betAmount: number; mines: number; mineCells: number[]; revealed: number[]; status: string; winAmount: number }) {
@@ -82,7 +82,7 @@ export async function start(userId: string, amount: number, mines: number) {
   const mineCells = cells.slice(0, mines).sort((a, b) => a - b);
   const gid = await gameId();
   const res = await GameResult.create({ gameId: gid, userId: uid, betAmount: amount, outcome: "pending", resultData: `${mines} mines · started` });
-  const g = await MinesGame.create({ userId: uid, resultId: res._id, betAmount: amount, mines, mineCells });
+  const g = await MinesGame.create({ userId: uid, resultId: String(res._id), betAmount: amount, mines, mineCells });
   return { ok: true, game: pub(g.toObject()) };
 }
 

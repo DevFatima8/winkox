@@ -32,7 +32,7 @@ function persist(db: DB) {
   const raw = JSON.stringify(db);
   try { localStorage.setItem(KEY, raw); } catch { /* quota */ }
   cachedRaw = raw; cachedDb = db;
-  try { window.dispatchEvent(new CustomEvent("wx:db")); } catch {}
+  try { window.dispatchEvent(new CustomEvent("wx:db")); } catch { }
 }
 export function resetLocalDb() { if (isBrowser()) localStorage.removeItem(KEY); memory = {}; cachedRaw = null; cachedDb = null; }
 export function exportLocalDb() { return JSON.stringify(load()); }
@@ -53,7 +53,7 @@ export function getPath(obj: any, path: string): any {
   if (!path.includes(".")) return obj[path];
   return path.split(".").reduce((o, k) => (o == null ? undefined : o[k]), obj);
 }
-function setPath(obj: any, path: string, val: any) {
+export function setPath(obj: any, path: string, val: any) {
   const parts = path.split("."); let o = obj;
   for (let i = 0; i < parts.length - 1; i++) { if (o[parts[i]] == null || typeof o[parts[i]] !== "object") o[parts[i]] = {}; o = o[parts[i]]; }
   o[parts[parts.length - 1]] = val;
@@ -164,7 +164,7 @@ type Pop<R, P> = R extends (infer E)[] ? (Omit<E, keyof P> & P)[] : R extends nu
 
 export class Query<R> implements PromiseLike<R> {
   private _sort?: Record<string, 1 | -1>; private _limit?: number; private _pops: PopSpec[] = []; private _lean = false;
-  constructor(private model: Model<any>, private exec: (q: Query<R>) => any, private single: boolean) {}
+  constructor(private model: Model<any>, private exec: (q: Query<R>) => any, private single: boolean) { }
   sort(spec: Record<string, 1 | -1>) { this._sort = spec; return this; }
   limit(n: number) { this._limit = n; return this; }
   select(_s?: string) { return this; }
@@ -302,7 +302,7 @@ export class Model<T extends { _id: string }> {
 
 /** subscribe to changes (same tab + other tabs) */
 export function onDbChange(fn: () => void) {
-  if (!isBrowser()) return () => {};
+  if (!isBrowser()) return () => { };
   const h = () => fn();
   window.addEventListener("wx:db", h); window.addEventListener("storage", h);
   return () => { window.removeEventListener("wx:db", h); window.removeEventListener("storage", h); };

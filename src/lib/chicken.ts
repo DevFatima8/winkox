@@ -41,7 +41,7 @@ function rollCrashLane(d: Difficulty) {
 }
 
 let cachedGameId: ObjectId | null = null;
-async function gameId() {
+async function gameId(): Promise<ObjectId> {
   if (cachedGameId) return cachedGameId;
   const g = await Game.findOneAndUpdate(
     { slug: "chicken-road-2" },
@@ -49,7 +49,7 @@ async function gameId() {
     { upsert: true, returnDocument: "after" },
   ).lean();
   cachedGameId = g!._id;
-  return cachedGameId;
+  return cachedGameId!;
 }
 
 type GameLike = { _id: ObjectId; difficulty: string; betAmount: number; lanes: number; position: number; status: string; winAmount: number; crashLane: number };
@@ -108,7 +108,7 @@ export async function startGame(userId: string, amount: number, difficulty: stri
   const gid = await gameId();
   const result = await GameResult.create({ gameId: gid, userId: uid, betAmount: amount, outcome: "pending", resultData: `${DIFFICULTIES[difficulty].label} · started` });
   void payBetCommission(uid, amount);
-  const g = await ChickenGame.create({ userId: uid, resultId: result._id, difficulty, betAmount: amount, lanes: lanesFor(difficulty), crashLane: rollCrashLane(difficulty) });
+  const g = await ChickenGame.create({ userId: uid, resultId: String(result._id), difficulty, betAmount: amount, lanes: lanesFor(difficulty), crashLane: rollCrashLane(difficulty) });
   return { ok: true, game: publicState(g.toObject()) };
 }
 

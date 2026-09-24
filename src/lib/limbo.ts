@@ -16,10 +16,10 @@ export const RTP = 0.99; // Stake Limbo: 99% RTP (1% house edge)
 export const MIN_TARGET = 1.01, MAX_TARGET = MAX_MULTIPLIER;
 
 let cachedGameId: ObjectId | null = null;
-async function gameId() {
+async function gameId(): Promise<ObjectId> {
   if (cachedGameId) return cachedGameId;
   const g = await Game.findOneAndUpdate({ slug: "limbo" }, { $setOnInsert: { name: "Limbo", slug: "limbo", icon: "🎯", category: "original", description: "Target multiplier set karein — 100x tak instant result!", isActive: true } }, { upsert: true, returnDocument: "after" }).lean();
-  cachedGameId = g!._id; return cachedGameId;
+  cachedGameId = g!._id; return cachedGameId!;
 }
 
 /** Stake-style: result = floor((2^52 * RTP) / (h+1) * 100)/100, min 1.00 */
