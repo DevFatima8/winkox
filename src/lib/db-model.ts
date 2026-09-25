@@ -200,7 +200,8 @@ export class Model<T extends { _id: string }> {
         if (q.opts.sort) out = sortDocs(out, q.opts.sort);
         if (q.opts.single) out = out.slice(0, 1);
         else if (q.opts.limit != null) out = out.slice(0, q.opts.limit);
-        return q.opts.single ? (out[0] ?? null) : out;
+        const wrapped = out.map((d) => this.wrap(d, q.opts.lean));
+        return q.opts.single ? (wrapped[0] ?? null) : wrapped;
     }
 
     private wrap(doc: any, lean?: boolean) {

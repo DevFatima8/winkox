@@ -26,11 +26,10 @@ export const DEFAULT_ACCOUNTS = isMysqlEnabled()
 
 export async function cleanupDemoAccounts() {
   const demoFilters = [
-    { role: { $in: ["owner", "subadmin", "agent", "client"] } },
-    { username: { $in: ["system", "wx-adm-0002", "agent", "demo", "ali"] } },
+    { username: { $in: ["system", "wx-adm-0002", "agent", "demo"] } },
     { adminId: { $in: ["WX-SYS-0000", "WX-ADM-0002"] } },
     { phone: { $in: ["03999999999", "03000000001", "03007654321", "03001234567", "03211112222"] } },
-    { name: { $in: ["System", "Ahmed Support", "Bilal Agent", "Demo Client", "Ali Khan"] } },
+    { name: { $in: ["System", "Ahmed Support", "Bilal Agent", "Demo Client"] } },
   ];
 
   await User.deleteMany({ $or: demoFilters });
