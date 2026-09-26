@@ -82,7 +82,9 @@ const GAMES = [
   { slug: "andar-bahar", name: "Andar Bahar", icon: "🃏", category: "wg-cards", description: "Live table — Joker ka match Andar aayega ya Bahar? Predict karein aur jeetein!" },
 ];
 export async function ensureGames() {
-  for (const g of GAMES) if (!(await Game.exists({ slug: g.slug }))) await Game.create({ ...g, isActive: true });
+  await Promise.all(GAMES.map(async (game) => {
+    if (!(await Game.exists({ slug: game.slug }))) await Game.create({ ...game, isActive: true });
+  }));
 }
 export async function ensureHelp() { if ((await HelpArticle.countDocuments()) === 0) await HelpArticle.insertMany(DEFAULT_HELP as never); }
 export async function ensureSettings() { if (!(await Settings.exists({ key: "main" }))) await Settings.create({ key: "main", vipLevels: DEFAULT_VIP }); }
@@ -96,6 +98,6 @@ let done = false;
 export async function seedAll() {
   if (done) return;
   done = true;
-  await ensureAdmin(); await ensureGames(); await ensureSettings(); await ensureHelp(); await ensurePaymentAccounts();
+  await Promise.all([ensureAdmin(), ensureGames(), ensureSettings(), ensureHelp(), ensurePaymentAccounts()]);
 }
 export { dbConnect };
