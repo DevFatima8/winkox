@@ -1,4 +1,5 @@
 import type { Pool } from "mysql2/promise";
+import type { EventEmitter } from "events";
 
 export type MysqlConfig = {
     host: string;
@@ -129,6 +130,11 @@ export async function ensureMysqlReady(): Promise<boolean> {
             connectionLimit: 10,
             charset: "utf8mb4",
             ssl: cfg.ssl ? { rejectUnauthorized: false } : undefined,
+        });
+        // Idle connections dropped by the server/firewall (e.g. ECONNRESET) surface as pool
+        // 'error' events; mysql2's Pool type omits this event, so listen via EventEmitter.
+        (pool as unknown as EventEmitter).on("error", (err: Error) => {
+            console.error("[mysql] pool error:", err.message);
         });
 
         await Promise.all(COLLECTIONS.map((table) => pool!.execute(`
