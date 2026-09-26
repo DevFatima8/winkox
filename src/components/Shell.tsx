@@ -3,6 +3,7 @@ import Link from "next/link";
 import { destroySession } from "@/lib/auth";
 import { SupportWidget } from "./SupportWidget";
 import { NotificationBell } from "./NotificationBell";
+import { Marquee } from "./lobby/LobbyClient";
 import { PwaRegister } from "./PwaRegister";
 import { InstallPrompt } from "./InstallPrompt";
 import { LanguageSwitch } from "./LanguageSwitch";
@@ -89,6 +90,7 @@ export function Shell({ title, nav, userName, badge, children, support = true, s
         <div className={`mx-auto w-full ${hideSidebar ? "max-w-[1300px]" : "max-w-[1600px] 2xl:max-w-[1800px]"}`}>
           {support && <div className="mb-3 hidden items-center justify-end gap-2 md:flex"><ThemeToggle /><NotificationBell loggedIn /></div>}
           {!support && <div className="mb-3 hidden items-center justify-end gap-2 md:flex"><ThemeToggle /><LanguageSwitch compact /><NotificationBell loggedIn /></div>}
+          {!hideSidebar && <div className="mb-3"><Marquee items={t("marquee")} /></div>}
           {children}
         </div>
       </main>

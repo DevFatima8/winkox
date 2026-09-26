@@ -28,7 +28,7 @@ export async function getNotifications() {
   const q: Record<string, unknown> = uid ? { isActive: true, $or: [{ audience: { $in: aud } }, { audience: "user", userId: uid }] } : { isActive: true, audience: "all" };
   const list = await Notification.find(q).sort({ createdAt: -1 }).limit(30).lean<NotificationDoc[]>();
   return {
-    items: list.map((n) => ({ id: String(n._id), title: n.title, body: n.body, type: n.type, at: n.createdAt, read: uid ? (n.readBy ?? []).some((r) => String(r) === String(uid)) : false })),
+    items: list.map((n) => ({ id: String(n._id), title: n.title, body: n.body, type: n.type, audience: n.audience, at: n.createdAt, read: uid ? (n.readBy ?? []).some((r) => String(r) === String(uid)) : false })),
     unread: uid ? list.filter((n) => !(n.readBy ?? []).some((r) => String(r) === String(uid))).length : 0,
   };
 }

@@ -16,7 +16,7 @@ const ROTATE_MS = 3 * 60 * 1000;
 
 /* ---------- shared ---------- */
 function Overlay({ children }: { children: ReactNode }) {
-  return <div className="fixed inset-0 z-[95] flex items-center justify-center overflow-y-auto bg-black/75 p-4">{children}</div>;
+  return <div className="wx-promo-overlay fixed inset-0 z-[95] flex items-center justify-center overflow-y-auto bg-black/75 p-4">{children}</div>;
 }
 
 function CloseBelow({ onClose }: { onClose: () => void }) {

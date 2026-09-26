@@ -14,7 +14,6 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { useI18n, Hi } from "@/lib/i18n/client";
 import { WhatsAppIcon, TelegramIcon, FacebookIcon, InstagramIcon, YouTubeIcon, HeadsetIcon, HomeIcon, GiftIcon, UsersIcon, WalletIcon, UserIcon, ZapIcon, BanknoteIcon, ShieldIcon, FlameIcon, TrophyIcon, CrownIcon, PlayIcon, DownloadIcon, SlotIcon, GamepadIcon, SpadeIcon, FishIcon, CricketIcon, TicketIcon, RefreshIcon } from "@/components/Icons";
 import { InstallPrompt } from "@/components/InstallPrompt";
-import { useState } from "react";
 
 export type Viewer = { loggedIn: boolean; isAdmin: boolean; name?: string; balance?: number };
 export type Links = { whatsapp?: string; whatsappChannel?: string; telegram?: string; telegramChannel?: string; facebook?: string; instagram?: string; youtube?: string; androidUrl?: string; iosUrl?: string };
@@ -66,13 +65,13 @@ const CATS: { key: string; label: string; icon: string; img: string; grad: strin
   { key: "Lottery", label: "Lottery", icon: "🎱", img: "/lobby/cats/lottery.jpg", grad: "from-[#ca8a04]" },
 ];
 
-const LEADERS: Row[] = [
-  { rank: 4, name: "ab***112", amount: 12_450_900, up: true }, { rank: 5, name: "mk***778", amount: 9_874_210, up: false }, { rank: 6, name: "sa***301", amount: 8_120_400, up: true },
-  { rank: 7, name: "us***905", amount: 7_655_180, up: true }, { rank: 8, name: "ha***217", amount: 6_940_022, up: false }, { rank: 9, name: "zi***640", amount: 6_102_750, up: true },
-  { rank: 10, name: "fa***588", amount: 5_770_310, up: true }, { rank: 11, name: "im***432", amount: 5_412_960, up: false }, { rank: 12, name: "bi***019", amount: 5_201_115, up: true },
-  { rank: 13, name: "no***873", amount: 5_004_388, up: false }, { rank: 14, name: "ta***256", amount: 4_950_170, up: true }, { rank: 15, name: "he***077", amount: 4_915_174, up: false },
-  { rank: 16, name: "by***323", amount: 4_499_286, up: true }, { rank: 17, name: "gk***344", amount: 3_067_098, up: true }, { rank: 18, name: "yw***354", amount: 1_649_361, up: false },
-];
+const LEADER_NAMES = ["ab***112", "mk***778", "sa***301", "us***905", "ha***217", "zi***640", "fa***588", "im***432", "bi***019", "no***873", "ta***256", "ra***660", "ka***731", "um***408", "sh***925", "al***516", "ma***284", "re***693", "aq***807", "za***164"];
+const LEADERS: Row[] = Array.from({ length: 50 }, (_, i) => ({
+  rank: i + 4,
+  name: LEADER_NAMES[i % LEADER_NAMES.length],
+  amount: Math.max(312_000, 1_180_000 - i * 17_300),
+  up: i % 3 !== 1,
+}));
 
 export const CONTAINER = "mx-auto w-full max-w-[560px] md:max-w-[880px] lg:max-w-[1200px] xl:max-w-[1320px] 2xl:max-w-[1600px] min-[2200px]:max-w-[1900px]";
 
@@ -90,53 +89,56 @@ export function Logo({ size = "md" }: { size?: "sm" | "md" | "lg" }) {
   );
 }
 
-export function Header({ viewer, active = "home" }: { viewer: Viewer; active?: "home" | "promo" | "games" }) {
+export function Header({ viewer, active = "home", showAnnouncement = true }: { viewer: Viewer; active?: "home" | "promo" | "games"; showAnnouncement?: boolean }) {
   const { t } = useI18n();
   const dep = viewer.loggedIn ? "/client/wallet" : "/login";
   const prof = viewer.isAdmin ? "/admin" : viewer.loggedIn ? "/client" : "/login";
   const navCls = (k: string) => `whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-bold transition lg:px-3.5 ${active === k ? "btn-violet" : "text-[#b8a7e6] hover:text-white"}`;
   return (
-    <header className="sticky top-0 z-40 border-b border-[#3a2470]/70 bg-[#0b0716]/85 backdrop-blur-xl">
-      <div className="wx-shine h-[2px] w-full" />
-      <div className={`${CONTAINER} flex items-center justify-between gap-2 px-2 py-2 sm:gap-3 sm:px-3 lg:px-6`}>
-        <div className="flex items-center gap-2">
-          <span className="md:hidden"><Drawer loggedIn={viewer.loggedIn} isAdmin={viewer.isAdmin} /></span>
-          <Logo />
-        </div>
-        <nav className="hidden items-center gap-0.5 md:flex lg:gap-1">
-          <Link href="/" className={navCls("home")}>{t("home")}</Link>
-          <Link href="/#games" className={navCls("games")}>{t("games")}</Link>
-          <Link href="/promo" className={navCls("promo")}>{t("promo")}</Link>
-          <Link href={dep} className="hidden rounded-full px-3 py-1.5 text-sm font-bold text-[#b8a7e6] hover:text-white lg:inline-flex">{t("deposit")}</Link>
-          <Link href={viewer.loggedIn ? "/client/team" : "/signup"} className="hidden rounded-full px-3 py-1.5 text-sm font-bold text-[#b8a7e6] hover:text-white lg:inline-flex">{t("invite")}</Link>
-          <Link href="/help" className="hidden rounded-full px-3 py-1.5 text-sm font-bold text-[#b8a7e6] hover:text-white lg:inline-flex">{t("help")}</Link>
-        </nav>
-        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-          <span className="hidden md:inline-flex"><ThemeToggle /></span>
-          <span className="hidden md:inline-flex"><LanguageSwitch /></span>
-          <NotificationBell loggedIn={viewer.loggedIn} />
-          <button type="button" title="Reload page" aria-label="Reload page" onClick={() => window.location.reload()} className="flex h-8 w-8 items-center justify-center rounded-full border border-[#3a2470] text-[#c4b5fd] transition hover:border-[#00e5a0] hover:text-[#00e5a0]"><RefreshIcon size={16} /></button>
-          <OpenSupportButton className="flex h-8 w-8 items-center justify-center rounded-full bg-black/30 text-[#c4b5fd] ring-1 ring-[#3a2470] hover:text-white"><HeadsetIcon size={16} /></OpenSupportButton>
-          <div className="hidden items-center gap-2 md:flex">
-            {viewer.loggedIn ? (
-              <>
-                {!viewer.isAdmin && <span className="hidden whitespace-nowrap rounded-full bg-black/40 px-3 py-1.5 text-xs font-black text-[#ffb800] ring-1 ring-[#ffb800]/40 lg:inline">Rs. {(viewer.balance ?? 0).toLocaleString()}</span>}
-                <Link href={prof} className="btn-violet whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-bold lg:px-4 lg:text-sm">{viewer.isAdmin ? t("adminPanel") : t("myAccount")}</Link>
-              </>
-            ) : (
-              <>
-                <Link href="/login" className="btn-outline whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-bold lg:px-4 lg:text-sm">{t("login")}</Link>
-                <Link href="/signup" className="btn-gold whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-black lg:px-4 lg:text-sm">{t("register")}</Link>
-              </>
-            )}
+    <>
+      <header className="sticky top-0 z-40 border-b border-[#3a2470]/70 bg-[#0b0716]/85 backdrop-blur-xl">
+        <div className="wx-shine h-[2px] w-full" />
+        <div className={`${CONTAINER} flex items-center justify-between gap-2 px-2 py-2 sm:gap-3 sm:px-3 lg:px-6`}>
+          <div className="flex items-center gap-2">
+            <span className="md:hidden"><Drawer loggedIn={viewer.loggedIn} isAdmin={viewer.isAdmin} /></span>
+            <Logo />
           </div>
-          {/* mobile: compact auth/account button */}
-          <span className="md:hidden">
-            {viewer.loggedIn ? <Link href={prof} className="btn-violet flex h-8 w-8 items-center justify-center rounded-full" aria-label="Account"><UserIcon size={16} /></Link> : <Link href="/login" className="btn-gold whitespace-nowrap rounded-full px-2.5 py-1.5 text-[11px] font-black">{t("login")}</Link>}
-          </span>
+          <nav className="hidden items-center gap-0.5 md:flex lg:gap-1">
+            <Link href="/" className={navCls("home")}>{t("home")}</Link>
+            <Link href="/#games" className={navCls("games")}>{t("games")}</Link>
+            <Link href="/promo" className={navCls("promo")}>{t("promo")}</Link>
+            <Link href={dep} className="hidden rounded-full px-3 py-1.5 text-sm font-bold text-[#b8a7e6] hover:text-white lg:inline-flex">{t("deposit")}</Link>
+            <Link href={viewer.loggedIn ? "/client/team" : "/signup"} className="hidden rounded-full px-3 py-1.5 text-sm font-bold text-[#b8a7e6] hover:text-white lg:inline-flex">{t("invite")}</Link>
+            <Link href="/help" className="hidden rounded-full px-3 py-1.5 text-sm font-bold text-[#b8a7e6] hover:text-white lg:inline-flex">{t("help")}</Link>
+          </nav>
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+            <span className="hidden md:inline-flex"><ThemeToggle /></span>
+            <span className="hidden md:inline-flex"><LanguageSwitch /></span>
+            <NotificationBell loggedIn={viewer.loggedIn} />
+            <button type="button" title="Reload page" aria-label="Reload page" onClick={() => window.location.reload()} className="flex h-8 w-8 items-center justify-center rounded-full border border-[#3a2470] text-[#c4b5fd] transition hover:border-[#00e5a0] hover:text-[#00e5a0]"><RefreshIcon size={16} /></button>
+            <OpenSupportButton className="flex h-8 w-8 items-center justify-center rounded-full bg-black/30 text-[#c4b5fd] ring-1 ring-[#3a2470] hover:text-white"><HeadsetIcon size={16} /></OpenSupportButton>
+            <div className="hidden items-center gap-2 md:flex">
+              {viewer.loggedIn ? (
+                <>
+                  {!viewer.isAdmin && <span className="hidden whitespace-nowrap rounded-full bg-black/40 px-3 py-1.5 text-xs font-black text-[#ffb800] ring-1 ring-[#ffb800]/40 lg:inline">Rs. {(viewer.balance ?? 0).toLocaleString()}</span>}
+                  <Link href={prof} className="btn-violet whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-bold lg:px-4 lg:text-sm">{viewer.isAdmin ? t("adminPanel") : t("myAccount")}</Link>
+                </>
+              ) : (
+                <>
+                  <Link href="/login" className="btn-outline whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-bold lg:px-4 lg:text-sm">{t("login")}</Link>
+                  <Link href="/signup" className="btn-gold whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-black lg:px-4 lg:text-sm">{t("register")}</Link>
+                </>
+              )}
+            </div>
+            {/* mobile: compact auth/account button */}
+            <span className="md:hidden">
+              {viewer.loggedIn ? <Link href={prof} className="btn-violet flex h-8 w-8 items-center justify-center rounded-full" aria-label="Account"><UserIcon size={16} /></Link> : <Link href="/login" className="btn-gold whitespace-nowrap rounded-full px-2.5 py-1.5 text-[11px] font-black">{t("login")}</Link>}
+            </span>
+          </div>
         </div>
-      </div>
-    </header>
+      </header>
+      {showAnnouncement && <Marquee items={t("marquee")} />}
+    </>
   );
 }
 
@@ -194,6 +196,120 @@ export function BottomNav({ viewer, active }: { viewer: Viewer; active: "home" |
   );
 }
 
+/* ---------------- Leaderboard Component ---------------- */
+function LeaderboardCard({ t }: { t: any }) {
+  const listData = LEADERS;
+
+  return (
+    <section className="wx-winners-card relative overflow-hidden rounded-[2rem] border border-slate-200 bg-white dark:border-[#3a2470] dark:bg-[#0b0716] p-4 md:p-6 lg:col-span-7 shadow-2xl transition-colors duration-300">
+
+      {/* Header */}
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 dark:bg-white/5 text-rose-500 shadow-sm border border-slate-200 dark:border-white/10">
+          <TrophyIcon size={20} />
+        </div>
+        <h3 className="text-lg font-black text-slate-900 dark:text-white sm:text-xl tracking-wide">Leaderboard</h3>
+        <div className="flex h-10 w-10 items-center justify-center">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="text-slate-500 dark:text-slate-400"><path d="M4 6h16M4 12h16M8 18h12" /></svg>
+        </div>
+      </div>
+
+      {/* Top 3 Avatars/Initials Grid */}
+      <div className="flex items-end justify-center gap-4 sm:gap-8 pt-4 pb-10">
+
+        {/* Rank 2 */}
+        <div className="flex flex-col items-center w-24 group">
+          <div className="relative flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-indigo-400 to-purple-600 shadow-lg ring-4 ring-white dark:ring-[#0b0716] transition-transform group-hover:scale-105">
+            <span className="text-xl font-black text-white">2</span>
+            {/* Decorative Outer Ring */}
+            <div className="absolute inset-0 scale-[1.3] rounded-full border-[1.5px] border-dashed border-slate-300 dark:border-white/20 animate-[spin_15s_linear_infinite]"></div>
+          </div>
+          <div className="mt-5 w-full truncate text-center text-xs font-bold text-slate-800 dark:text-slate-200">ub...264</div>
+          <div className="mt-1 flex items-center gap-1 text-[11px] font-black text-emerald-500 drop-shadow-[0_0_5px_rgba(16,185,129,0.3)]">
+            <span>↑</span> 84,787
+          </div>
+        </div>
+
+        {/* Rank 1 */}
+        <div className="flex flex-col items-center w-28 -translate-y-6 group">
+          <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-amber-300 via-amber-400 to-orange-500 shadow-xl ring-4 ring-white dark:ring-[#0b0716] transition-transform group-hover:scale-105">
+            <CrownIcon size={36} className="absolute -top-7 text-amber-400 drop-shadow-[0_2px_10px_rgba(251,191,36,0.6)]" />
+            <span className="text-3xl font-black text-amber-950">1</span>
+            {/* Decorative Outer Ring */}
+            <div className="absolute inset-0 scale-[1.25] rounded-full border-2 border-dashed border-amber-400/50 animate-[spin_10s_linear_infinite]"></div>
+          </div>
+          <div className="mt-6 w-full truncate text-center text-sm font-bold text-slate-900 dark:text-white">Jo...947</div>
+          <div className="mt-1 flex items-center gap-1 text-xs font-black text-emerald-500 drop-shadow-[0_0_8px_rgba(16,185,129,0.4)]">
+            <span>↑</span> 96,239
+          </div>
+        </div>
+
+        {/* Rank 3 */}
+        <div className="flex flex-col items-center w-24 group">
+          <div className="relative flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-orange-400 to-rose-600 shadow-lg ring-4 ring-white dark:ring-[#0b0716] transition-transform group-hover:scale-105">
+            <span className="text-xl font-black text-white">3</span>
+            {/* Decorative Outer Ring */}
+            <div className="absolute inset-0 scale-[1.3] rounded-full border-[1.5px] border-dashed border-slate-300 dark:border-white/20 animate-[spin_15s_linear_infinite]"></div>
+          </div>
+          <div className="mt-5 w-full truncate text-center text-xs font-bold text-slate-800 dark:text-slate-200">Cr...026</div>
+          <div className="mt-1 flex items-center gap-1 text-[11px] font-black text-emerald-500 drop-shadow-[0_0_5px_rgba(16,185,129,0.3)]">
+            <span>↑</span> 82,139
+          </div>
+        </div>
+      </div>
+
+      {/* Glowing Curved Divider */}
+      <div className="relative h-10 w-full overflow-hidden">
+        <div className="absolute left-1/2 top-0 h-24 w-[150%] -translate-x-1/2 rounded-[50%] border-t-[3px] border-emerald-400/40 bg-slate-50 dark:bg-[#140c2a] shadow-[0_-5px_25px_rgba(16,185,129,0.15)] transition-colors duration-300"></div>
+      </div>
+
+      {/* Tabs & List Area */}
+      <div className="relative -mt-6 rounded-b-[2rem] bg-slate-50 dark:bg-[#140c2a] px-2 pt-6 pb-2 transition-colors duration-300">
+
+        {/* Subtitle */}
+        <div className="mb-4 flex items-center justify-center gap-3 opacity-80">
+          <div className="h-px w-10 bg-gradient-to-r from-transparent to-slate-400 dark:to-amber-500/50"></div>
+          <span className="text-[9px] font-black uppercase tracking-[0.25em] text-slate-500 dark:text-amber-500">Top Ranking</span>
+          <div className="h-px w-10 bg-gradient-to-l from-transparent to-slate-400 dark:to-amber-500/50"></div>
+        </div>
+
+        {/* List Container */}
+        <div className="wx-winners-clip relative h-64 overflow-hidden px-1">
+          <div className="wx-winners absolute inset-x-0 space-y-2.5">
+            {listData.map((r, i) => (
+              <div key={i} className="flex items-center justify-between rounded-2xl bg-white dark:bg-[#1b1038] p-3 shadow-sm border border-slate-200 dark:border-[#3a2470]/50 transition hover:bg-slate-100 dark:hover:bg-white/10">
+
+                <div className="flex min-w-0 items-center gap-3 sm:gap-4">
+                  <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,.55)]" />
+                  <div className="min-w-0">
+                    <div className="truncate text-sm font-black text-slate-900 dark:text-slate-100">{r.name}</div>
+                    <div className="flex items-center gap-1.5 mt-0.5 text-[11px] font-black text-emerald-500 dark:text-emerald-400">
+                      <span>{r.up ? "↑" : "↓"}</span> {r.amount.toLocaleString("en-US")}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Decorative Element instead of Rank Number */}
+                <div className="flex items-center justify-center relative h-9 w-9">
+                  <div className="absolute inset-0 rounded-full border-[1.5px] border-dashed border-amber-400/50 animate-[spin_20s_linear_infinite]"></div>
+                  <span className="text-[10px] text-slate-400 dark:text-slate-500">
+                    <CrownIcon size={12} />
+                  </span>
+                </div>
+
+              </div>
+            ))}
+          </div>
+
+          {/* Fade Overlays for scrolling effect */}
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-6 bg-gradient-to-b from-slate-50 dark:from-[#140c2a] to-transparent" />
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-slate-50 dark:from-[#140c2a] to-transparent" />
+        </div>
+      </div>
+    </section>
+  );
+}
+
 /* ---------------- full lobby ---------------- */
 export function Lobby({ viewer, cat, links = {}, showHeader = true }: { viewer: Viewer; cat: string; links?: Links; showHeader?: boolean }) {
   const { t, locale } = useI18n();
@@ -209,7 +325,7 @@ export function Lobby({ viewer, cat, links = {}, showHeader = true }: { viewer: 
 
   return (
     <div className="wx-lobby wx-bg min-h-[100dvh] text-white">
-      {showHeader && <Header viewer={viewer} active="home" />}
+      {showHeader && <Header viewer={viewer} active="home" showAnnouncement={false} />}
       <main className={`${CONTAINER} space-y-3 px-2 pb-28 pt-3 md:space-y-5 md:px-4 md:pb-12 lg:px-6`}>
         <BannerCarousel slides={slides} />
 
@@ -290,38 +406,9 @@ export function Lobby({ viewer, cat, links = {}, showHeader = true }: { viewer: 
 
         {/* leaderboard + app */}
         <div className="space-y-3 lg:grid lg:grid-cols-12 lg:gap-4 lg:space-y-0">
-          <section className="wx-winners-card relative overflow-hidden rounded-3xl border border-[#3a2470] bg-gradient-to-b from-[#160d33] to-[#0b0720] p-4 text-white md:p-6 lg:col-span-7">
-            {/* glow background */}
-            <div className="pointer-events-none absolute -top-24 left-1/2 h-56 w-56 -translate-x-1/2 rounded-full bg-[#ffb800]/20 blur-3xl" />
-            <div className="relative flex items-center justify-center gap-2">
-              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-[#ffd45a] to-[#ff8a00] text-[#2a1500] shadow-lg shadow-amber-500/30"><TrophyIcon size={18} /></span>
-              <div className="text-center">
-                <div className="text-sm font-black uppercase tracking-[0.18em] text-white sm:text-base">{t("topWinners").replace("🏆 ", "")}</div>
-                <div className="text-[10px] font-semibold uppercase tracking-widest text-amber-300/70">Weekly championship</div>
-              </div>
-            </div>
-            {/* podium */}
-            <div className="relative mt-6 grid grid-cols-3 items-end gap-2 sm:gap-4">
-              {(() => {
-                const top = [
-                  { rank: 2, n: "fs***429", a: 32741392, from: "from-[#cbd5e1] to-[#64748b]", h: "h-24 sm:h-28", ring: "ring-slate-300", med: "🥈", glow: "shadow-slate-500/30" },
-                  { rank: 1, n: "gn***850", a: 34093974, from: "from-[#ffe08a] to-[#ff8a00]", h: "h-32 sm:h-36", ring: "ring-amber-300", med: "🥇", glow: "shadow-amber-500/50" },
-                  { rank: 3, n: "pr***399", a: 19749864, from: "from-[#f0b98a] to-[#8a4a12]", h: "h-20 sm:h-24", ring: "ring-orange-700", med: "🥉", glow: "shadow-orange-800/30" },
-                ];
-                return top.map((x) => (
-                  <div key={x.rank} className="relative flex flex-col items-center">
-                    <div className="relative mb-2">
-                      <span className={`flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br ${x.from} text-lg shadow-lg ${x.glow} ring-4 ${x.ring}/40 sm:h-14 sm:w-14`}>{x.rank === 1 ? <CrownIcon size={22} /> : <span className="text-base font-black text-slate-900">{x.rank}</span>}</span>
-                      {x.rank === 1 && <span className="absolute -right-2 -top-2 animate-bounce text-xl">{x.med}</span>}
-                    </div>
-                    <div className="mb-1 max-w-full truncate rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-bold text-white sm:text-xs">{x.n}</div>
-                    <div className={`w-full ${x.h} rounded-t-2xl bg-gradient-to-b ${x.from} p-2 text-center shadow-inner`}><div className="flex h-full flex-col items-center justify-end gap-0.5"><span className="text-[9px] font-black text-slate-900/80 sm:text-[10px]">#{x.rank}</span><span className="text-[10px] font-black leading-tight text-slate-900 sm:text-xs">Rs. {(x.a / 1000000).toFixed(2)}M</span></div></div>
-                  </div>
-                ));
-              })()}
-            </div>
-            <div className="mt-5"><div className="on-image mb-1 grid grid-cols-[44px_1fr_auto] gap-2 px-3 pb-1 text-[10px] font-black uppercase tracking-widest text-[#b8a7e6] sm:text-xs"><span>{t("rank")}</span><span>{t("username")}</span><span className="text-right">{t("winnings")}</span></div><div className="wx-winners-clip relative h-44 overflow-hidden rounded-xl sm:h-52"><div className="wx-winners absolute inset-x-0">{[...LEADERS, ...LEADERS].map((r, i) => (<div key={i} className="grid grid-cols-[44px_1fr_auto] items-center gap-2 px-3 py-[7px] text-xs" style={{ background: i % 2 ? "rgba(255,255,255,.03)" : "transparent" }}><span className="flex items-center gap-1 font-black text-white/90"><span className={`flex h-6 w-6 items-center justify-center rounded-lg text-[10px] ${r.rank <= 3 ? "bg-gradient-to-br from-[#ffd45a] to-[#ff8a00] text-[#2a1500]" : "bg-white/10 text-slate-300"}`}>{r.rank}</span><span className={`text-[9px] ${r.up ? "text-emerald-400" : "text-rose-400"}`}>{r.up ? "▲" : "▼"}</span></span><span className="flex items-center gap-2 truncate font-semibold text-slate-200"><span className="h-5 w-5 shrink-0 rounded-full" style={{ background: `hsl(${(r.rank * 47) % 360} 70% 55%)` }} /><span className="truncate">{r.name}</span></span><span className="text-right font-black text-amber-300">Rs. {r.amount.toLocaleString("en-US")}</span></div>))}</div><div className="pointer-events-none absolute inset-x-0 top-0 h-4 bg-gradient-to-b from-[#160d33] to-transparent" /><div className="pointer-events-none absolute inset-x-0 bottom-0 h-4 bg-gradient-to-t from-[#0b0720] to-transparent" /></div></div>
-          </section>
+
+          <LeaderboardCard t={t} />
+
           <section className="space-y-2 lg:col-span-5"><div className="flex items-center gap-2 px-1 text-sm font-bold"><DownloadIcon size={16} />{t("appDownload")}</div><div className="on-image relative overflow-hidden rounded-2xl border border-[#3a2470] bg-gradient-to-br from-[#3b0764] via-[#1b1038] to-[#0b0716] p-4 lg:flex lg:h-[calc(100%-2rem)] lg:items-center"><div className="flex items-center gap-4 lg:w-full lg:gap-6"><div className="relative h-36 w-20 shrink-0 overflow-hidden rounded-[14px] border-4 border-[#241546] bg-black shadow-xl"><img src="/lobby/jackpot.jpg" alt="" className="h-full w-full object-cover" /></div><div className="flex-1 space-y-2"><div className="text-sm font-black">{t("getApp")}</div><p className="text-[11px] text-[#b8a7e6]">{t("getAppSub")}</p><InstallApp androidUrl={links.androidUrl || undefined} iosUrl={links.iosUrl || undefined} /></div></div></div></section>
         </div>
 
