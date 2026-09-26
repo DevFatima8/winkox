@@ -59,6 +59,7 @@ export async function POST(req: Request) {
         ]).catch(() => { });
         return NextResponse.json({ id: String(u._id), role: "client", name: u.name });
     } catch (e) {
-        return NextResponse.json({ error: e instanceof Error ? e.message : "Signup failed." }, { status: 500 });
+        console.error("[signup]", e);
+        return NextResponse.json({ error: "Server abhi database se connect nahi ho pa raha. Thodi dair baad dobara try karein." }, { status: 500 });
     }
 }

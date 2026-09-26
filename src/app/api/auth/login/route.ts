@@ -47,6 +47,7 @@ export async function POST(req: Request) {
         void LoginEvent.create({ userId: String(u._id), ip: loginIp, role: u.role }).catch(() => { });
         return NextResponse.json({ id: String(u._id), role, name: u.name });
     } catch (e) {
-        return NextResponse.json({ error: e instanceof Error ? e.message : "Login failed." }, { status: 500 });
+        console.error("[login]", e);
+        return NextResponse.json({ error: "Server abhi database se connect nahi ho pa raha. Thodi dair baad dobara try karein." }, { status: 500 });
     }
 }
