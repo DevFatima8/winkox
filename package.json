@@ -6,12 +6,12 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "package:hostinger": "node scripts/package-standalone.mjs"
   },
   "dependencies": {
     "dotenv": "17.3.1",
     "drizzle-orm": "0.45.2",
-    "mysql": "^2.18.1",
     "mysql2": "^3.24.4",
     "next": "16.2.6",
     "particles.js": "^2.0.0",
