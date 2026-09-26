@@ -21,6 +21,7 @@ export function Drawer({
   const pathname = usePathname();
   const sidePos = side === "right" ? "right-0" : "left-0";
   const translateClosed = side === "right" ? "translate-x-full rtl:-translate-x-full" : "-translate-x-full rtl:translate-x-full";
+  const desktopClosed = side === "right" ? "md:translate-x-full md:rtl:-translate-x-full" : "md:-translate-x-full md:rtl:translate-x-full";
 
   // mount with the panel off-screen, then transition in
   useEffect(() => { if (open) setMounted(true); const t = setTimeout(() => setMounted(open), open ? 0 : 220); return () => clearTimeout(t); }, [open]);
@@ -46,7 +47,7 @@ export function Drawer({
       />
       {/* panel */}
       <aside
-        className={`absolute inset-y-0 top-0 ${sidePos} flex h-[100dvh] ${widthClass} min-w-0 flex-col border shadow-[12px_0_40px_rgba(0,0,0,.4)] transition-transform duration-300 ease-[cubic-bezier(.22,1,.36,1)] will-change-transform ${side === "right" ? "rounded-l-[2rem] border-l" : "rounded-r-[2rem] border-r rtl:rounded-l-[2rem] rtl:rounded-r-none"} wx-drawer-panel ${open ? "translate-x-0" : translateClosed}`}
+        className={`absolute bottom-0 left-0 top-0 z-10 flex h-[100dvh] ${widthClass} min-w-0 origin-bottom-left flex-col border bg-[#140c2a] shadow-[0_-14px_45px_rgba(0,0,0,.45)] transition-[transform,opacity] duration-450 ease-[cubic-bezier(.22,1,.36,1)] will-change-transform md:inset-y-0 md:left-auto md:top-0 md:origin-left md:bg-transparent md:shadow-[12px_0_40px_rgba(0,0,0,.4)] ${sidePos} ${side === "right" ? "rounded-tl-[2rem] border-t md:rounded-l-[2rem] md:rounded-tl-none md:border-l md:border-t-0" : "rounded-tr-[2rem] border-t md:rounded-r-[2rem] md:rounded-tr-none md:border-r md:border-t-0 rtl:origin-bottom-right md:rtl:origin-right"} wx-drawer-panel ${open ? "translate-y-0 scale-100 opacity-100 md:translate-x-0" : `translate-y-full scale-[.96] opacity-0 ${desktopClosed}`}`}
       >
         <div className="pointer-events-none absolute inset-y-5 right-0 z-20 w-px bg-gradient-to-b from-transparent via-[#00e5c0]/70 to-transparent opacity-80" />
         <div className="pointer-events-none absolute inset-x-8 top-0 z-20 h-px bg-gradient-to-r from-transparent via-[#ffb800]/80 to-transparent" />

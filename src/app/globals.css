@@ -1771,6 +1771,7 @@ body {
     bottom: 0;
     height: 100dvh !important;
     max-height: 100dvh;
+    background: linear-gradient(180deg, #140c2a 0%, #0c0720 100%) !important;
   }
 
   .wx-drawer-panel>div,
