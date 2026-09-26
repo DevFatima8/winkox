@@ -86,4 +86,23 @@ Do not reset a shared or production database casually. For browser LocalDB testi
 
 Set all required `MYSQL_*` and `SUPER_ADMIN_*` variables in the hosting provider's environment settings, then deploy the Next.js application. Verify the database connection with the provider's host, port, credentials, database name, and SSL settings before testing login or signup.
 
+### Hostinger (Node.js hosting)
+
+Do not upload the raw project (without `node_modules`/`.next`) and rely on Hostinger to run `npm install` — its dynamic `mysql2` import is invisible to that flow and Hostinger will report the MySQL driver as missing. Instead, build a self-contained bundle locally and upload that:
+
+```bash
+npm install
+npm run build
+npm run package:hostinger
+```
+
+This produces a `deploy/` folder containing `server.js`, a pruned `node_modules` (with `mysql2` included), `.next/static`, and `public/`. Zip the **contents** of `deploy/` (not the project root) and upload/extract that on Hostinger. In hPanel's Node.js app settings:
+
+- Startup file: `server.js`
+- No `npm install` step needed — everything required is already inside `node_modules`
+- Set the same `MYSQL_*`/`SUPER_ADMIN_*` environment variables in hPanel (or keep the `.env` file, which is already copied into `deploy/`)
+
+Repeat `npm run build && npm run package:hostinger` and re-upload on every future deploy.
+
+
 
