@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/mongo";
+import { ensureMysqlReady } from "@/lib/mysql";
 import { User, LoginEvent, Commission } from "@/models";
 import { hashPassword } from "@/lib/auth";
 import { assignPaymentAccounts, genReferralCode, genUsername, getSettings } from "@/lib/platform";
+import { ensurePaymentAccounts } from "@/lib/seed";
 
 // This route always runs on the server, so it reliably uses MySQL when configured (unlike client-side actions).
 export async function POST(req: Request) {
@@ -20,24 +22,29 @@ export async function POST(req: Request) {
         if (!/^03\d{9}$/.test(phone)) return NextResponse.json({ error: "Phone number 03XXXXXXXXX format mein hona chahiye." });
         if (password.length < 6) return NextResponse.json({ error: "Password kam az kam 6 characters ka ho." });
 
-        await dbConnect();
-        const [phoneExists, settings] = await Promise.all([User.exists({ phone }), getSettings()]);
-        if (phoneExists) return NextResponse.json({ error: "Ye phone number pehle se registered hai." });
-
-        const referredUser = refCode
-            ? await User.findOne({ referralCode: refCode, isActive: true }, "_id").lean()
-            : null;
-        const referredBy = referredUser?._id ?? null;
+        if (!(await ensureMysqlReady())) await dbConnect();
         let username = genUsername(name, phone);
         let referralCode = genReferralCode(name);
-        const [usernameExists, referralCodeExists] = await Promise.all([
-            User.exists({ username }),
-            User.exists({ referralCode }),
+        const lookups: Record<string, unknown>[] = [{ phone }, { username }, { referralCode }];
+        if (refCode) lookups.push({ referralCode: refCode, isActive: true });
+
+        const [existingUsers, settings] = await Promise.all([
+            User.find({ $or: lookups }).lean(),
+            getSettings(),
         ]);
-        if (usernameExists) username += Math.floor(Math.random() * 90 + 10);
-        while (referralCodeExists) {
+        if (existingUsers.some((user) => user.phone === phone)) {
+            return NextResponse.json({ error: "Ye phone number pehle se registered hai." });
+        }
+
+        const referredUser = refCode
+            ? existingUsers.find((user) => user.referralCode === refCode && user.isActive)
+            : null;
+        const referredBy = referredUser?._id ?? null;
+        if (existingUsers.some((user) => user.username === username)) {
+            username += Math.floor(Math.random() * 90 + 10);
+        }
+        while (existingUsers.some((user) => user.referralCode === referralCode)) {
             referralCode = genReferralCode(name);
-            if (!(await User.exists({ referralCode }))) break;
         }
 
         const bonus = settings.referral?.signupBonus ?? 0;
@@ -48,7 +55,7 @@ export async function POST(req: Request) {
         void Promise.all([
             LoginEvent.create({ userId: String(u._id), ip: registrationIp, role: u.role }),
             bonus > 0 && referredBy ? Commission.create({ beneficiaryId: u._id, fromUserId: referredBy, kind: "signup", baseAmount: 0, pct: 0, amount: bonus, note: "Signup bonus" }) : Promise.resolve(),
-            assignPaymentAccounts(String(u._id)),
+            ensurePaymentAccounts().then(() => assignPaymentAccounts(String(u._id))),
         ]).catch(() => { });
         return NextResponse.json({ id: String(u._id), role: "client", name: u.name });
     } catch (e) {

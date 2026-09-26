@@ -130,16 +130,14 @@ export async function ensureMysqlReady(): Promise<boolean> {
             ssl: cfg.ssl ? { rejectUnauthorized: false } : undefined,
         });
 
-        for (const table of COLLECTIONS) {
-            await pool!.execute(`
+        await Promise.all(COLLECTIONS.map((table) => pool!.execute(`
         CREATE TABLE IF NOT EXISTS ${tableName(table)} (
           id VARCHAR(64) PRIMARY KEY,
           data JSON NOT NULL,
           created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
           updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-      `);
-        }
+            `)));
 
         return true;
     })();

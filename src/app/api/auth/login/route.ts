@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/mongo";
+import { ensureMysqlReady } from "@/lib/mysql";
 import { User, LoginEvent, AdminLog, oid } from "@/models";
 import { verifyPassword, isStaff } from "@/lib/auth";
 import { assignPaymentAccounts, genReferralCode, genUsername } from "@/lib/platform";
+import { ensureAdmin } from "@/lib/seed";
 
 // This route always runs on the server, so it reliably uses MySQL when configured (unlike client-side actions).
 export async function POST(req: Request) {
@@ -12,13 +14,21 @@ export async function POST(req: Request) {
         const password = String(form.get("password") ?? "");
         const loginIp = String(form.get("loginIp") ?? "").trim() || null;
 
-        await dbConnect();
+        if (!(await ensureMysqlReady())) await dbConnect();
 
         const idLike = /^WX[-\s]?(ADM|SYS)/i.test(rawLogin);
         const login = idLike
             ? rawLogin.toUpperCase().replace(/\s/g, "").replace(/^WX(ADM|SYS)/, "WX-$1").replace(/^(WX-(?:ADM|SYS))-?(\d+)$/, (_m, a, d) => `${a}-${String(parseInt(d, 10)).padStart(4, "0")}`)
             : rawLogin.replace(/\s|-/g, "");
-        const u = await User.findOne(idLike ? { adminId: login } : /^03\d{9}$/.test(login) ? { phone: login } : { username: login.toLowerCase() });
+        const userFilter = idLike ? { adminId: login } : /^03\d{9}$/.test(login) ? { phone: login } : { username: login.toLowerCase() };
+        let u = await User.findOne(userFilter);
+        const adminLogin = idLike
+            || login.toLowerCase() === (process.env.SUPER_ADMIN_USERNAME || "superadmin").toLowerCase()
+            || login === (process.env.SUPER_ADMIN_PHONE || "03000000000");
+        if (!u && adminLogin) {
+            await ensureAdmin();
+            u = await User.findOne(userFilter);
+        }
         if (!u || !(await verifyPassword(password, u.passwordHash))) return NextResponse.json({ error: "Phone/username/ID ya password ghalat hai." });
         if (!u.isActive) return NextResponse.json({ error: "Aapka account block hai. Support se rabta karein." });
 
