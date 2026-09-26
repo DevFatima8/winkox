@@ -108,7 +108,7 @@ export function Header({ viewer, active = "home", showAnnouncement = true }: { v
             <Link href="/#games" className={navCls("games")}>{t("games")}</Link>
             <Link href="/promo" className={navCls("promo")}>{t("promo")}</Link>
             <Link href={dep} className="hidden rounded-full px-3 py-1.5 text-sm font-bold text-[#b8a7e6] hover:text-white lg:inline-flex">{t("deposit")}</Link>
-            <Link href={viewer.loggedIn ? "/client/team" : "/signup"} className="hidden rounded-full px-3 py-1.5 text-sm font-bold text-[#b8a7e6] hover:text-white lg:inline-flex">{t("invite")}</Link>
+            <Link href={viewer.loggedIn ? "/player/team" : "/signup"} className="hidden rounded-full px-3 py-1.5 text-sm font-bold text-[#b8a7e6] hover:text-white lg:inline-flex">{t("invite")}</Link>
             <Link href="/help" className="hidden rounded-full px-3 py-1.5 text-sm font-bold text-[#b8a7e6] hover:text-white lg:inline-flex">{t("help")}</Link>
           </nav>
           <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
@@ -185,7 +185,7 @@ export function BottomNav({ viewer, active }: { viewer: Viewer; active: "home" |
       <div className="mx-auto flex w-full max-w-[560px] items-end border-t border-[#3a2470] bg-[#140c2a]/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_rgba(0,0,0,.5)] backdrop-blur">
         {item("home", "/", <HomeIcon size={22} />, t("home"))}
         {item("promo", "/promo", <GiftIcon size={22} />, t("promo"))}
-        <Link href={viewer.loggedIn ? "/client/team" : "/signup"} className="relative -top-4 flex min-w-0 flex-1 flex-col items-center text-[10px] font-semibold text-white min-[380px]:text-[11px]">
+        <Link href={viewer.loggedIn ? "/player/team" : "/signup"} className="relative -top-4 flex min-w-0 flex-1 flex-col items-center text-[10px] font-semibold text-white min-[380px]:text-[11px]">
           <span className="btn-gold flex h-12 w-12 items-center justify-center rounded-full ring-4 ring-[#0b0716] min-[380px]:h-14 min-[380px]:w-14"><UsersIcon size={24} /></span>
           <span className="mt-0.5">{t("invite")}</span>
         </Link>
@@ -317,7 +317,7 @@ export function Lobby({ viewer, cat, links = {}, showHeader = true }: { viewer: 
   const slides: Slide[] = SLIDES.map((sl, i) => ({ ...sl, kicker: t(`b${i + 1}k` as "b1k"), title: t(`b${i + 1}t` as "b1t"), sub: t(`b${i + 1}s` as "b1s"), cta: [t("registerNow"), t("playNow"), t("joinTable"), t("viewPromo")][i] }));
   const tabLabel: Record<string, string> = { Hot: t("hotLabel"), Recent: t("recent"), Demo: t("demo"), Cards: t("cards"), "Mini Games": t("miniGames"), Live: t("live"), Slot: t("slot"), Fishing: t("fishing"), Sports: t("sports"), Lottery: t("lottery") };
   const catLabel: Record<string, string> = { Slot: t("slot"), "Mini Games": t("miniGames"), Live: t("liveCasino"), Cards: t("cards"), Fishing: t("fishing"), Sports: t("sports"), Lottery: t("lottery") };
-  const gameHref = (slug: string) => (viewer.loggedIn && !viewer.isAdmin ? `/client/games/${slug}` : `/games/${slug}`);
+  const gameHref = (slug: string) => (viewer.loggedIn && !viewer.isAdmin ? `/player/games/${slug}` : `/games/${slug}`);
   const tabs = ["Hot", "Recent", "Demo", "Cards", "Mini Games", "Live"];
   const activeTab = tabs.includes(cat) || CATS.some((c) => c.key === cat) ? cat : "Hot";
   const games = GAME_ORDER.filter((s) => activeTab === "Recent" || GAME_META[s].cat.includes(activeTab));
@@ -338,8 +338,8 @@ export function Lobby({ viewer, cat, links = {}, showHeader = true }: { viewer: 
               <div className="flex gap-2">
                 {viewer.isAdmin ? <Link href="/admin" className="btn-violet rounded-full px-5 py-2 text-sm font-bold">{t("adminPanel")}</Link> : (
                   <>
-                    <Link href="/client/wallet" className="btn-gold rounded-full px-4 py-2 text-sm font-black">{t("deposit")}</Link>
-                    <Link href="/client/wallet" className="btn-outline rounded-full px-4 py-2 text-sm font-bold">{t("withdraw")}</Link>
+                    <Link href="/player/wallet" className="btn-gold rounded-full px-4 py-2 text-sm font-black">{t("deposit")}</Link>
+                    <Link href="/player/wallet" className="btn-outline rounded-full px-4 py-2 text-sm font-bold">{t("withdraw")}</Link>
                   </>
                 )}
               </div>

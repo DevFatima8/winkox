@@ -186,7 +186,7 @@ export function AviatorGame({ table = "aviator" }: { table?: Table }) {
           <button onClick={() => setSound(!sound)} className="flex w-full items-center justify-between rounded px-2 py-2 hover:bg-white/5"><span>Sound</span><span className={`h-4 w-8 rounded-full p-0.5 ${sound ? "bg-[#28a909]" : "bg-slate-600"}`}><span className={`block h-3 w-3 rounded-full bg-white transition ${sound ? "translate-x-4" : ""}`} /></span></button>
           <div className="my-1 border-t" style={{ borderColor: T.line }} />
           {[["Game rules", () => { setRules(true); setMenu(false); }], ["My bet history", () => { setTab("prev"); setMenu(false); }], ["Provably fair settings", () => setMenu(false)]].map(([l, fn]) => <button key={String(l)} onClick={fn as () => void} className="block w-full rounded px-2 py-2 text-left hover:bg-white/5">{String(l)}</button>)}
-          <div className="my-1 border-t" style={{ borderColor: T.line }} /><a href="/client" className="block rounded px-2 py-2 hover:bg-white/5">Home</a>
+          <div className="my-1 border-t" style={{ borderColor: T.line }} /><a href="/player" className="block rounded px-2 py-2 hover:bg-white/5">Home</a>
         </div>
       )}
 

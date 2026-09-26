@@ -143,9 +143,9 @@ export function Drawer({ loggedIn, isAdmin }: { loggedIn: boolean; isAdmin: bool
   const { t } = useI18n();
   const links: [ReactNode, string, string][] = [
     [<HomeIcon key="h" size={18} />, t("home"), "/"], [<FlameIcon key="f" size={18} />, t("hotGames"), "/#games"], [<SpadeIcon key="c" size={18} />, t("cards"), "/?cat=Cards#games"], [<GamepadIcon key="g" size={18} />, t("miniGames"), "/?cat=Mini%20Games#games"],
-    [<GiftIcon key="p" size={18} />, t("promo"), "/promo"], [<CrownIcon key="v" size={18} />, "VIP", "/vip"], [<UsersIcon key="i" size={18} />, t("invite"), loggedIn ? "/client/team" : "/invite"],
-    [<WalletIcon key="d" size={18} />, t("deposit"), loggedIn ? "/client/wallet" : "/login"], [<BanknoteIcon key="w" size={18} />, t("withdraw"), loggedIn ? "/client/wallet" : "/login"],
-    [<HistoryIcon key="b" size={18} />, t("betHistory"), loggedIn ? "/client/history" : "/login"], [<BookIcon key="k" size={18} />, t("helpCenter"), "/help"], [<UserIcon key="u" size={18} />, t("profile"), isAdmin ? "/admin" : loggedIn ? "/client/profile" : "/login"],
+    [<GiftIcon key="p" size={18} />, t("promo"), "/promo"], [<CrownIcon key="v" size={18} />, "VIP", "/vip"], [<UsersIcon key="i" size={18} />, t("invite"), loggedIn ? "/player/team" : "/invite"],
+    [<WalletIcon key="d" size={18} />, t("deposit"), loggedIn ? "/player/wallet" : "/login"], [<BanknoteIcon key="w" size={18} />, t("withdraw"), loggedIn ? "/player/wallet" : "/login"],
+    [<HistoryIcon key="b" size={18} />, t("betHistory"), loggedIn ? "/player/history" : "/login"], [<BookIcon key="k" size={18} />, t("helpCenter"), "/help"], [<UserIcon key="u" size={18} />, t("profile"), isAdmin ? "/admin" : loggedIn ? "/player/profile" : "/login"],
   ];
   return (
     <>

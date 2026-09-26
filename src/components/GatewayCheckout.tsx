@@ -126,8 +126,8 @@ export function GatewayCheckout({ id }: { id: string }) {
                 {result && <div className="flex justify-between"><span className="text-slate-500">New wallet balance</span><b className="text-emerald-600">Rs. {result.balance.toLocaleString()}</b></div>}
               </div>
               <div className="grid grid-cols-2 gap-2">
-                <Link href="/client" className="rounded-xl py-3 text-sm font-black text-white" style={{ background: b.accent }}>Play games</Link>
-                <Link href="/client/wallet" className="rounded-xl border border-slate-200 py-3 text-sm font-bold text-slate-700">Back to wallet</Link>
+                <Link href="/player" className="rounded-xl py-3 text-sm font-black text-white" style={{ background: b.accent }}>Play games</Link>
+                <Link href="/player/wallet" className="rounded-xl border border-slate-200 py-3 text-sm font-bold text-slate-700">Back to wallet</Link>
               </div>
             </div>
           )}
@@ -137,7 +137,7 @@ export function GatewayCheckout({ id }: { id: string }) {
               <div className="text-xl font-black text-slate-900">Request submitted for review</div>
               <p className="text-sm text-slate-600">Admin proof verify karega. Approval ke baad deposit balance mein add hoga ya withdrawal process hogi.</p>
               <div className="rounded-xl bg-slate-50 p-3 text-left text-sm"><div className="flex justify-between"><span className="text-slate-500">Amount</span><b>Rs. {s.amount.toLocaleString()}</b></div><div className="flex justify-between"><span className="text-slate-500">Reference</span><b className="font-mono">{result?.txnRef ?? s.txnRef}</b></div><div className="flex justify-between"><span className="text-slate-500">Status</span><b className="text-amber-600">Pending admin approval</b></div></div>
-              <Link href="/client/wallet" className="block rounded-xl py-3 text-sm font-black text-white" style={{ background: b.accent }}>Back to wallet</Link>
+              <Link href="/player/wallet" className="block rounded-xl py-3 text-sm font-black text-white" style={{ background: b.accent }}>Back to wallet</Link>
             </div>
           )}
           {step === "failed" && (
@@ -145,7 +145,7 @@ export function GatewayCheckout({ id }: { id: string }) {
               <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-100 text-red-600"><XIcon size={34} /></span>
               <div className="text-xl font-black text-slate-900">Payment {s.status === "cancelled" ? "Cancelled" : s.status === "expired" ? "Expired" : "Failed"}</div>
               {err && <p className="text-sm text-slate-600">{err}</p>}
-              <Link href="/client/wallet" className="block rounded-xl py-3 text-sm font-black text-white" style={{ background: b.accent }}>Try again</Link>
+              <Link href="/player/wallet" className="block rounded-xl py-3 text-sm font-black text-white" style={{ background: b.accent }}>Try again</Link>
             </div>
           )}
         </div>

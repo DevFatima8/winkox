@@ -7,10 +7,10 @@ import { useI18n } from "@/lib/i18n/client";
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const { user, loading } = useSession();
+  const { t } = useI18n();
   useEffect(() => { if (!loading && (!user || user.role !== "admin")) window.location.replace("/login"); }, [user, loading]);
   if (loading || !user || user.role !== "admin") return <div className="wx-bg flex min-h-screen items-center justify-center text-sm text-[#b8a7e6]"><span className="h-8 w-8 animate-spin rounded-full border-2 border-[#00e5a0] border-t-transparent" /></div>;
   const superNav = user.level >= 2;
-  const { t } = useI18n();
   const nav = [
     { href: "/admin", label: t("dashboard"), icon: "📊" },
     { href: "/admin/support", label: t("liveSupportAdmin"), icon: "💬" },

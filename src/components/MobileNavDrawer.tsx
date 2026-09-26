@@ -38,7 +38,7 @@ export function MobileNavDrawer({ items, title, footer }: { items: MobileNavItem
         </div>
         <nav className="min-w-0 space-y-1 p-2 sm:p-3">
           {items.map((n, index) => {
-            const active = path === n.href || (n.href !== "/admin" && n.href !== "/client" && path.startsWith(n.href));
+            const active = path === n.href || (n.href !== "/admin" && n.href !== "/player" && path.startsWith(n.href));
             return (
               <Link key={n.href} href={n.href} style={{ "--drawer-index": index } as CSSProperties} className={`wx-drawer-item flex min-w-0 items-center gap-2 rounded-2xl px-2.5 py-3 text-sm font-semibold transition sm:gap-3 sm:px-3.5 sm:py-3.5 ${active ? "bg-gradient-to-r from-[#8b5cf6]/25 to-[#d946ef]/10 text-white ring-1 ring-[#8b5cf6]/60 shadow-lg shadow-[#8b5cf6]/10" : "wx-rowtext hover:bg-white/5 hover:text-white"}`}>
                 <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl sm:h-9 sm:w-9 ${active ? "bg-[#ffb800]/15 text-[#ffcf4a]" : "bg-white/5 text-[#c4b5fd]"}`}>{n.icon}</span><span className="min-w-0 truncate">{n.label}</span>

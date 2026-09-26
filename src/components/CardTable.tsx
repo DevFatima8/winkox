@@ -180,14 +180,14 @@ export function CardTable({ table }: { table: Table }) {
         </div>
         <div className="flex items-center gap-2">
           <div className="rounded-lg bg-[#0b0716] px-3 py-1.5 text-sm font-black text-[#ffb800]">{money(st.balance)}</div>
-          <Link href="/client" className="rounded-lg bg-[#0b0716] px-3 py-1.5 text-xs text-[#b8a7e6] hover:text-white"></Link>
+          <Link href="/player" className="rounded-lg bg-[#0b0716] px-3 py-1.5 text-xs text-[#b8a7e6] hover:text-white"></Link>
         </div>
       </div>
 
       {/* table tabs */}
       <div className="grid grid-cols-2 gap-2">
         {(["dragon-tiger", "andar-bahar"] as Table[]).map((t) => (
-          <Link key={t} href={`/client/games/${t}`} className={`rounded-xl px-3 py-2 text-center text-sm font-bold ${t === table ? "btn-violet" : "bg-[#1b1038] text-[#b8a7e6] hover:text-white"}`}>
+          <Link key={t} href={`/player/games/${t}`} className={`rounded-xl px-3 py-2 text-center text-sm font-bold ${t === table ? "btn-violet" : "bg-[#1b1038] text-[#b8a7e6] hover:text-white"}`}>
             {t === "dragon-tiger" ? "Dragon Tiger" : "🃏 Andar Bahar"}
           </Link>
         ))}
