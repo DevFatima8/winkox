@@ -1,3 +1,4 @@
+import mysql from "mysql2/promise";
 import type { Pool } from "mysql2/promise";
 
 export type MysqlConfig = {
@@ -36,23 +37,6 @@ const COLLECTIONS = [
 
 let pool: Pool | null = null;
 let initPromise: Promise<boolean> | null = null;
-let mysqlModule: Promise<typeof import("mysql2/promise")> | null = null;
-
-function loadMysql() {
-    // The current app still imports its model layer from client components. Hide this
-    // server-only dependency from the client bundler; it is invoked only on the server.
-    if (!mysqlModule) {
-        mysqlModule = (Function("return import('mysql2/promise')")() as Promise<typeof import("mysql2/promise")>).catch((error) => {
-            mysqlModule = null;
-            const msg = error instanceof Error ? error.message : String(error);
-            if (/mysql2/.test(msg) && /module|package|find/i.test(msg)) {
-                throw new Error("Database driver missing on server. Install production dependency 'mysql2' and redeploy.");
-            }
-            throw error;
-        });
-    }
-    return mysqlModule;
-}
 
 function parseMysqlUrl(url: string): MysqlConfig | null {
     try {
@@ -115,7 +99,6 @@ export async function ensureMysqlReady(): Promise<boolean> {
     if (initPromise) return initPromise;
 
     initPromise = (async () => {
-        const mysql = await loadMysql();
         // Hostinger provisions the database in hPanel. Its application users usually
         // do not have permission to create databases, only tables inside their database.
         pool = mysql.createPool({
