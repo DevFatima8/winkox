@@ -44,7 +44,7 @@ export function Shell({ title, nav, userName, badge, children, support = true, s
           {/* nav (scrolls independently) */}
           <nav className="wx-scroll flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto overscroll-contain px-2 py-3 xl:px-3">
             {nav.map((n) => (
-              <ActiveLink key={n.href} href={n.href} exact={n.href === "/admin" || n.href === "/client"} className={linkBase} activeClassName={linkActive}>
+              <ActiveLink key={n.href} href={n.href} exact={n.href === "/admin" || n.href === "/player"} className={linkBase} activeClassName={linkActive}>
                 <span className="shrink-0 text-[#c4b5fd]" title={n.label}>{ico(n.icon)}</span>
                 <span className="hidden truncate xl:inline">{n.label}</span>
               </ActiveLink>
@@ -103,7 +103,7 @@ export function Shell({ title, nav, userName, badge, children, support = true, s
       {/* ===== Mobile bottom tabs (4 + More) ===== */}
       <nav className="fixed inset-x-0 bottom-0 z-40 flex border-t border-[#3a2470] bg-[#140c2a]/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
         {tabs.map((n) => (
-          <ActiveLink key={n.href} href={n.href} exact={n.href === "/admin" || n.href === "/client"} className="flex min-w-0 flex-1 flex-col items-center gap-0.5 py-2 text-[10px] font-semibold text-[#b8a7e6]" activeClassName="!text-[#ffb800]">
+          <ActiveLink key={n.href} href={n.href} exact={n.href === "/admin" || n.href === "/player"} className="flex min-w-0 flex-1 flex-col items-center gap-0.5 py-2 text-[10px] font-semibold text-[#b8a7e6]" activeClassName="!text-[#ffb800]">
             <span>{ico(n.icon)}</span>
             <span className="w-full truncate px-1 text-center">{n.label}</span>
           </ActiveLink>

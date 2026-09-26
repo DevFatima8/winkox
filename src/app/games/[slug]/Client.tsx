@@ -15,7 +15,7 @@ export default function PublicGamePageClient({ params, searchParams }: { params?
     const { slug } = params ?? {};
     if (!GAME_SLUGS.includes(slug)) return NOT_FOUND;
     const s = await getSession();
-    if (s?.role === "client") return REDIRECT(`/client/games/${slug}`);
+    if (s?.role === "client") return REDIRECT(`/player/games/${slug}`);
 
     const viewer = { loggedIn: !!s, isAdmin: s?.role === "admin", name: s?.name };
     return (

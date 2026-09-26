@@ -10,7 +10,7 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
   const { user, loading } = useSession();
   const { t } = useI18n();
   const pathname = usePathname();
-  const hideSidebar = pathname.startsWith("/client/games/");
+  const hideSidebar = pathname.startsWith("/player/games/");
   useEffect(() => {
     if (loading) return;
     if (!user) window.location.replace("/login");
@@ -31,12 +31,12 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
     </div>
   );
   const nav = [
-    { href: "/client", label: t("games"), icon: "🎮" },
-    { href: "/client/wallet", label: t("wallet"), icon: "💰" },
-    { href: "/client/team", label: t("invite"), icon: "🤝" },
-    { href: "/client/history", label: t("history"), icon: "🧾" },
-    { href: "/client/profile", label: t("profile"), icon: "👤" },
-    { href: "/client/notifications", label: t("notifications"), icon: "🔔" },
+    { href: "/player", label: t("games"), icon: "🎮" },
+    { href: "/player/wallet", label: t("wallet"), icon: "💰" },
+    { href: "/player/team", label: t("invite"), icon: "🤝" },
+    { href: "/player/history", label: t("history"), icon: "🧾" },
+    { href: "/player/profile", label: t("profile"), icon: "👤" },
+    { href: "/player/notifications", label: t("notifications"), icon: "🔔" },
     { href: "/help", label: t("helpCenter"), icon: "📘" },
   ];
   return (

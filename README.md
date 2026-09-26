@@ -69,9 +69,9 @@ On first initialization, the configured `SUPER_ADMIN_*` values are used to creat
 
 - `/` — public lobby and games
 - `/games/[slug]` — guest game pages
-- `/client` — authenticated player area
-- `/client/wallet` — deposits and withdrawals
-- `/client/team` — referrals and commissions
+- `/player` — authenticated player area
+- `/player/wallet` — deposits and withdrawals
+- `/player/team` — referrals and commissions
 - `/admin` — protected admin dashboard
 - `/admin/notifications` — platform broadcasts
 - `/api/health` — health check

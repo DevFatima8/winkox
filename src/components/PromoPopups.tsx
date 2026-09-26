@@ -154,7 +154,7 @@ function LuckyDrawPopup({ onClose, onNext }: { onClose: () => void; onNext: () =
               <span className="truncate">Referral link: {refLink}</span>
               <span className="rounded bg-white/20 px-1">{copied ? "✓" : "⧉"}</span>
             </button>
-            <button type="button" onClick={() => router.push("/client/team")} className="rounded bg-white/10 px-2 py-1">My subordinates</button>
+            <button type="button" onClick={() => router.push("/player/team")} className="rounded bg-white/10 px-2 py-1">My subordinates</button>
           </div>
           <div className="mt-2 rounded-lg bg-[#0e3f96]/80 py-2 text-center text-xs font-black text-white">✦ Complete tasks for free draws ✦</div>
           <div className="mt-1.5 flex items-center gap-2 rounded-lg bg-white/90 px-3 py-2 text-[11px] font-bold text-[#1257c4]">📅 Daily Login <span className="text-[#7aa8e8]">Free draw:{hh}:{mm}:{ss}</span></div>
@@ -194,14 +194,14 @@ function FirstDepositPopup({ onClose }: { onClose: (today: boolean, never: boole
                     <span className="relative inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#ffd12e] text-sm ring-2 ring-[#f5a623]">🪙<b className="absolute -right-2.5 -top-2 rounded-full bg-[#ff7a00] px-1 text-[9px] text-white">{b}</b></span>
                     <span className="mt-1 rounded bg-[#20c997] px-1.5 text-[9px] font-black text-white">Bonus</span>
                   </span>
-                  <button type="button" onClick={() => { onClose(today, never); router.push(`/client/wallet?amount=${d}`); }} className="rounded-full bg-gradient-to-b from-[#ffa02e] to-[#ff7a00] px-4 py-1.5 text-xs font-black text-white">Deposit</button>
+                  <button type="button" onClick={() => { onClose(today, never); router.push(`/player/wallet?amount=${d}`); }} className="rounded-full bg-gradient-to-b from-[#ffa02e] to-[#ff7a00] px-4 py-1.5 text-xs font-black text-white">Deposit</button>
                 </div>
               ))}
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3 p-3">
-            <button type="button" onClick={() => router.push("/client/history")} className="rounded-lg border border-blue-500 bg-white py-2.5 text-sm font-bold text-blue-600">History</button>
-            <button type="button" onClick={() => router.push("/client/wallet")} className="rounded-lg bg-blue-600 py-2.5 text-sm font-bold text-white">View event</button>
+            <button type="button" onClick={() => router.push("/player/history")} className="rounded-lg border border-blue-500 bg-white py-2.5 text-sm font-bold text-blue-600">History</button>
+            <button type="button" onClick={() => router.push("/player/wallet")} className="rounded-lg bg-blue-600 py-2.5 text-sm font-bold text-white">View event</button>
           </div>
           <div className="flex items-center justify-between border-t border-gray-100 px-4 py-2.5 text-[11px] text-gray-600">
             <label className="inline-flex items-center gap-1.5"><input type="checkbox" checked={today} onChange={(e) => setToday(e.target.checked)} /> Don&apos;t show again today</label>
@@ -223,7 +223,7 @@ export function PromoPopups() {
   const startedRef = useRef(false);
 
   const isAdminPath = pathname?.startsWith("/admin");
-  const isGamePath = !!pathname && (pathname.startsWith("/games") || pathname.startsWith("/client/games"));
+  const isGamePath = !!pathname && (pathname.startsWith("/games") || pathname.startsWith("/player/games"));
 
   const fddOff = useCallback(() => {
     try {

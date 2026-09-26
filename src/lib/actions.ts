@@ -21,7 +21,7 @@ export async function signupAction(_: ActionState, form: FormData): Promise<Acti
   const data = await res.json().catch(() => ({ error: "Signup failed. Server se connect nahi ho saka." }));
   if (data.error) return { error: data.error };
   await createSession({ id: data.id, role: data.role, name: data.name });
-  redirect("/client");
+  redirect("/player");
 }
 
 export async function loginAction(_: ActionState, form: FormData): Promise<ActionState> {
@@ -29,7 +29,7 @@ export async function loginAction(_: ActionState, form: FormData): Promise<Actio
   const data = await res.json().catch(() => ({ error: "Login failed. Server se connect nahi ho saka." }));
   if (data.error) return { error: data.error };
   await createSession({ id: data.id, role: data.role, name: data.name });
-  redirect(data.role === "admin" ? "/admin" : "/client");
+  redirect(data.role === "admin" ? "/admin" : "/player");
 }
 
 export async function logoutAction() {
@@ -48,7 +48,7 @@ export async function setWithdrawPinAction(_: ActionState, form: FormData): Prom
   const u = await User.findById(me.id, "withdrawPin");
   if (u?.withdrawPin && u.withdrawPin !== current) return { error: "Purana PIN ghalat hai." };
   await User.updateOne({ _id: oid(me.id) }, { $set: { withdrawPin: pin } });
-  revalidatePath("/client/profile");
+  revalidatePath("/player/profile");
   return { success: "Withdrawal PIN set ho gaya." };
 }
 
@@ -87,7 +87,7 @@ export async function depositAction(_: ActionState, form: FormData): Promise<Act
   await Transaction.create({ userId: oid(me.id), type: "deposit", provider: acc.provider, amount, paymentAccountId: acc._id, assignedAccountId: acc._id, accountName: acc.accountTitle, senderNumber, referenceId, method: "manual" });
   await notifyUser(me.id, "Purchase request received", `Your deposit request of Rs. ${amount.toLocaleString()} has been sent for admin verification.`, "info");
   await notifyAdmins("New deposit request", `${me.name} requested a deposit of Rs. ${amount.toLocaleString()} via ${acc.provider}.`, "info");
-  revalidatePath("/client/wallet"); revalidatePath("/admin");
+  revalidatePath("/player/wallet"); revalidatePath("/admin");
   return { success: "Deposit request submit ho gayi. Admin verify kar ke balance add karega." };
 }
 
@@ -128,7 +128,7 @@ export async function withdrawAction(_: ActionState, form: FormData): Promise<Ac
   });
   await notifyUser(me.id, "Withdrawal request received", `Your withdrawal request of Rs. ${amount.toLocaleString()} is pending admin approval.`, "info");
   await notifyAdmins("New withdrawal request", `${me.name} requested a withdrawal of Rs. ${amount.toLocaleString()} via ${provider}.`, "warning");
-  revalidatePath("/client/wallet"); revalidatePath("/admin");
+  revalidatePath("/player/wallet"); revalidatePath("/admin");
   return { success: "Withdraw request submit ho gayi. Amount 24 ghanton mein aapke account mein aa jayegi." };
 }
 
@@ -137,7 +137,7 @@ export async function markNotificationsReadAction() {
   const me = await getCurrentUser();
   if (!me) return;
   await Notification.updateMany({ isActive: true, readBy: { $ne: oid(me.id) } }, { $addToSet: { readBy: oid(me.id) } });
-  revalidatePath("/client/notifications");
+  revalidatePath("/player/notifications");
 }
 
 // ---------- ADMIN ----------
@@ -381,7 +381,7 @@ export async function setUserGameBlockAction(userId: string, slug: string, block
 export async function toggleGameAction(id: string, isActive: boolean) {
   await requireSuper();
   await Game.updateOne({ _id: oid(id) }, { $set: { isActive } });
-  revalidatePath("/admin/games"); revalidatePath("/"); revalidatePath("/client");
+  revalidatePath("/admin/games"); revalidatePath("/"); revalidatePath("/player");
 }
 
 // settings

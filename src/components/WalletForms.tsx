@@ -71,8 +71,8 @@ export function WithdrawForm({ balance, hasPin, limits }: { balance: number; has
   return (
     <form action={action} className="space-y-4">
       <p className="text-sm text-slate-400">{t("availableBalance")} <b className="text-yellow-400">Rs. {Number(balance).toLocaleString()}</b></p>
-      {limits && <div className="rounded-xl bg-black/30 p-3 text-xs text-[#b8a7e6] ring-1 ring-[#3a2470]"><b className="text-white">{limits.name}</b> · {t("dailyLimit")} <b className="text-[#ffb800]">Rs. {limits.daily.toLocaleString()}</b> ({t("remainingToday")} Rs. {Math.max(0, limits.daily - limits.usedToday).toLocaleString()}) · {t("maxPerWithdraw")} Rs. {limits.perMax.toLocaleString()} · {t("min")} Rs. {limits.min}. <a href="/client/profile" className="text-[#c4b5fd] underline">{t("raiseVip")}</a></div>}
-      {!hasPin && <div className="rounded-xl bg-[#ffb800]/10 p-3 text-xs text-[#ffe0a3] ring-1 ring-[#ffb800]/40">{t("setPinFirst")} <a href="/client/profile" className="font-bold underline">{t("profile")}</a>.</div>}
+      {limits && <div className="rounded-xl bg-black/30 p-3 text-xs text-[#b8a7e6] ring-1 ring-[#3a2470]"><b className="text-white">{limits.name}</b> · {t("dailyLimit")} <b className="text-[#ffb800]">Rs. {limits.daily.toLocaleString()}</b> ({t("remainingToday")} Rs. {Math.max(0, limits.daily - limits.usedToday).toLocaleString()}) · {t("maxPerWithdraw")} Rs. {limits.perMax.toLocaleString()} · {t("min")} Rs. {limits.min}. <a href="/player/profile" className="text-[#c4b5fd] underline">{t("raiseVip")}</a></div>}
+      {!hasPin && <div className="rounded-xl bg-[#ffb800]/10 p-3 text-xs text-[#ffe0a3] ring-1 ring-[#ffb800]/40">{t("setPinFirst")} <a href="/player/profile" className="font-bold underline">{t("profile")}</a>.</div>}
       <label className="block">
         <span className="mb-1 block text-sm font-medium text-slate-300">{t("provider")}</span>
         <select name="provider" className={input}>

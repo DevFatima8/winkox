@@ -153,7 +153,7 @@ export function PlinkoGame() {
         <div className="flex items-center gap-2 text-base font-black tracking-tight text-white"><span className="inline-block h-4 w-4 rounded-full bg-gradient-to-br from-[#ff7a90] to-[#e4003a] shadow-[0_0_10px_rgba(255,59,92,.8)]" />Plinko</div>
         <div className="flex items-center gap-2">
           <div className="rounded-lg bg-[#1a2c38] px-3 py-1.5 text-sm font-black text-[#00e701]">{money(balance)}</div>
-          <Link href="/client" className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#1a2c38] text-slate-300 hover:text-white"></Link>
+          <Link href="/player" className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#1a2c38] text-slate-300 hover:text-white"></Link>
         </div>
       </div>
 

@@ -650,7 +650,7 @@ export function ChickenDashGame() {
             {game && phase === "active" && <div className="hidden rounded-lg bg-[#1f2533] px-3 py-1 text-xs text-slate-300 sm:block">Tile <b className="text-white">{game.position}</b>/{game.lanes}{game.bagCollected ? <> · <b className="text-yellow-400">+{game.bagMult}x</b></> : null}</div>}
             <div className="flex items-center gap-2 rounded-lg bg-[#1f2533] px-3 py-1 text-sm font-bold text-white"><span className="inline-block h-4 w-4 rounded-full border-2 border-yellow-600 bg-yellow-400" />{balance.toLocaleString()}</div>
             <button onClick={() => setShowRules((s) => !s)} className="flex h-7 w-7 items-center justify-center rounded-full bg-[#1f2533] text-xs font-bold text-slate-300 hover:text-white">i</button>
-            <Link href="/client" className="flex h-7 w-7 items-center justify-center rounded-full bg-[#1f2533] text-xs text-slate-300 hover:text-white"></Link>
+            <Link href="/player" className="flex h-7 w-7 items-center justify-center rounded-full bg-[#1f2533] text-xs text-slate-300 hover:text-white"></Link>
           </div>
         </div>
 
