@@ -9,7 +9,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { BrandLogo } from "@/components/BrandLogo";
 import { Drawer as GlobalDrawer } from "@/components/Drawer";
 import { HomeIcon, FlameIcon, SpadeIcon, GamepadIcon, GiftIcon, WalletIcon, BanknoteIcon, HistoryIcon, BookIcon, UserIcon, MegaphoneIcon, MailIcon, ArrowUpIcon, XIcon, MenuIcon, GlobeIcon, CrownIcon, UsersIcon } from "@/components/Icons";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 
 /* ---------- Banner carousel ---------- */
 export type Slide = { img?: string; bg: string; kicker?: string; title: string; sub?: string; href: string; cta: string; emoji?: string };
@@ -159,7 +159,7 @@ export function Drawer({ loggedIn, isAdmin }: { loggedIn: boolean; isAdmin: bool
           <div className="wx-chip flex items-center justify-between rounded-xl bg-black/30 px-3 py-2.5 text-xs text-[#b8a7e6]"><span>Theme</span><ThemeToggle compact /></div>
         </div>
         <nav className="mt-3 space-y-0.5 px-3">
-          {links.map(([i, l, h]) => <Link key={l + h} href={h} onClick={() => setOpen(false)} className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold wx-rowtext hover:wx-row"><span className="wx-rowicon">{i}</span>{l}</Link>)}
+          {links.map(([i, l, h], index) => <Link key={l + h} href={h} onClick={() => setOpen(false)} style={{ "--drawer-index": index } as CSSProperties} className="wx-drawer-item flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold wx-rowtext hover:wx-row"><span className="wx-rowicon">{i}</span>{l}</Link>)}
         </nav>
         {!loggedIn && (
           <div className="mt-5 grid grid-cols-2 gap-2 border-t border-white/10 p-4">
