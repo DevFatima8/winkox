@@ -24,15 +24,21 @@ export async function POST(req: Request) {
         const [phoneExists, settings] = await Promise.all([User.exists({ phone }), getSettings()]);
         if (phoneExists) return NextResponse.json({ error: "Ye phone number pehle se registered hai." });
 
-        let referredBy = null;
-        if (refCode) {
-            const r = await User.findOne({ referralCode: refCode, isActive: true }, "_id").lean();
-            if (r) referredBy = r._id;
-        }
+        const referredUser = refCode
+            ? await User.findOne({ referralCode: refCode, isActive: true }, "_id").lean()
+            : null;
+        const referredBy = referredUser?._id ?? null;
         let username = genUsername(name, phone);
-        if (await User.exists({ username })) username = username + Math.floor(Math.random() * 90 + 10);
         let referralCode = genReferralCode(name);
-        while (await User.exists({ referralCode })) referralCode = genReferralCode(name);
+        const [usernameExists, referralCodeExists] = await Promise.all([
+            User.exists({ username }),
+            User.exists({ referralCode }),
+        ]);
+        if (usernameExists) username += Math.floor(Math.random() * 90 + 10);
+        while (referralCodeExists) {
+            referralCode = genReferralCode(name);
+            if (!(await User.exists({ referralCode }))) break;
+        }
 
         const bonus = settings.referral?.signupBonus ?? 0;
         const u = await User.create({
