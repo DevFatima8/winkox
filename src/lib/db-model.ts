@@ -179,7 +179,8 @@ export class Model<T extends { _id: string }> {
         const pool = await getMysqlPool();
         if (!pool) return [];
         const [rows] = await pool.query(`SELECT data FROM \`${this.o.collection.replace(/`/g, "")}\``);
-        return (rows as any[]).map((row) => JSON.parse(row.data ?? "{}"));
+        // mysql2 auto-parses JSON columns into objects, but some drivers/configs return the raw string.
+        return (rows as any[]).map((row) => (typeof row.data === "string" ? JSON.parse(row.data || "{}") : (row.data ?? {})));
     }
 
     private async persistMysqlDoc(doc: any): Promise<void> {
