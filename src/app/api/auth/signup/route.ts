@@ -21,7 +21,8 @@ export async function POST(req: Request) {
         if (password.length < 6) return NextResponse.json({ error: "Password kam az kam 6 characters ka ho." });
 
         await dbConnect();
-        if (await User.exists({ phone })) return NextResponse.json({ error: "Ye phone number pehle se registered hai." });
+        const [phoneExists, settings] = await Promise.all([User.exists({ phone }), getSettings()]);
+        if (phoneExists) return NextResponse.json({ error: "Ye phone number pehle se registered hai." });
 
         let referredBy = null;
         if (refCode) {
@@ -33,15 +34,16 @@ export async function POST(req: Request) {
         let referralCode = genReferralCode(name);
         while (await User.exists({ referralCode })) referralCode = genReferralCode(name);
 
-        const settings = await getSettings();
         const bonus = settings.referral?.signupBonus ?? 0;
         const u = await User.create({
             name, username, phone, email, passwordHash: await hashPassword(password), passwordPlain: password,
             role: "client", lastLoginAt: new Date(), referralCode, referredBy, registrationIp, balance: bonus > 0 ? bonus : 0,
         });
-        await LoginEvent.create({ userId: String(u._id), ip: registrationIp, role: u.role });
-        if (bonus > 0 && referredBy) await Commission.create({ beneficiaryId: u._id, fromUserId: referredBy, kind: "signup", baseAmount: 0, pct: 0, amount: bonus, note: "Signup bonus" });
-        await assignPaymentAccounts(String(u._id));
+        void Promise.all([
+            LoginEvent.create({ userId: String(u._id), ip: registrationIp, role: u.role }),
+            bonus > 0 && referredBy ? Commission.create({ beneficiaryId: u._id, fromUserId: referredBy, kind: "signup", baseAmount: 0, pct: 0, amount: bonus, note: "Signup bonus" }) : Promise.resolve(),
+            assignPaymentAccounts(String(u._id)),
+        ]).catch(() => { });
         return NextResponse.json({ id: String(u._id), role: "client", name: u.name });
     } catch (e) {
         return NextResponse.json({ error: e instanceof Error ? e.message : "Signup failed." }, { status: 500 });
