@@ -25,7 +25,12 @@ function tone(frequency: number, duration: number, type: OscillatorType, volume:
     oscillator.stop(start + duration + 0.02);
 }
 
-export type GameSound = "jump" | "coin" | "danger" | "crash" | "launch" | "cashout" | "click" | "ballDrop";
+export type GameSound = "jump" | "coin" | "danger" | "crash" | "launch" | "cashout" | "click" | "ballDrop" | "notification";
+
+export function unlockGameAudio() {
+    const ctx = getContext();
+    if (ctx?.state === "suspended") void ctx.resume();
+}
 
 export type GameVoice = "chickenJump" | "chickenCrash" | "chickenWin" | "planeLaunch" | "planeCrash" | "planeWin" | "ballDrop" | "gemFound" | "mineHit" | "slotWin" | "cardWin" | "limboWin";
 
@@ -88,6 +93,11 @@ export function playGameSound(sound: GameSound) {
         case "ballDrop":
             tone(180, 0.08, "triangle", 0.03);
             tone(280, 0.12, "triangle", 0.025, 0.07);
+            break;
+        case "notification":
+            tone(740, 0.12, "sine", 0.045);
+            tone(988, 0.18, "sine", 0.04, 0.14);
+            tone(1175, 0.22, "sine", 0.035, 0.32);
             break;
     }
 }

@@ -1,12 +1,12 @@
 "use client";
 
 import { localApi } from "@/lib/client";
-
 import { useCallback, useEffect, useState } from "react";
 import { useRef } from "react";
 import { useI18n } from "@/lib/i18n/client";
 import { BellIcon, XIcon, GiftIcon, MegaphoneIcon, CheckIcon, ShieldIcon } from "@/components/Icons";
 import { playGameSound } from "@/lib/gameAudio";
+import { useRealtime } from "@/components/RealtimeSync";
 
 type N = { id: string; title: string; body: string; type: string; at: string; read: boolean };
 
@@ -15,28 +15,67 @@ export function NotificationBell({ loggedIn }: { loggedIn: boolean }) {
   const [unread, setUnread] = useState(0);
   const [open, setOpen] = useState(false);
   const [toast, setToast] = useState<N | null>(null);
-  const latestIdRef = useRef<string | null>(null);
+  const seenLiveIdRef = useRef<string | null>(null);
+  const knownIdsRef = useRef<Set<string> | null>(null);
+  const { notification: liveNotification } = useRealtime();
   const { t } = useI18n();
   const load = useCallback(async () => {
-    const r = await localApi("/api/notifications", { cache: "no-store" });
-    if (!r.ok) return;
-    const j = await r.json();
-    setItems(j.items);
-    setUnread(j.unread);
-    const latest = j.items[0] as N | undefined;
-    if (latest && latestIdRef.current && latest.id !== latestIdRef.current && loggedIn) playGameSound("coin");
-    if (latest) latestIdRef.current = latest.id;
+    const [serverResponse, localResponse] = await Promise.all([
+      fetch("/api/notifications", { cache: "no-store" }).catch(() => null),
+      localApi("/api/notifications", { cache: "no-store" }).catch(() => null),
+    ]);
+    const serverData = serverResponse?.ok ? await serverResponse.json() : { items: [] };
+    const localData = localResponse?.ok ? await localResponse.json() : { items: [] };
+    const merged = [...(serverData.items ?? []), ...(localData.items ?? [])] as N[];
+    const byId = new Map(merged.map((item) => [item.id, item]));
+    const nextItems = [...byId.values()].sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime()).slice(0, 30);
+    if (knownIdsRef.current) {
+      const fresh = nextItems.filter((item) => !item.read && !knownIdsRef.current?.has(item.id));
+      for (const item of fresh) {
+        if (item.id === seenLiveIdRef.current) continue;
+        seenLiveIdRef.current = item.id;
+        playGameSound("notification");
+        setToast(item);
+        window.setTimeout(() => setToast((current) => current?.id === item.id ? null : current), 7000);
+      }
+    }
+    knownIdsRef.current = new Set(nextItems.map((item) => item.id));
+    setItems(nextItems);
+    setUnread(nextItems.filter((item) => !item.read).length);
     // popup latest unread once
-    const latestUnread = j.items.find((n: N) => !n.read);
+    const latestUnread = nextItems.find((n) => !n.read);
     if (latestUnread && loggedIn) {
       const key = "wx_seen_" + latestUnread.id;
       if (!sessionStorage.getItem(key)) { sessionStorage.setItem(key, "1"); setToast(latestUnread); setTimeout(() => setToast(null), 7000); }
     }
   }, [loggedIn]);
-  useEffect(() => { load(); const id = setInterval(load, 5000); return () => clearInterval(id); }, [load]);
+  useEffect(() => {
+    void load();
+    const id = setInterval(load, 5000);
+    const handleLocalNotification = () => { void load(); };
+    window.addEventListener("wx:notification-local", handleLocalNotification);
+    return () => { clearInterval(id); window.removeEventListener("wx:notification-local", handleLocalNotification); };
+  }, [load]);
+  useEffect(() => {
+    if (!loggedIn || !liveNotification || seenLiveIdRef.current === liveNotification.id) return;
+    seenLiveIdRef.current = liveNotification.id;
+    knownIdsRef.current?.add(liveNotification.id);
+    const item: N = { ...liveNotification, at: String(liveNotification.at), read: false };
+    setItems((current) => [item, ...current.filter((existing) => existing.id !== item.id)].slice(0, 30));
+    setUnread((current) => current + 1);
+    setToast(item);
+    playGameSound("notification");
+    window.setTimeout(() => setToast((current) => current?.id === item.id ? null : current), 7000);
+  }, [liveNotification, loggedIn]);
   const openPanel = async () => {
     setOpen((o) => !o);
-    if (!open && unread > 0 && loggedIn) { await localApi("/api/notifications", { method: "POST" }); setUnread(0); setItems((xs) => xs.map((x) => ({ ...x, read: true }))); }
+    if (!open && unread > 0 && loggedIn) {
+      await Promise.all([
+        fetch("/api/notifications", { method: "POST" }).catch(() => null),
+        localApi("/api/notifications", { method: "POST" }).catch(() => null),
+      ]);
+      setUnread(0); setItems((xs) => xs.map((x) => ({ ...x, read: true })));
+    }
   };
   const icon = (t: string) => (t === "promo" ? <GiftIcon size={20} /> : t === "warning" ? <ShieldIcon size={20} /> : t === "success" ? <CheckIcon size={20} /> : <MegaphoneIcon size={20} />);
   return (
