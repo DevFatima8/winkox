@@ -1,7 +1,6 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { getSessionSync } from "@/lib/auth";
 import { unlockGameAudio } from "@/lib/gameAudio";
 
 export type LiveNotification = { id: string; title: string; body: string; type: string; audience?: string; at: string; read: boolean };
@@ -12,13 +11,11 @@ export const useRealtime = () => useContext(RealtimeContext);
 
 export function RealtimeSync({ children }: { children: ReactNode }) {
   const [sessionReady, setSessionReady] = useState(false);
-  const [sessionId, setSessionId] = useState<string | null>(null);
   const [notification, setNotification] = useState<LiveNotification | null>(null);
   const [announcement, setAnnouncement] = useState("");
 
   useEffect(() => {
     const syncSession = () => {
-      setSessionId(getSessionSync()?.id ?? null);
       setSessionReady(true);
     };
     const unlockAudio = () => {
@@ -50,7 +47,7 @@ export function RealtimeSync({ children }: { children: ReactNode }) {
       catch { setAnnouncement((event as MessageEvent).data); }
     });
     return () => stream.close();
-  }, [sessionReady, sessionId]);
+  }, [sessionReady]);
 
   return <RealtimeContext.Provider value={{ notification, announcement }}>{children}</RealtimeContext.Provider>;
 }

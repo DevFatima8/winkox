@@ -1,9 +1,10 @@
-/* LocalDB mode: most of these "actions" run in the browser (no server); auth goes through /api/auth/*. */
-const redirect = (url: string) => { if (typeof window !== "undefined") window.location.assign(url); };
-const revalidatePath = (_p: string) => { void _p; };
-const readCookie = (name: string) => (typeof document === "undefined" ? "" : (document.cookie.match(new RegExp("(?:^|; )" + name + "=([^;]+)"))?.[1] ?? ""));
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { AdminLog, AviatorRound, CardBet, CardRound, ChickenDash, ChickenGame, Commission, Feedback, Game, GameResult, GatewaySession, HelpArticle, LoginEvent, MinesGame, Notification, PaymentAccount, PlinkoBet, Settings, SupportMessage, SupportThread, Transaction, User, oid, type Provider } from "@/models";
-import { createSession, destroySession, hashPassword, verifyPassword, getCurrentUser, isStaff, staffLevel, type CurrentUser } from "./auth";
+import { hashPassword, verifyPassword, isStaff, staffLevel, type CurrentUser } from "./auth";
+import { getServerSessionUser } from "./serverAuth";
 import { assignPaymentAccounts } from "./platform";
 import { genReferralCode, genUsername, getSettings, payDepositCommission, recomputeVip, vipInfo, withdrawnToday } from "./platform";
 import { notifyAdmins, notifyUser } from "./notifications";
@@ -12,35 +13,9 @@ export type ActionState = { error?: string; success?: string } | undefined;
 const str = (f: FormData, k: string) => String(f.get(k) ?? "").trim();
 const num = (f: FormData, k: string) => Number(f.get(k));
 
-// ---------- AUTH ----------
-export async function signupAction(_: ActionState, form: FormData): Promise<ActionState> {
-  if (!str(form, "ref")) { const c = readCookie("ref").toUpperCase(); if (c) form.set("ref", c); }
-  // Signup/login always go through the server API so accounts are persisted to the real
-  // (MySQL) database on hosting providers like Hostinger — browser env vars can't see MYSQL_* config.
-  const res = await fetch("/api/auth/signup", { method: "POST", body: form });
-  const data = await res.json().catch(() => ({ error: "Signup failed. Server se connect nahi ho saka." }));
-  if (data.error) return { error: data.error };
-  await createSession({ id: data.id, role: data.role, name: data.name });
-  redirect("/player");
-}
-
-export async function loginAction(_: ActionState, form: FormData): Promise<ActionState> {
-  const res = await fetch("/api/auth/login", { method: "POST", body: form });
-  const data = await res.json().catch(() => ({ error: "Login failed. Server se connect nahi ho saka." }));
-  if (data.error) return { error: data.error };
-  await createSession({ id: data.id, role: data.role, name: data.name });
-  redirect(data.role === "admin" ? "/admin" : "/player");
-}
-
-export async function logoutAction() {
-  await fetch("/api/auth/logout", { method: "POST" });
-  await destroySession();
-  redirect("/login");
-}
-
 // ---------- CLIENT: profile ----------
 export async function setWithdrawPinAction(_: ActionState, form: FormData): Promise<ActionState> {
-  const me = await getCurrentUser();
+  const me = await getServerSessionUser();
   if (!me) return { error: "Login required." };
   const pin = str(form, "pin"), confirm = str(form, "confirm");
   const current = str(form, "current");
@@ -54,7 +29,7 @@ export async function setWithdrawPinAction(_: ActionState, form: FormData): Prom
 }
 
 export async function changePasswordAction(_: ActionState, form: FormData): Promise<ActionState> {
-  const me = await getCurrentUser();
+  const me = await getServerSessionUser();
   if (!me) return { error: "Login required." };
   const current = String(form.get("current") ?? ""), next = String(form.get("next") ?? "");
   const u = await User.findById(me.id);
@@ -67,7 +42,7 @@ export async function changePasswordAction(_: ActionState, form: FormData): Prom
 
 // ---------- CLIENT WALLET ----------
 export async function claimWinHoldsAction(_: ActionState, _form: FormData): Promise<ActionState> {
-  const me = await getCurrentUser();
+  const me = await getServerSessionUser();
   if (!me) return { error: "Login required." };
   const { claimWinHolds } = await import("./winHold");
   const { claimed } = await claimWinHolds(me.id);
@@ -76,76 +51,9 @@ export async function claimWinHoldsAction(_: ActionState, _form: FormData): Prom
   return { success: `Rs. ${claimed.toLocaleString()} wallet mein claim ho gaya.` };
 }
 
-export async function depositAction(_: ActionState, form: FormData): Promise<ActionState> {
-  const me = await getCurrentUser();
-  if (!me || me.role !== "client") return { error: "Login required." };
-  const settings = await getSettings();
-  const amount = num(form, "amount");
-  const paymentAccountId = str(form, "paymentAccountId");
-  const senderNumber = str(form, "senderNumber");
-  const referenceId = str(form, "referenceId");
-  const minDep = settings.wallet?.minDeposit ?? 100;
-  if (!amount || amount < minDep) return { error: `Minimum deposit Rs. ${minDep} hai.` };
-  if (!paymentAccountId) return { error: "Payment account select karein." };
-  if (!senderNumber || !referenceId) return { error: "Sender number aur Transaction ID (TID) zaroori hai." };
-  const user = await User.findById(me.id, "paymentDepositLimit").lean();
-  if (user?.paymentDepositLimit && user.paymentDepositLimit > 0) {
-    const [used] = await Transaction.aggregate<{ s: number }>([{ $match: { userId: oid(me.id), type: "deposit", status: { $in: ["pending", "approved"] } } }, { $group: { _id: null, s: { $sum: "$amount" } } }]);
-    if ((used?.s ?? 0) + amount > user.paymentDepositLimit) return { error: `Payment lock active hai. Aapki total deposit limit Rs. ${user.paymentDepositLimit.toLocaleString()} hai; baqi Rs. ${Math.max(0, user.paymentDepositLimit - (used?.s ?? 0)).toLocaleString()} hai.` };
-  }
-  const acc = await PaymentAccount.findById(paymentAccountId).lean();
-  if (!acc || !acc.isActive) return { error: "Invalid payment account." };
-  await Transaction.create({ userId: oid(me.id), type: "deposit", provider: acc.provider, amount, paymentAccountId: acc._id, assignedAccountId: acc._id, accountName: acc.accountTitle, senderNumber, referenceId, method: "manual" });
-  await notifyUser(me.id, "Purchase request received", `Your deposit request of Rs. ${amount.toLocaleString()} has been sent for admin verification.`, "info");
-  await notifyAdmins("New deposit request", `${me.name} requested a deposit of Rs. ${amount.toLocaleString()} via ${acc.provider}.`, "info");
-  revalidatePath("/player/wallet"); revalidatePath("/admin");
-  return { success: "Deposit request submit ho gayi. Admin verify kar ke balance add karega." };
-}
-
-export async function withdrawAction(_: ActionState, form: FormData): Promise<ActionState> {
-  const me = await getCurrentUser();
-  if (!me || me.role !== "client") return { error: "Login required." };
-  const settings = await getSettings();
-  const amount = num(form, "amount");
-  const provider = str(form, "provider") as Provider;
-  const accountNumber = str(form, "accountNumber");
-  const holderName = str(form, "holderName") || str(form, "accountName");
-  const pin = str(form, "pin");
-  if (!holderName || holderName.trim().length < 3) return { error: "Apne JazzCash/Easypaisa account holder ka naam likhein." };
-  const u = await User.findById(me.id, "withdrawPin vipLevel assignedAccounts").lean();
-  if (!u?.withdrawPin) return { error: "Pehle Profile se Withdrawal PIN set karein." };
-  if (pin !== u.withdrawPin) return { error: "Withdrawal PIN ghalat hai." };
-  const { cur } = vipInfo(u.vipLevel ?? 0, settings.vipLevels);
-  const minW = cur?.minWithdraw ?? settings.wallet?.minWithdraw ?? 1000;
-  if (!amount || amount < minW) return { error: `Minimum withdraw Rs. ${minW} hai.` };
-  if (cur?.perWithdrawMax && amount > cur.perWithdrawMax) return { error: `Aapki VIP level (${cur.name}) par ek withdraw max Rs. ${cur.perWithdrawMax.toLocaleString()} hai.` };
-  if (!["jazzcash", "easypaisa"].includes(provider)) return { error: "Provider select karein." };
-  if (!/^03\d{9}$/.test(accountNumber)) return { error: "Account number 03XXXXXXXXX format mein ho." };
-  const today = await withdrawnToday(oid(me.id));
-  if (cur?.dailyWithdrawLimit && today + amount > cur.dailyWithdrawLimit) return { error: `Daily limit Rs. ${cur.dailyWithdrawLimit.toLocaleString()} (${cur.name}). Aaj baqi: Rs. ${Math.max(0, cur.dailyWithdrawLimit - today).toLocaleString()}. VIP level barhayein.` };
-
-  // the admin whose account was assigned to this client will handle the payout
-  const assignedId = (u.assignedAccounts?.[provider] as string) ?? null;
-  const payAcc = assignedId ? await PaymentAccount.findById(assignedId).lean() : null;
-  const r = await User.updateOne({ _id: oid(me.id), balance: { $gte: amount } }, { $inc: { balance: -amount } });
-  if (r.modifiedCount === 0) return { error: "Insufficient balance." };
-  await Transaction.create({
-    userId: oid(me.id), type: "withdraw", provider, amount,
-    senderNumber: accountNumber, holderName,
-    assignedAccountId: payAcc?._id ? String(payAcc._id) : null,
-    paymentAccountId: payAcc?._id ? payAcc._id : null,
-    accountName: payAcc?.accountTitle ?? null,
-    method: "manual",
-  });
-  await notifyUser(me.id, "Withdrawal request received", `Your withdrawal request of Rs. ${amount.toLocaleString()} is pending admin approval.`, "info");
-  await notifyAdmins("New withdrawal request", `${me.name} requested a withdrawal of Rs. ${amount.toLocaleString()} via ${provider}.`, "warning");
-  revalidatePath("/player/wallet"); revalidatePath("/admin");
-  return { success: "Withdraw request submit ho gayi. Amount 24 ghanton mein aapke account mein aa jayegi." };
-}
-
 // ---------- SUPPORT (user side, server actions) ----------
 export async function markNotificationsReadAction() {
-  const me = await getCurrentUser();
+  const me = await getServerSessionUser();
   if (!me) return;
   await Notification.updateMany({ isActive: true, readBy: { $ne: oid(me.id) } }, { $addToSet: { readBy: oid(me.id) } });
   revalidatePath("/player/notifications");
@@ -154,14 +62,14 @@ export async function markNotificationsReadAction() {
 // ---------- ADMIN ----------
 /** Any staff (sub admin, super admin, owner) */
 async function requireAdmin(minLevel = 1) {
-  const me = await getCurrentUser();
+  const me = await getServerSessionUser();
   if (!me || me.role !== "admin" || me.level < minLevel) throw new Error("Unauthorized");
   return me;
 }
 /** Super admin or owner */
 const requireSuper = () => requireAdmin(2);
 
-export async function logAdmin(me: Pick<CurrentUser, "id" | "name" | "dbRole">, action: string, target = "", details = "") {
+async function logAdmin(me: Pick<CurrentUser, "id" | "name" | "dbRole">, action: string, target = "", details = "") {
   try {
     // owner activity is never logged (mysterious)
     if (me.dbRole === "owner") return;
@@ -271,34 +179,6 @@ export async function deletePaymentAccountAction(id: string) {
   await Transaction.updateMany({ paymentAccountId: oid(id) }, { $set: { paymentAccountId: null } });
   await PaymentAccount.deleteOne({ _id: oid(id) });
   revalidatePath("/admin/payments");
-}
-
-export async function processTransactionAction(id: string, decision: "approved" | "rejected", note?: string) {
-  const me = await requireAdmin(1);
-  // find the pending transaction, restricting sub-admins to accounts they own or withdrawals with their assigned account
-  const pending = await Transaction.findOne({ _id: oid(id), status: "pending" });
-  if (!pending) return { error: "Pending request nahi mili." };
-  const acc = pending.paymentAccountId ? await PaymentAccount.findById(oid(pending.paymentAccountId)) : null;
-  if (me.level < 2 && acc && String(acc.ownerId ?? "") !== me.id) return { error: "Ye payment kisi aur admin ke account par hai." };
-  const t = await Transaction.findOneAndUpdate(
-    { _id: oid(id), status: "pending" },
-    { $set: { status: decision, adminNote: note ?? null, processedAt: new Date(), processedById: me.id, processedByName: me.name, accountName: acc?.accountTitle ?? null } },
-    { returnDocument: "after" },
-  );
-  if (t) {
-    if (t.type === "deposit" && decision === "approved") {
-      await User.updateOne({ _id: t.userId }, { $inc: { balance: t.amount } });
-      await recomputeVip(t.userId);
-      await payDepositCommission(t.userId, t.amount);
-    }
-    if (t.type === "withdraw" && decision === "rejected") await User.updateOne({ _id: t.userId }, { $inc: { balance: t.amount } });
-    if (t.type === "withdraw" && decision === "approved") await recomputeVip(t.userId);
-    const actionLabel = decision === "approved" ? "approved" : "rejected";
-    const transactionLabel = t.type === "deposit" ? "Purchase/deposit" : "Withdrawal";
-    await notifyUser(String(t.userId), `${transactionLabel} ${actionLabel}`, `Your ${transactionLabel.toLowerCase()} of Rs. ${t.amount.toLocaleString()} has been ${actionLabel} by admin.${note ? ` Note: ${note}` : ""}`, decision === "approved" ? "success" : "warning");
-    await logAdmin(me, `${decision}_${t.type}`, String(t.userId), `Rs. ${t.amount}`);
-  }
-  revalidatePath("/admin/transactions"); revalidatePath("/admin");
 }
 
 // users

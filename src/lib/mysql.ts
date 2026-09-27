@@ -33,6 +33,7 @@ const COLLECTIONS = [
     "feedbacks",
     "gatewaysessions",
     "minesgames",
+    "winholds",
 ];
 
 let pool: Pool | null = null;
@@ -110,7 +111,7 @@ export async function ensureMysqlReady(): Promise<boolean> {
     if (!cfg) {
         pool = null;
         initPromise = null;
-        return false;
+        throw new Error("MySQL is required. Configure MYSQL_HOST, MYSQL_DATABASE, MYSQL_USER, and MYSQL_PASSWORD.");
     }
 
     if (pool) return true;

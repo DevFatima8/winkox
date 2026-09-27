@@ -1,34 +1,30 @@
 "use client";
 import Link from "next/link";
-import { dbConnect } from "@/lib/mongo";
-import { Commission, Game, GameResult, Transaction, User } from "@/models";
 import { Card, ProviderBadge, StatCard, StatusBadge, fmt, fmtDate } from "@/components/Shell";
 import { deleteUserAction, toggleUserActiveAction } from "@/lib/actions";
 import { UserEditForm } from "@/components/admin/UserEditForm";
 import { BalanceAdjustForm } from "@/components/admin/BalanceAdjustForm";
 import { PaymentLockForm } from "@/components/admin/PaymentLockForm";
-import { getSettings, vipInfo } from "@/lib/platform";
-import { getCurrentUser, isStaff } from "@/lib/auth";
 import { usePage, NOT_FOUND } from "@/lib/useDb";
 
 export default function UserDetailClient({ params, searchParams }: { params?: Record<string, string>; searchParams?: Record<string, string> }) {
     return usePage(async () => {
         const { id } = params ?? {};
-        const me = (await getCurrentUser())!;
-        const canSee = me.level >= 2;
-        await dbConnect();
-        const u = await User.findById(id).lean();
-        if (!u || isStaff(u.role)) return NOT_FOUND;
-        const [games, tx, plays, team, comm, settings, referrer] = await Promise.all([
-            Game.find().sort({ createdAt: 1 }).lean(),
-            Transaction.find({ userId: u._id }).sort({ createdAt: -1 }).limit(50).lean(),
-            GameResult.find({ userId: u._id }).sort({ createdAt: -1 }).limit(30).populate<{ gameId: { name: string; icon: string } | null }>("gameId", "name icon").lean(),
-            User.find({ referredBy: u._id }).sort({ createdAt: -1 }).lean(),
-            Commission.find({ beneficiaryId: u._id }).sort({ createdAt: -1 }).limit(30).populate<{ fromUserId: { name: string } | null }>("fromUserId", "name").lean(),
-            getSettings(),
-            u.referredBy ? User.findById(u.referredBy, "name phone role").lean() : null,
-        ]);
-        const { cur } = vipInfo(u.vipLevel ?? 0, settings.vipLevels);
+        if (!id) return NOT_FOUND;
+        const response = await fetch(`/api/admin/data?view=user&id=${encodeURIComponent(id)}`, { cache: "no-store" });
+        if (response.status === 404) return NOT_FOUND;
+        const data = await response.json(); if (!response.ok) throw new Error(data.error ?? "User details load nahi ho sake.");
+        const u = data.user;
+        const canSee = Boolean(data.canSee);
+        const games = data.games as any[];
+        const tx = data.transactions as any[];
+        const plays = data.plays as any[];
+        const team = data.team as any[];
+        const comm = data.commissions as any[];
+        const settings = data.settings;
+        const referrer = data.referrer;
+        const orderedLevels = [...settings.vipLevels].sort((a: any, b: any) => (a.level ?? 0) - (b.level ?? 0));
+        const cur = orderedLevels.find((level: any) => level.level === (u.vipLevel ?? 0)) ?? orderedLevels[0];
         const deposits = tx.filter((t) => t.type === "deposit");
         const withdrawals = tx.filter((t) => t.type === "withdraw");
         const bets = plays.reduce((sum, p) => sum + p.betAmount, 0);

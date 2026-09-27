@@ -1,13 +1,9 @@
 "use client";
-import { dbConnect } from "@/lib/mongo";
-import { User, oid } from "@/models";
-import { getCurrentUser } from "@/lib/auth";
 import { Card, StatCard, fmt } from "@/components/Shell";
 import { PinForm, PasswordForm, CopyLink } from "@/components/ProfileForms";
-import { getSettings, vipInfo } from "@/lib/platform";
 import { InstallApp } from "@/components/InstallApp";
 import { OpenSupportButton } from "@/components/OpenSupport";
-import { logoutAction } from "@/lib/actions";
+import { logoutAction } from "@/lib/clientActions";
 import { WhatsAppIcon, TelegramIcon, BookIcon, CrownIcon } from "@/components/Icons";
 import { useI18n } from "@/lib/i18n/client";
 import { usePage, NOT_FOUND, REDIRECT } from "@/lib/useDb";
@@ -17,10 +13,14 @@ export default function ProfilePageClient({ params, searchParams }: { params?: R
   void locale;
   void params; void searchParams;
   return usePage(async () => {
-    const me = (await getCurrentUser())!;
-    await dbConnect();
-    const [settings, u, team] = await Promise.all([getSettings(), User.findById(me.id).lean(), User.countDocuments({ referredBy: oid(me.id) })]);
-    const { cur, next } = vipInfo(me.vipLevel, settings.vipLevels);
+    const response = await fetch("/api/player/profile", { cache: "no-store" });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error ?? "Profile data load nahi ho saka.");
+    const { me, settings, teamMembers: team } = data;
+    const u = me;
+    const levels = [...settings.vipLevels].sort((a, b) => (a.level ?? 0) - (b.level ?? 0));
+    const cur = levels.find((level) => level.level === me.vipLevel) ?? levels[0];
+    const next = levels.find((level) => (level.level ?? 0) > me.vipLevel) ?? null;
 
     const link = `${typeof window !== "undefined" ? window.location.origin : "https://winkox.shop"}/signup?ref=${me.referralCode ?? ""}`;
     const progress = next ? Math.min(100, Math.round((me.totalDeposited / (next.minDeposit ?? 1)) * 100)) : 100;
@@ -48,7 +48,7 @@ export default function ProfilePageClient({ params, searchParams }: { params?: R
           <div className="flex flex-wrap items-center justify-between gap-2 text-sm"><span className="text-white">{t("level")} {me.vipLevel} — {cur?.name}</span>{next ? <span className="text-[#b8a7e6]">{t("next")}: <b className="text-[#ffb800]">{next.name}</b> {t("atTotalDeposit", { n: (next.minDeposit ?? 0).toLocaleString() })} ({t("remaining", { n: Math.max(0, (next.minDeposit ?? 0) - me.totalDeposited).toLocaleString() })})</span> : <span className="text-[#ffb800]">{t("maxLevel")}</span>}</div>
           <div className="mt-2 h-3 overflow-hidden rounded-full bg-black/40"><div className="h-full rounded-full bg-gradient-to-r from-[#ffb800] to-[#ff8a00]" style={{ width: `${progress}%` }} /></div>
           <div className="mt-3 grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
-            {[...settings.vipLevels].sort((a, b) => (a.level ?? 0) - (b.level ?? 0)).map((l) => (
+            {levels.map((l) => (
               <div key={l.level} className={`rounded-xl p-2 ${l.level === me.vipLevel ? "bg-[#ffb800]/15 ring-1 ring-[#ffb800]" : "bg-black/30"}`}>
                 <div className="flex items-center gap-1 font-black text-white"><CrownIcon size={12} className="text-[#ffb800]" /> {l.level} {l.name}</div><div className="text-[#b8a7e6]">{t("depositPlus", { n: (l.minDeposit ?? 0).toLocaleString() })}</div><div className="text-[#b8a7e6]">{t("daily", { n: (l.dailyWithdrawLimit ?? 0).toLocaleString() })}</div>
               </div>

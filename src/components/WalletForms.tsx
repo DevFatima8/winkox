@@ -1,7 +1,8 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { depositAction, withdrawAction, type ActionState } from "@/lib/actions";
+import { depositAction, withdrawAction } from "@/lib/clientActions";
+import type { ActionState } from "@/lib/actions";
 import { useI18n } from "@/lib/i18n/client";
 
 type Account = { id: string; provider: "jazzcash" | "easypaisa"; accountTitle: string; accountNumber: string };

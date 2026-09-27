@@ -1,12 +1,6 @@
 "use client";
-import { dbConnect } from "@/lib/mongo";
-import { PaymentAccount } from "@/models";
-import { getCurrentUser } from "@/lib/auth";
 import { Card } from "@/components/Shell";
 import { DepositForm, WithdrawForm } from "@/components/WalletForms";
-import { getSettings, vipInfo, withdrawnToday } from "@/lib/platform";
-import { oid } from "@/models";
-import { gatewayConfig } from "@/lib/gateway";
 import { InstantPayForm } from "@/components/InstantPayForm";
 import { WalletTabs } from "@/components/WalletTabs";
 import { WinHoldCard } from "@/components/WinHoldCard";
@@ -20,22 +14,10 @@ export default function WalletPageClient({ params, searchParams }: { params?: Re
   const requestedAmount = Number(searchParams?.amount);
   const initialDepositAmount = Number.isFinite(requestedAmount) && requestedAmount > 0 ? requestedAmount : undefined;
   return usePage(async () => {
-    const me = (await getCurrentUser())!;
-    await dbConnect();
-    // ensure the client has random accounts assigned, then show only those
-    const { assignPaymentAccounts } = await import("@/lib/platform");
-    const assigned = await assignPaymentAccounts(me.id);
-    const raw = await PaymentAccount.find({ isActive: true }).sort({ createdAt: 1 }).lean();
-    const accounts = raw
-      .filter((a) => Object.values(assigned).map(String).includes(String(a._id)))
-      .map((a) => ({ id: String(a._id), provider: a.provider as "jazzcash" | "easypaisa", accountTitle: a.accountTitle, accountNumber: a.accountNumber }));
-    const settings = await getSettings();
-    const { cur } = vipInfo(me.vipLevel, settings.vipLevels);
-    const usedToday = await withdrawnToday(oid(me.id));
-    const limits = { name: `VIP ${me.vipLevel} ${cur?.name ?? ""}`, daily: cur?.dailyWithdrawLimit ?? 0, perMax: cur?.perWithdrawMax ?? 0, usedToday, min: cur?.minWithdraw ?? settings.wallet?.minWithdraw ?? 1000 };
-    const gw = await gatewayConfig();
-    const { getWinHoldSummary } = await import("@/lib/winHold");
-    const holds = await getWinHoldSummary(me.id);
+    const response = await fetch("/api/player/wallet", { cache: "no-store" });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error ?? "Wallet data load nahi ho saka.");
+    const { me, accounts, limits, gateway: gw, holds } = data;
     return (
       <div className="space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-2"><h1 className="text-2xl font-bold text-white">{t("walletTitle")}</h1><span className="rounded-full bg-black/30 px-3 py-1 text-sm text-[#b8a7e6] ring-1 ring-[#3a2470]">{t("balance")}: <b className="text-[#ffb800]">Rs. {me.balance.toLocaleString()}</b></span></div>

@@ -1,7 +1,5 @@
 "use client";
 import Link from "next/link";
-import { dbConnect } from "@/lib/mongo";
-import { Commission, User } from "@/models";
 import { Card, StatCard, fmt, fmtDate } from "@/components/Shell";
 import { usePage, NOT_FOUND, REDIRECT } from "@/lib/useDb";
 
@@ -17,15 +15,14 @@ type RecentCommission = {
 export default function AgentsPageClient({ params, searchParams }: { params?: Record<string, string>; searchParams?: Record<string, string> }) {
   void params; void searchParams;
   return usePage(async () => {
-    await dbConnect();
-    const [agents, refStats, commTotal, recent] = await Promise.all([
-      User.find({ role: "agent" }).sort({ commissionEarned: -1 }).lean(),
-      User.aggregate<{ _id: string; c: number; dep: number }>([{ $match: { referredBy: { $ne: null } } }, { $group: { _id: "$referredBy", c: { $sum: 1 }, dep: { $sum: "$totalDeposited" } } }]),
-      Commission.aggregate<{ _id: string; s: number }>([{ $group: { _id: "$kind", s: { $sum: "$amount" } } }]),
-      Commission.find().sort({ createdAt: -1 }).limit(40).populate<{ beneficiaryId: { name: string; role: string } | null; fromUserId: { name: string } | null }>([{ path: "beneficiaryId", select: "name role" }, { path: "fromUserId", select: "name" }]).lean<RecentCommission[]>(),
-    ]);
+    const response = await fetch("/api/admin/data?view=agents", { cache: "no-store" });
+    const data = await response.json(); if (!response.ok) throw new Error(data.error ?? "Agent data load nahi ho saka.");
+    const agents = data.agents as { _id: string; name: string; phone: string; referralCode: string | null; commissionEarned: number; balance: number; createdAt: string }[];
+    const refStats = data.refStats as { _id: string; c: number; dep: number }[];
+    const commTotal = data.totals as { _id: string; s: number }[];
+    const recent = data.recent as RecentCommission[];
+    const topRef = data.topRef as { _id: string; name: string; referralCode: string | null; commissionEarned: number }[];
     const rm = new Map(refStats.map((r) => [String(r._id), r]));
-    const topRef = await User.find({ _id: { $in: refStats.map((r) => r._id) }, role: "client" }).sort({ commissionEarned: -1 }).limit(15).lean();
     return (
       <div className="space-y-6">
         <div><h1 className="text-2xl font-bold text-white">Agents & Referrals</h1><p className="text-sm text-[#b8a7e6]">Kisi bhi user ko <b>Users → Manage → Role: Agent</b> se agent promote karein. Har user ka apna referral link hota hai; commission rates Settings mein hain.</p></div>

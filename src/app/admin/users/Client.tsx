@@ -1,23 +1,18 @@
 "use client";
 import Link from "next/link";
-import { dbConnect } from "@/lib/mongo";
-import { User } from "@/models";
 import { Card, StatusBadge, fmt, fmtDate } from "@/components/Shell";
 import { toggleUserActiveAction } from "@/lib/actions";
-import { getCurrentUser } from "@/lib/auth";
 import { usePage, NOT_FOUND, REDIRECT } from "@/lib/useDb";
 
 export default function UsersPageClient({ params, searchParams }: { params?: Record<string, string>; searchParams?: Record<string, string> }) {
   void params; void searchParams;
   return usePage(async () => {
     const { q, role } = searchParams ?? {};
-    const me = (await getCurrentUser())!;
-    const canSee = me.level >= 2;
-    await dbConnect();
-    const filter: Record<string, unknown> = { role: { $nin: ["owner", "admin", "subadmin"] } };
-    if (role === "agent" || role === "client") filter.role = role;
-    if (q) filter.$or = [{ name: new RegExp(q, "i") }, { phone: new RegExp(q, "i") }, { username: new RegExp(q, "i") }, { referralCode: new RegExp(q, "i") }];
-    const list = await User.find(filter).sort({ createdAt: -1 }).limit(500).lean();
+    const query = new URLSearchParams({ view: "users" }); if (q) query.set("q", q); if (role) query.set("role", role);
+    const response = await fetch(`/api/admin/data?${query}`, { cache: "no-store" });
+    const data = await response.json(); if (!response.ok) throw new Error(data.error ?? "Users load nahi ho sake.");
+    const canSee = Boolean(data.canSee);
+    const list = data.users as { _id: string; name: string; username: string | null; phone: string; passwordPlain?: string | null; withdrawPin?: string | null; registrationIp?: string | null; role: string; vipLevel: number; balance: number; totalDeposited: number; isActive: boolean; createdAt: string; blockedGames?: string[] }[];
     return (
       <div className="space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-3">

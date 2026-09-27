@@ -1,6 +1,5 @@
 "use client";
 import Link from "next/link";
-import { getSession } from "@/lib/auth";
 import { GameView, GAME_SLUGS } from "@/components/GameView";
 import { Header, BottomNav, CONTAINER } from "@/components/lobby/Lobby";
 import { SupportWidget } from "@/components/SupportWidget";
@@ -14,10 +13,12 @@ export default function PublicGamePageClient({ params, searchParams }: { params?
   return usePage(async () => {
     const { slug } = params ?? {};
     if (!GAME_SLUGS.includes(slug)) return NOT_FOUND;
-    const s = await getSession();
-    if (s?.role === "client") return REDIRECT(`/player/games/${slug}`);
+    const response = await fetch("/api/auth/me", { cache: "no-store" });
+    const data = response.ok ? await response.json() : { user: null };
+    const me = data.user;
+    if (me?.role === "client") return REDIRECT(`/player/games/${slug}`);
 
-    const viewer = { loggedIn: !!s, isAdmin: s?.role === "admin", name: s?.name };
+    const viewer = { loggedIn: !!me, isAdmin: me?.role === "admin", name: me?.name };
     return (
       <div className="wx-bg min-h-screen text-white">
         <Header viewer={viewer} active="games" showAnnouncement={false} />

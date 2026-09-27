@@ -3,8 +3,6 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { XIcon } from "@/components/Icons";
-import { getCurrentUser } from "@/lib/auth";
-import { getSettings } from "@/lib/platform";
 
 /*
  * Promotional popups — website khulte hi pehla popup, phir har 3 minutes baad
@@ -80,14 +78,15 @@ function LuckyDrawPopup({ onClose, onNext }: { onClose: () => void; onNext: () =
     let alive = true;
     (async () => {
       try {
-        const me = await getCurrentUser();
-        const settings = await getSettings();
-        const code = me?.referralCode ?? "WINKOX";
+        const response = await fetch("/api/public/data?view=invite", { cache: "no-store" });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error ?? "Invite data unavailable.");
+        const code = data.referralCode ?? "WINKOX";
         const origin = typeof window !== "undefined" ? window.location.origin : "https://winkox.shop";
         const link = `${origin}/signup?ref=${encodeURIComponent(code)}`;
         if (!alive) return;
         setRefLink(link);
-        setDepositPct(settings.referral?.depositCommissionPct ?? 1.5);
+        setDepositPct(data.depositCommissionPct ?? 1.5);
       } catch {
         if (alive) {
           setRefLink("https://winkox.shop/signup");

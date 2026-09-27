@@ -1,18 +1,14 @@
 "use client";
 import { Lobby } from "@/components/lobby/Lobby";
-import { useDb, useSession } from "@/lib/useDb";
-import { getSettings } from "@/lib/platform";
-import { dbConnect } from "@/lib/mongo";
+import { useEffect, useState } from "react";
+import { useSession } from "@/lib/useDb";
 
 export default function ClientHomePage({ params, searchParams }: { params?: Record<string, string>; searchParams?: Record<string, string> }) {
   void params;
   const { user } = useSession();
   const cat = searchParams?.cat ?? "Hot";
-  const { data: links } = useDb(async () => {
-    await dbConnect();
-    const s = await getSettings();
-    return { ...(s.links ?? {}), androidUrl: s.app?.androidUrl, iosUrl: s.app?.iosUrl };
-  }, []);
+  const [links, setLinks] = useState<Record<string, string>>({});
+  useEffect(() => { fetch("/api/public/data?view=lobby").then((response) => response.ok ? response.json() : null).then((data) => data && setLinks(data.links ?? {})).catch(() => { }); }, []);
 
   return (
     <Lobby

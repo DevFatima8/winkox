@@ -1,11 +1,7 @@
 "use client";
 import Link from "next/link";
-import { dbConnect } from "@/lib/mongo";
-import { HelpArticle } from "@/models";
 import type { HelpArticleDoc } from "@/models";
-import { getCurrentUser } from "@/lib/auth";
 import { Header, BottomNav, CONTAINER } from "@/components/lobby/Lobby";
-import { ensureHelp, getSettings } from "@/lib/platform";
 import { OpenSupportButton } from "@/components/OpenSupport";
 import { SupportWidget } from "@/components/SupportWidget";
 import { WhatsAppIcon, TelegramIcon, BookIcon, WalletIcon, BanknoteIcon, GamepadIcon, UserIcon, CircleHelpIcon } from "@/components/Icons";
@@ -17,11 +13,13 @@ export default function HelpPageClient({ params, searchParams }: { params?: Reco
   void locale;
   void params; void searchParams;
   return usePage(async () => {
-    await dbConnect(); await ensureHelp();
-    const [list, me, settings] = await Promise.all([HelpArticle.find({ isActive: true }).sort({ category: 1, order: 1 }).lean<HelpArticleDoc[]>(), getCurrentUser().catch(() => null), getSettings()]);
+    const response = await fetch("/api/public/data?view=help", { cache: "no-store" });
+    const data = await response.json(); if (!response.ok) throw new Error(data.error ?? "Help guides load nahi ho sake.");
+    const list = data.articles as HelpArticleDoc[];
+    const me = data.me;
     const viewer = { loggedIn: !!me, isAdmin: me?.role === "admin", name: me?.name, balance: me?.balance };
     const cats = Array.from(new Set(list.map((a) => a.category)));
-    const l = settings.links;
+    const l = data.links;
     return (
       <div className="wx-bg min-h-screen text-white">
         <Header viewer={viewer} />

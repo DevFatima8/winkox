@@ -1,10 +1,8 @@
 "use client";
 import Link from "next/link";
-import { getCurrentUser } from "@/lib/auth";
 import { Header, BottomNav, CONTAINER } from "@/components/lobby/Lobby";
 import { SupportWidget } from "@/components/SupportWidget";
 import { getInfoPage, INFO_PAGES } from "@/lib/infoPages";
-import { getSettings, supportOnline } from "@/lib/platform";
 import { OpenSupportButton } from "@/components/OpenSupport";
 import { WhatsAppIcon, TelegramIcon, HeadsetIcon, CrownIcon, BookIcon, MailIcon } from "@/components/Icons";
 import { useI18n } from "@/lib/i18n/client";
@@ -19,9 +17,11 @@ export default function InfoPageRouteClient({ params, searchParams }: { params?:
     const info = getInfoPage(page);
     if (!info) return NOT_FOUND;
     const ur = locale === "ur";
-    const [me, settings] = await Promise.all([getCurrentUser().catch(() => null), getSettings()]);
+    const response = await fetch("/api/public/data?view=info", { cache: "no-store" });
+    const data = await response.json(); if (!response.ok) throw new Error(data.error ?? "Page data load nahi ho saka.");
+    const me = data.me, settings = data.settings;
     const viewer = { loggedIn: !!me, isAdmin: me?.role === "admin", name: me?.name, balance: me?.balance };
-    const online = supportOnline(settings.support);
+    const online = Boolean(data.supportOnline);
     const l: { whatsapp?: string; telegram?: string; whatsappChannel?: string; telegramChannel?: string } = settings.links ?? {};
     const vip = [...settings.vipLevels].sort((a, b) => (a.level ?? 0) - (b.level ?? 0));
 
