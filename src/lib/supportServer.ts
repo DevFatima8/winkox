@@ -4,6 +4,7 @@ import { SupportMessage, SupportThread, User, oid } from "@/models";
 import { getSettings, supportOnline } from "./platform";
 import { dbConnect } from "./mongo";
 import { getServerSessionUser } from "./serverAuth";
+import { notifyAdmins } from "./notifications";
 
 const GUEST_COOKIE = "wx_support_guest";
 const GUEST_TTL_SECONDS = 60 * 60 * 24 * 365;
@@ -70,12 +71,14 @@ export async function sendClientSupportMessage(textRaw: string, name?: string) {
 
     const identity = await clientIdentity();
     const thread = (await findClientThread(identity.userId, identity.guestId, true))!;
-    if (!identity.userId && name) await SupportThread.updateOne({ _id: thread._id }, { $set: { guestName: String(name).trim().slice(0, 60) } });
+    const authorName = !identity.userId && name ? String(name).trim().slice(0, 60) : identity.name;
+    if (!identity.userId && name) await SupportThread.updateOne({ _id: thread._id }, { $set: { guestName: authorName } });
     await SupportMessage.create({ threadId: thread._id, from: "user", text });
 
     const settings = await getSettings();
     const online = supportOnline(settings.support);
     await SupportThread.updateOne({ _id: thread._id }, { $set: { lastMessage: text, lastMessageAt: new Date(), status: "open" }, $inc: { unreadForAdmin: 1 } });
+    await notifyAdmins("New support message", `${authorName}: ${text.slice(0, 160)}`, "info");
     const userMessageCount = await SupportMessage.countDocuments({ threadId: thread._id, from: "user" });
     if (userMessageCount === 1 && settings.support?.welcomeMessage) {
         await SupportMessage.create({ threadId: thread._id, from: "system", text: settings.support.welcomeMessage.replace("{name}", identity.name) });

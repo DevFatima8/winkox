@@ -1,4 +1,5 @@
 import { dbConnect } from "./mongo";
+import { notifyUser } from "./notifications";
 import { Commission, HelpArticle, PaymentAccount, Settings, Transaction, User, type PaymentAccountDoc, type SettingsDoc, type UserDoc, type ObjectId } from "@/models";
 
 // VIP defaults modelled on 9K-style tiers (PKR). Admin can edit in panel.
@@ -87,6 +88,7 @@ export async function payDepositCommission(depositorId: ObjectId, amount: number
   if (c <= 0) return;
   await User.updateOne({ _id: ref._id }, { $inc: { balance: c, commissionEarned: c } });
   await Commission.create({ beneficiaryId: ref._id, fromUserId: depositorId, kind: "deposit", baseAmount: amount, pct, amount: c, note: `First deposit commission from ${dep.name}` });
+  await notifyUser(String(ref._id), "Referral commission received", `Your 1.5% referral commission of Rs. ${c.toLocaleString("en-PK")} has been added for ${dep.name}'s first approved deposit.`, "success");
 }
 
 export function genReferralCode(name: string) {

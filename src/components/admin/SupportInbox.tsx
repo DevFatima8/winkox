@@ -40,6 +40,11 @@ export function SupportInbox({ initialThread }: { initialThread?: string }) {
 
   useEffect(() => { loadThreads(); const id = setInterval(loadThreads, 4000); return () => clearInterval(id); }, [loadThreads]);
   useEffect(() => { loadMsgs(); const id = setInterval(loadMsgs, 3000); return () => clearInterval(id); }, [loadMsgs]);
+  useEffect(() => {
+    const refresh = () => { void loadThreads(); void loadMsgs(); };
+    window.addEventListener("wx:support-update", refresh);
+    return () => window.removeEventListener("wx:support-update", refresh);
+  }, [loadMsgs, loadThreads]);
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [msgs.length]);
 
   const send = async () => {

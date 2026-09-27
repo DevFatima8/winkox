@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useI18n, Hi } from "@/lib/i18n/client";
-import { localApi } from "@/lib/client";
+import { useRealtime } from "@/components/RealtimeSync";
 import { LanguageSwitch } from "@/components/LanguageSwitch";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { BrandLogo } from "@/components/BrandLogo";
@@ -48,20 +48,21 @@ export function BannerCarousel({ slides }: { slides: Slide[] }) {
 
 /* ---------- Marquee ---------- */
 export function Marquee({ items }: { items: string[] }) {
-  const [announcements, setAnnouncements] = useState<string[]>(items);
+  const { announcement, notification } = useRealtime();
+  const [broadcasts, setBroadcasts] = useState<string[]>([]);
   const load = useCallback(async () => {
-    const response = await localApi("/api/notifications", { cache: "no-store" });
+    const response = await fetch("/api/notifications", { cache: "no-store" });
     if (!response.ok) return;
     const data = await response.json() as { items?: { title: string; body: string; audience?: string }[] };
-    const broadcasts = (data.items ?? []).filter((item) => item.audience === "all").map((item) => `${item.title}: ${item.body}`);
-    if (broadcasts.length) setAnnouncements(broadcasts);
+    setBroadcasts((data.items ?? []).filter((item) => item.audience === "all").map((item) => `${item.title}: ${item.body}`));
   }, []);
   useEffect(() => {
     const initial = window.setTimeout(() => void load(), 0);
     const id = window.setInterval(() => void load(), 5000);
     return () => { window.clearTimeout(initial); window.clearInterval(id); };
   }, [load]);
-  const text = announcements.join("      •      ");
+  const liveBroadcast = notification?.audience === "all" ? `${notification.title}: ${notification.body}` : "";
+  const text = announcement.trim() || [liveBroadcast, ...broadcasts.filter((item) => item !== liveBroadcast)].filter(Boolean).join("      •      ") || items.join("      •      ");
   return (
     <div className="flex items-center gap-2 rounded-xl bg-black/30 px-3 py-2 ring-1 ring-[#3a2470]">
       <span className="shrink-0 text-[#ffb800]"><MegaphoneIcon size={16} /></span>

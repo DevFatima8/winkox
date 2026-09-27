@@ -24,6 +24,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     { href: "/admin/agents", label: t("agentsAdmin"), icon: "🤝" },
     { href: "/admin/notifications", label: t("notificationsAdmin"), icon: "🔔" },
     ...(superNav ? [
+    { href: "/admin/announcements", label: "Announcements", icon: "📢" },
       { href: "/admin/staff", label: t("staffAdmin"), icon: "🛡️" },
       { href: "/admin/logs", label: t("activityLogs"), icon: "📜" },
       { href: "/admin/cleanup", label: t("historyCleanup"), icon: "🧹" },
