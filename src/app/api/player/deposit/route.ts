@@ -1,0 +1,51 @@
+import { NextResponse } from "next/server";
+import { PaymentAccount, Transaction, User, oid } from "@/models";
+import { getServerSessionUser } from "@/lib/serverAuth";
+import { assignPaymentAccounts, getSettings } from "@/lib/platform";
+import { notifyAdmins, notifyUser } from "@/lib/notifications";
+
+export async function POST(request: Request) {
+  try {
+    const me = await getServerSessionUser();
+    if (!me || me.role !== "client") return NextResponse.json({ error: "Login required." }, { status: 401 });
+
+    const form = await request.formData();
+    const amount = Number(form.get("amount"));
+    const paymentAccountId = String(form.get("paymentAccountId") ?? "").trim();
+    const senderNumber = String(form.get("senderNumber") ?? "").trim();
+    const referenceId = String(form.get("referenceId") ?? "").trim();
+    const settings = await getSettings();
+    const minDeposit = settings.wallet?.minDeposit ?? 100;
+    if (!Number.isFinite(amount) || amount < minDeposit) return NextResponse.json({ error: `Minimum deposit Rs. ${minDeposit} hai.` }, { status: 400 });
+    if (!paymentAccountId) return NextResponse.json({ error: "Payment account select karein." }, { status: 400 });
+    if (!senderNumber || !referenceId) return NextResponse.json({ error: "Sender number aur Transaction ID (TID) zaroori hai." }, { status: 400 });
+
+    const user = await User.findById(me.id, "paymentDepositLimit").lean();
+    if (user?.paymentDepositLimit && user.paymentDepositLimit > 0) {
+      const [used] = await Transaction.aggregate<{ s: number }>([
+        { $match: { userId: oid(me.id), type: "deposit", status: { $in: ["pending", "approved"] } } },
+        { $group: { _id: null, s: { $sum: "$amount" } } },
+      ]);
+      if ((used?.s ?? 0) + amount > user.paymentDepositLimit) {
+        return NextResponse.json({ error: `Payment lock active hai. Aapki total deposit limit Rs. ${user.paymentDepositLimit.toLocaleString()} hai; baqi Rs. ${Math.max(0, user.paymentDepositLimit - (used?.s ?? 0)).toLocaleString()} hai.` }, { status: 400 });
+      }
+    }
+
+    const assigned = await assignPaymentAccounts(me.id);
+    if (!Object.values(assigned).map(String).includes(paymentAccountId)) return NextResponse.json({ error: "Invalid payment account." }, { status: 400 });
+    const account = await PaymentAccount.findById(paymentAccountId).lean();
+    if (!account?.isActive) return NextResponse.json({ error: "Invalid payment account." }, { status: 400 });
+
+    await Transaction.create({
+      userId: oid(me.id), type: "deposit", provider: account.provider, amount,
+      paymentAccountId: account._id, assignedAccountId: account._id, accountName: account.accountTitle,
+      senderNumber, referenceId, method: "manual",
+    });
+    await notifyUser(me.id, "Purchase request received", `Your deposit request of Rs. ${amount.toLocaleString()} has been sent for admin verification.`, "info");
+    await notifyAdmins("New deposit request", `${me.name} requested a deposit of Rs. ${amount.toLocaleString()} via ${account.provider}.`, "info");
+    return NextResponse.json({ success: "Deposit request submit ho gayi. Admin verify kar ke balance add karega." });
+  } catch (error) {
+    console.error("[player deposit]", error);
+    return NextResponse.json({ error: "Deposit request submit nahi ho saki." }, { status: 500 });
+  }
+}

@@ -23,5 +23,6 @@ CREATE TABLE IF NOT EXISTS `adminlogs` LIKE `users`;
 CREATE TABLE IF NOT EXISTS `feedbacks` LIKE `users`;
 CREATE TABLE IF NOT EXISTS `gatewaysessions` LIKE `users`;
 CREATE TABLE IF NOT EXISTS `minesgames` LIKE `users`;
+CREATE TABLE IF NOT EXISTS `winholds` LIKE `users`;
 
 SHOW TABLES;

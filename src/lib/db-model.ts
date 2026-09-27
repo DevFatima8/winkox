@@ -169,6 +169,7 @@ export class Model<T extends { _id: string }> {
     }
 
     private async ensureMysql(): Promise<boolean> {
+        if (!isMysqlEnabled()) throw new Error("MySQL is required; local/browser database fallback is disabled.");
         return ensureMysqlReady();
     }
 
@@ -325,17 +326,17 @@ export class Model<T extends { _id: string }> {
 
     find(filter: any = {}, _proj?: any): Query<any[]> {
         if (isMysqlEnabled()) return new Query(this, async (q) => this.mysqlRun(filter, q), false) as any;
-        return this.fallback.find(filter, _proj);
+        throw new Error("MySQL is required; local/browser database fallback is disabled.");
     }
 
     findOne(filter: any = {}, _proj?: any): Query<any> {
         if (isMysqlEnabled()) return new Query(this, async (q) => this.mysqlRun(filter, q), true) as any;
-        return this.fallback.findOne(filter, _proj);
+        throw new Error("MySQL is required; local/browser database fallback is disabled.");
     }
 
     findById(id: any, _proj?: any): Query<any> {
         if (isMysqlEnabled()) return new Query(this, async (q) => this.mysqlRun({ _id: String(id) }, q), true) as any;
-        return this.fallback.findById(id, _proj);
+        throw new Error("MySQL is required; local/browser database fallback is disabled.");
     }
 
     async exists(filter: any): Promise<{ _id: string } | null> {

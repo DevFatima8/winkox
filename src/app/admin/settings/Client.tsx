@@ -1,15 +1,15 @@
 "use client";
-import { getCurrentUser } from "@/lib/auth";
 import { SettingsForm } from "@/components/admin/Forms";
-import { getSettings } from "@/lib/platform";
 import { usePage, NOT_FOUND, REDIRECT } from "@/lib/useDb";
 
 export default function SettingsPageClient({ params, searchParams }: { params?: Record<string, string>; searchParams?: Record<string, string> }) {
   void params; void searchParams;
   return usePage(async () => {
-    const _me = await getCurrentUser();
-    if (!_me || _me.level < 2) return REDIRECT("/admin");
-    const s = await getSettings();
+    const response = await fetch("/api/admin/data?view=settings", { cache: "no-store" });
+    const data = await response.json();
+    if (response.status === 403) return REDIRECT("/admin");
+    if (!response.ok) throw new Error(data.error ?? "Settings load nahi ho sakin.");
+    const s = data.settings;
     return (
       <div className="space-y-6">
         <div><h1 className="text-2xl font-bold text-white">Platform Settings</h1><p className="text-sm text-[#b8a7e6]">Support hours, WhatsApp/Telegram channels, app links, referral commission aur wallet limits.</p></div>

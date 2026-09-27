@@ -91,8 +91,8 @@ export function Logo({ size = "md" }: { size?: "sm" | "md" | "lg" }) {
 
 export function Header({ viewer, active = "home", showAnnouncement = true }: { viewer: Viewer; active?: "home" | "promo" | "games"; showAnnouncement?: boolean }) {
   const { t } = useI18n();
-  const dep = viewer.loggedIn ? "/client/wallet" : "/login";
-  const prof = viewer.isAdmin ? "/admin" : viewer.loggedIn ? "/client" : "/login";
+  const dep = viewer.loggedIn ? "/player/wallet" : "/login";
+  const prof = viewer.isAdmin ? "/admin" : viewer.loggedIn ? "/player" : "/login";
   const navCls = (k: string) => `whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-bold transition lg:px-3.5 ${active === k ? "btn-violet" : "text-[#b8a7e6] hover:text-white"}`;
   return (
     <>
@@ -173,8 +173,8 @@ export function GameCard({ slug, href }: { slug: string; href: string }) {
 
 export function BottomNav({ viewer, active }: { viewer: Viewer; active: "home" | "promo" | "invite" | "deposit" | "profile" }) {
   const { t } = useI18n();
-  const dep = viewer.loggedIn ? "/client/wallet" : "/login";
-  const prof = viewer.isAdmin ? "/admin" : viewer.loggedIn ? "/client" : "/login";
+  const dep = viewer.loggedIn ? "/player/wallet" : "/login";
+  const prof = viewer.isAdmin ? "/admin" : viewer.loggedIn ? "/player" : "/login";
   const item = (key: typeof active, href: string, icon: ReactNode, label: string) => (
     <Link href={href} className={`flex min-w-0 flex-1 flex-col items-center gap-0.5 py-2 text-[10px] font-semibold min-[380px]:text-[11px] ${active === key ? "text-[#ffb800]" : "text-[#b8a7e6]"}`}>
       <span className="leading-none">{icon}</span><span className="w-full truncate text-center">{label}</span>

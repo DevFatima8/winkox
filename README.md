@@ -48,7 +48,7 @@ SUPER_ADMIN_DEPOSIT_LIMIT=0
 
 `MYSQL_HOST`, `MYSQL_DATABASE`, `MYSQL_USER`, and `MYSQL_PASSWORD` must point to a reachable database. For hosted MySQL, replace `127.0.0.1` with the database host supplied by the hosting provider and use the provider's SSL requirement.
 
-The app uses MySQL when these variables are configured. Browser-side development utilities can use the LocalDB fallback, but production server operations require MySQL. A configured but unreachable MySQL server will cause login, signup, seed, and other server-side operations to fail.
+All application data is stored in MySQL. Browser-side database access and LocalDB fallback are disabled. Configure a reachable MySQL database before running the app; missing or unreachable MySQL configuration causes data operations to fail rather than writing to a local store.
 
 ## Database setup
 
@@ -81,9 +81,9 @@ On first initialization, the configured `SUPER_ADMIN_*` values are used to creat
 
 ## Data and reset notes
 
-Server data is stored in MySQL when the database environment is configured. LocalDB data, when used by browser-side development utilities, is stored in browser storage and is separate from MySQL.
+User accounts, game activity, wallet transactions, referral commissions, notifications, and settings are stored in MySQL. Browser storage is not used as an application database.
 
-Do not reset a shared or production database casually. For browser LocalDB testing, clear the site's local storage from browser developer tools. For MySQL, use an intentional backup and migration process instead of deleting tables manually.
+Do not reset a shared or production database casually. Use an intentional backup and migration process instead of deleting tables manually.
 
 ## Deployment
 

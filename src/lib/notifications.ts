@@ -1,7 +1,6 @@
 import { dbConnect } from "./mongo";
 import { Notification, User, oid } from "@/models";
 import type { NotificationDoc } from "@/models";
-import { getSessionSync } from "./auth";
 
 type NotificationType = "info" | "promo" | "warning" | "success";
 
@@ -19,11 +18,9 @@ export async function notifyAdmins(title: string, body: string, type: Notificati
   return notification;
 }
 
-export async function getNotifications() {
+export async function getNotifications(userId: string | null, role: string | null) {
   await dbConnect();
-  const s = getSessionSync();
-  const uid = s ? oid(s.id) : null;
-  const role = uid ? (await User.findById(uid).lean())?.role : null;
+  const uid = userId ? oid(userId) : null;
   type Aud = "all" | "clients" | "agents" | "admins" | "user";
   const aud: Aud[] = ["all"];
   if (role === "client") aud.push("clients");
@@ -36,10 +33,9 @@ export async function getNotifications() {
     unread: uid ? list.filter((n) => !(n.readBy ?? []).some((r) => String(r) === String(uid))).length : 0,
   };
 }
-export async function markAllNotificationsRead() {
-  const s = getSessionSync();
-  if (!s) return { ok: false };
+export async function markAllNotificationsRead(userId: string | null) {
+  if (!userId) return { ok: false };
   await dbConnect();
-  await Notification.updateMany({ isActive: true, readBy: { $ne: oid(s.id) } }, { $addToSet: { readBy: oid(s.id) } });
+  await Notification.updateMany({ isActive: true, readBy: { $ne: oid(userId) } }, { $addToSet: { readBy: oid(userId) } });
   return { ok: true };
 }

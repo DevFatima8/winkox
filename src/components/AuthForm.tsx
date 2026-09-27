@@ -2,11 +2,13 @@
 
 import { useActionState, useEffect, useState } from "react";
 import Link from "next/link";
-import { loginAction, signupAction, type ActionState } from "@/lib/actions";
+import { loginAction, signupAction } from "@/lib/clientActions";
+import type { ActionState } from "@/lib/actions";
 import { useI18n } from "@/lib/i18n/client";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { LanguageSwitch } from "@/components/LanguageSwitch";
 import { BrandLogo } from "@/components/BrandLogo";
+import { InstallPrompt } from "@/components/InstallPrompt";
 
 export function AuthForm({ mode }: { mode: "login" | "signup" }) {
   const action = mode === "login" ? loginAction : signupAction;
@@ -19,9 +21,13 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
   const [loginIp, setLoginIp] = useState("");
   useEffect(() => {
     const r = new URLSearchParams(window.location.search).get("ref");
-    if (r) { setRef(r.toUpperCase()); document.cookie = `ref=${r.toUpperCase()}; path=/; max-age=${60 * 60 * 24 * 30}`; }
+    if (r) {
+      setRef(r.toUpperCase()); document.cookie = `ref=${r.toUpperCase()}; path=/; max-age=${60 * 60 * 24 * 30}`;
+      // Referral link → open the install-app prompt right away so the friend installs the PWA.
+      if (mode === "signup") setTimeout(() => window.dispatchEvent(new CustomEvent("wx:open-install")), 500);
+    }
     else { const m = document.cookie.match(/(?:^|; )ref=([^;]+)/); if (m) setRef(m[1]); }
-  }, []);
+  }, [mode]);
   useEffect(() => {
     if (mode !== "signup") return;
     fetch("/api/ip").then((r) => r.ok ? r.json() : null).then((data) => { if (data?.ip) { setRegistrationIp(String(data.ip)); setLoginIp(String(data.ip)); } }).catch(() => { });
@@ -70,6 +76,7 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
           )}
         </p>
       </div>
+      {mode === "signup" && <InstallPrompt />}
     </main>
   );
 }

@@ -1,22 +1,19 @@
 "use client";
-import { getCurrentUser } from "@/lib/auth";
-import { dbConnect } from "@/lib/mongo";
-import { HelpArticle } from "@/models";
 import type { HelpArticleDoc } from "@/models";
 import { Card } from "@/components/Shell";
 import { HelpArticleForm } from "@/components/admin/Forms";
 import { deleteHelpArticleAction } from "@/lib/actions";
-import { ensureHelp } from "@/lib/platform";
 import { usePage, NOT_FOUND, REDIRECT } from "@/lib/useDb";
 
 export default function HelpAdminPageClient({ params, searchParams }: { params?: Record<string, string>; searchParams?: Record<string, string> }) {
   void params; void searchParams;
   return usePage(async () => {
-    const _me = await getCurrentUser();
-    if (!_me || _me.level < 2) return REDIRECT("/admin");
     const { edit, new: isNew } = searchParams ?? {};
-    await dbConnect(); await ensureHelp();
-    const list = await HelpArticle.find().sort({ category: 1, order: 1 }).lean<HelpArticleDoc[]>();
+    const response = await fetch("/api/admin/data?view=help", { cache: "no-store" });
+    const data = await response.json();
+    if (response.status === 403) return REDIRECT("/admin");
+    if (!response.ok) throw new Error(data.error ?? "Help articles load nahi ho sake.");
+    const list = data.list as HelpArticleDoc[];
     const editing = edit ? list.find((a) => String(a._id) === edit) : null;
     return (
       <div className="space-y-6">

@@ -3,7 +3,6 @@
 import { useActionState } from "react";
 import { cleanupHistoryAction, type ActionState } from "@/lib/actions";
 import { Card } from "@/components/Shell";
-import { getCurrentUser } from "@/lib/auth";
 import { usePage, REDIRECT } from "@/lib/useDb";
 
 const input = "w-full rounded-xl border border-[#3a2470] bg-black/30 px-3 py-2.5 text-sm text-white outline-none focus:border-[#d946ef]";
@@ -46,8 +45,10 @@ function CleanupForm() {
 export default function CleanupPageClient({ params, searchParams }: { params?: Record<string, string>; searchParams?: Record<string, string> }) {
     void params; void searchParams;
     return usePage(async () => {
-        const me = await getCurrentUser();
-        if (!me || me.level < 2) return REDIRECT("/admin");
+        const response = await fetch("/api/admin/data?view=account", { cache: "no-store" });
+        const data = await response.json();
+        if (response.status === 403) return REDIRECT("/admin");
+        if (!response.ok || Number(data.me?.level) < 2) return REDIRECT("/admin");
         return (
             <div className="space-y-6">
                 <div>
