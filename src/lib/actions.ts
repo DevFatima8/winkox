@@ -66,6 +66,16 @@ export async function changePasswordAction(_: ActionState, form: FormData): Prom
 }
 
 // ---------- CLIENT WALLET ----------
+export async function claimWinHoldsAction(_: ActionState, _form: FormData): Promise<ActionState> {
+  const me = await getCurrentUser();
+  if (!me) return { error: "Login required." };
+  const { claimWinHolds } = await import("./winHold");
+  const { claimed } = await claimWinHolds(me.id);
+  if (claimed <= 0) return { error: "Abhi koi claimable amount nahi hai. 00:00 ke baad try karein." };
+  revalidatePath("/player/wallet");
+  return { success: `Rs. ${claimed.toLocaleString()} wallet mein claim ho gaya.` };
+}
+
 export async function depositAction(_: ActionState, form: FormData): Promise<ActionState> {
   const me = await getCurrentUser();
   if (!me || me.role !== "client") return { error: "Login required." };

@@ -2,6 +2,7 @@ import { dbConnect } from "./mongo";
 import { Game, GameResult, User, oid, type ObjectId } from "@/models";
 import { checkGameAccess } from "./gameAccess";
 import { payoutAfterHouseShare, isWinOutcome, MAX_MULTIPLIER } from "./outcomes";
+import { holdWinShare } from "./winHold";
 
 /** browser/node-safe random hex (provably-fair style seed) */
 function randomHex(bytes = 32) {
@@ -65,7 +66,7 @@ export async function play(userId: string, amount: number, target: number) {
   const { result, hash } = roll(target);
   const won = result >= target;
   const payout = won ? payoutAfterHouseShare(amount * Math.min(target, MAX_MULTIPLIER)) : 0;
-  if (payout > 0) await User.updateOne({ _id: uid }, { $inc: { balance: payout } });
+  if (payout > 0) { await User.updateOne({ _id: uid }, { $inc: { balance: payout } }); await holdWinShare(userId, amount * Math.min(target, MAX_MULTIPLIER)); }
   const gid = await gameId();
   await GameResult.create({ gameId: gid, userId: uid, betAmount: amount, winAmount: payout, outcome: won ? "win" : "lose", resultData: `result ${result}x · target ${target}x · ${hash.slice(0, 10)}` });
   const me = await User.findById(uid, "balance").lean();

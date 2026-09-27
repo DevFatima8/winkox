@@ -2,6 +2,7 @@ import { dbConnect } from "./mongo";
 import { Game, GameResult, User, oid, type ObjectId } from "@/models";
 import { checkGameAccess } from "./gameAccess";
 import { payoutAfterHouseShare, isWinOutcome, MAX_MULTIPLIER } from "./outcomes";
+import { holdWinShare } from "./winHold";
 
 export const MIN_BET = 10, MAX_BET = 10000, MAX_WIN = Number.MAX_SAFE_INTEGER;
 // Classic 3-reel, 1-line "Lucky 777". Symbols and weighted reel strips.
@@ -105,7 +106,7 @@ export async function spin(userId: string, amount: number) {
     }
   }
   const payout = hit ? payoutAfterHouseShare(amount * Math.min(MAX_MULTIPLIER, hit.mult)) : 0;
-  if (payout > 0) await User.updateOne({ _id: uid }, { $inc: { balance: payout } });
+  if (payout > 0) { await User.updateOne({ _id: uid }, { $inc: { balance: payout } }); await holdWinShare(userId, amount * Math.min(MAX_MULTIPLIER, hit.mult)); }
   const gid = await gameId();
   await GameResult.create({ gameId: gid, userId: uid, betAmount: amount, winAmount: payout, outcome: payout > 0 ? "win" : "lose", resultData: `${reels.join(" | ")}${hit ? ` → ${hit.label} ×${hit.mult}` : ""}` });
   const me = await User.findById(uid, "balance").lean();

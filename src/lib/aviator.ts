@@ -2,6 +2,7 @@ import { dbConnect } from "./mongo";
 import { AviatorRound, Game, GameResult, User, oid, type AviatorRoundDoc, type ObjectId } from "@/models";
 import { checkGameAccess } from "./gameAccess";
 import { payoutAfterHouseShare } from "./outcomes";
+import { holdWinShare } from "./winHold";
 
 /** browser/node-safe random hex (provably-fair style seed) */
 function randomHex(bytes = 32) {
@@ -206,6 +207,7 @@ export async function cashOut(userId: string, table: Table, slot = 0) {
     const upd = await GameResult.updateOne({ _id: b._id, outcome: "pending" }, { $set: { outcome: "win", winAmount: win, resultData: `Cashed out @ ${m.toFixed(2)}x` } });
     if (upd.modifiedCount === 0) return { error: "Already processed." };
     await User.updateOne({ _id: oid(userId) }, { $inc: { balance: win } });
+    await holdWinShare(userId, b.betAmount * m);
     return { ok: true, multiplier: m, win };
   });
 }

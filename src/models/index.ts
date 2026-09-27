@@ -72,6 +72,8 @@ export type AdminLogDoc = Base & { actorId: string; actorName: string; actorRole
 export type FeedbackDoc = Base & { userId: string | null; name: string; phone: string; type: "reward" | "complaint" | "suggestion" | "other"; message: string; status: "new" | "reviewed" | "resolved"; adminNote: string };
 export type GatewaySessionDoc = Base & { userId: string; kind: "deposit" | "withdraw"; provider: Provider; amount: number; accountNumber: string; holderName?: string; proofImage?: string | null; status: "created" | "otp" | "pending" | "paid" | "failed" | "expired" | "cancelled"; otpAttempts: number; txnRef: string | null; transactionId: string | null; expiresAt: Date };
 export type MinesGameDoc = Base & { userId: string; resultId: string; betAmount: number; mines: number; mineCells: number[]; revealed: number[]; status: "active" | "cashed" | "dead"; winAmount: number };
+/** 2% withheld from every win; unlocks (claimable) after the next midnight following the win. */
+export type WinHoldDoc = Base & { userId: string; amount: number; unlockAt: Date; claimed: boolean; claimedAt: Date | null };
 
 export const User = new Model<UserDoc>("User", { collection: "users", unique: [["phone"]], defaults: () => ({ username: null, email: null, passwordPlain: null, withdrawPin: null, registrationIp: null, lastLoginIp: null, historicalIps: [], paymentDepositLimit: 0, role: "client", adminId: null, createdBy: null, adminNote: "", balance: 0, isActive: true, lastLoginAt: null, totalDeposited: 0, totalWithdrawn: 0, vipLevel: 0, blockedGames: [], referralCode: null, referredBy: null, commissionEarned: 0, agentCommissionPct: null }) });
 export const PaymentAccount = new Model<PaymentAccountDoc>("PaymentAccount", { collection: "paymentaccounts", defaults: () => ({ isActive: true }) });
@@ -94,3 +96,4 @@ export const AdminLog = new Model<AdminLogDoc>("AdminLog", { collection: "adminl
 export const Feedback = new Model<FeedbackDoc>("Feedback", { collection: "feedbacks", defaults: () => ({ userId: null, name: "", phone: "", type: "reward", status: "new", adminNote: "" }) });
 export const GatewaySession = new Model<GatewaySessionDoc>("GatewaySession", { collection: "gatewaysessions", cap: 200, defaults: () => ({ kind: "deposit", accountNumber: "", status: "created", otpAttempts: 0, txnRef: null, transactionId: null }) });
 export const MinesGame = new Model<MinesGameDoc>("MinesGame", { collection: "minesgames", cap: 500, defaults: () => ({ revealed: [], status: "active", winAmount: 0 }) });
+export const WinHold = new Model<WinHoldDoc>("WinHold", { collection: "winholds", refs: { userId: "User" }, cap: 5000, defaults: () => ({ claimed: false, claimedAt: null }) });

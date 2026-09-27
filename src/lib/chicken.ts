@@ -2,6 +2,7 @@ import { dbConnect } from "./mongo";
 import { ChickenGame, Game, GameResult, User, oid, type ObjectId } from "@/models";
 import { checkGameAccess } from "./gameAccess";
 import { payoutAfterHouseShare, isWinOutcome, MAX_MULTIPLIER } from "./outcomes";
+import { holdWinShare } from "./winHold";
 
 
 export const MIN_BET = 10;
@@ -134,6 +135,7 @@ export async function step(userId: string) {
     g.winAmount = win;
     await g.save();
     await User.updateOne({ _id: g.userId }, { $inc: { balance: win } });
+    await holdWinShare(userId, g.betAmount * Math.min(MAX_MULTIPLIER, m));
     await GameResult.updateOne({ _id: g.resultId }, { $set: { outcome: "win", winAmount: win, resultData: `${label} · crossed all ${g.lanes} lanes @ ${m.toFixed(2)}x` } });
     return { ok: true, game: publicState(g.toObject()), event: "finished" as const };
   }
@@ -152,6 +154,7 @@ export async function cashOut(userId: string) {
   g.winAmount = win;
   await g.save();
   await User.updateOne({ _id: g.userId }, { $inc: { balance: win } });
+  await holdWinShare(userId, g.betAmount * Math.min(MAX_MULTIPLIER, m));
   await GameResult.updateOne({ _id: g.resultId }, { $set: { outcome: "win", winAmount: win, resultData: `${DIFFICULTIES[diff].label} · cashed out at lane ${g.position} @ ${m.toFixed(2)}x` } });
   return { ok: true, game: publicState(g.toObject()), multiplier: m, win };
 }
