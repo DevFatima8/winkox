@@ -1,7 +1,5 @@
 "use client";
 
-import { localApi } from "@/lib/client";
-
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useI18n } from "@/lib/i18n/client";
 import { ChatIcon, HeadsetIcon, XIcon, SendIcon, WhatsAppIcon, TelegramIcon } from "@/components/Icons";
@@ -14,19 +12,25 @@ export function SupportWidget({ userName }: { userName?: string }) {
   const { t } = useI18n();
   const [s, setS] = useState<S | null>(null);
   const [text, setText] = useState("");
+  const [error, setError] = useState<string | null>(null);
   const [unread, setUnread] = useState(0);
   const seen = useRef(0);
   const endRef = useRef<HTMLDivElement>(null);
 
   const load = useCallback(async () => {
-    const r = await localApi("/api/support", { cache: "no-store" });
-    if (!r.ok) return;
-    const j: S = await r.json();
-    setS(j);
-    const agentMsgs = j.messages.filter((m) => m.from !== "user").length;
-    if (!open && agentMsgs > seen.current && seen.current > 0) setUnread(agentMsgs - seen.current);
-    if (open) seen.current = agentMsgs;
-    else if (seen.current === 0) seen.current = agentMsgs;
+    try {
+      const r = await fetch("/api/support", { cache: "no-store" });
+      if (!r.ok) throw new Error("Support abhi load nahi ho saka.");
+      const j: S = await r.json();
+      setS(j);
+      setError(null);
+      const agentMsgs = j.messages.filter((m) => m.from !== "user").length;
+      if (!open && agentMsgs > seen.current && seen.current > 0) setUnread(agentMsgs - seen.current);
+      if (open) seen.current = agentMsgs;
+      else if (seen.current === 0) seen.current = agentMsgs;
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Support abhi load nahi ho saka.");
+    }
   }, [open]);
 
   useEffect(() => { load(); const id = setInterval(load, open ? 3000 : 15000); return () => clearInterval(id); }, [load, open]);
@@ -36,7 +40,15 @@ export function SupportWidget({ userName }: { userName?: string }) {
   const send = async () => {
     const t = text.trim(); if (!t) return;
     setText("");
-    await localApi("/api/support", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: t, name: userName }) });
+    setError(null);
+    try {
+      const r = await fetch("/api/support", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: t, name: userName }) });
+      const result = await r.json().catch(() => ({}));
+      if (!r.ok) { setText(t); throw new Error(result.error ?? "Message bheja nahi ja saka."); }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Message bheja nahi ja saka.");
+      return;
+    }
     load();
   };
 
@@ -57,6 +69,7 @@ export function SupportWidget({ userName }: { userName?: string }) {
             <button onClick={() => setOpen(false)} className="text-white/80 hover:text-white"><XIcon size={18} /></button>
           </div>
           <div className="flex-1 space-y-2 overflow-y-auto p-3">
+            {error && <div className="rounded-lg bg-red-500/15 px-3 py-2 text-xs text-red-300">{error}</div>}
             {(!s || s.messages.length === 0) && (
               <div className="rounded-2xl rounded-bl-sm bg-black/40 px-3 py-2 text-sm text-white ring-1 ring-[#3a2470]">
                 {s?.welcome || t("defaultWelcome")}

@@ -3,7 +3,6 @@ import Link from "next/link";
 import { dbConnect } from "@/lib/mongo";
 import { Commission, User } from "@/models";
 import { Card, StatCard, fmt, fmtDate } from "@/components/Shell";
-import { getSettings } from "@/lib/platform";
 import { usePage, NOT_FOUND, REDIRECT } from "@/lib/useDb";
 
 type RecentCommission = {
@@ -19,7 +18,6 @@ export default function AgentsPageClient({ params, searchParams }: { params?: Re
   void params; void searchParams;
   return usePage(async () => {
     await dbConnect();
-    const s = await getSettings();
     const [agents, refStats, commTotal, recent] = await Promise.all([
       User.find({ role: "agent" }).sort({ commissionEarned: -1 }).lean(),
       User.aggregate<{ _id: string; c: number; dep: number }>([{ $match: { referredBy: { $ne: null } } }, { $group: { _id: "$referredBy", c: { $sum: 1 }, dep: { $sum: "$totalDeposited" } } }]),
@@ -34,15 +32,15 @@ export default function AgentsPageClient({ params, searchParams }: { params?: Re
         <div className="grid grid-cols-1 gap-3 min-[400px]:grid-cols-2 md:grid-cols-4">
           <StatCard label="Agents" value={agents.length} />
           <StatCard label="Deposit commission paid" value={fmt(commTotal.find((c) => c._id === "deposit")?.s ?? 0)} accent="text-emerald-300" />
-          <StatCard label="Bet commission paid" value={fmt(commTotal.find((c) => c._id === "bet")?.s ?? 0)} accent="text-[#ffb800]" />
-          <StatCard label="Rates" value={`${s.referral?.depositCommissionPct ?? 2}% / ${s.referral?.betCommissionPct ?? 1.5}%`} sub={`Agent deposit ${s.referral?.agentDepositCommissionPct ?? 8}%`} />
+          <StatCard label="Historical bet commission" value={fmt(commTotal.find((c) => c._id === "bet")?.s ?? 0)} accent="text-[#ffb800]" />
+          <StatCard label="Referrer deposit commission" value="1.5% once" />
         </div>
         <Card title="Agent accounts (staff)">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="text-xs uppercase text-[#6f5fa3]"><tr><th className="pb-2">Agent</th><th className="pb-2">Phone</th><th className="pb-2">Referral code</th><th className="pb-2">Team</th><th className="pb-2">Team deposits</th><th className="pb-2">Commission %</th><th className="pb-2">Earned</th><th className="pb-2">Balance</th><th className="pb-2">Since</th></tr></thead>
+              <thead className="text-xs uppercase text-[#6f5fa3]"><tr><th className="pb-2">Agent</th><th className="pb-2">Phone</th><th className="pb-2">Referral code</th><th className="pb-2">Team</th><th className="pb-2">Team deposits</th><th className="pb-2">First deposit %</th><th className="pb-2">Earned</th><th className="pb-2">Balance</th><th className="pb-2">Since</th></tr></thead>
               <tbody className="divide-y divide-[#3a2470]/50">
-                {agents.map((a) => { const r = rm.get(String(a._id)); return <tr key={String(a._id)}><td className="py-2"><Link href={`/admin/users/${a._id}`} className="font-medium text-white hover:text-[#ffb800]">{a.name}</Link></td><td className="py-2 text-[#e9ddff]">{a.phone}</td><td className="py-2 font-mono text-[#ffb800]">{a.referralCode}</td><td className="py-2 text-white">{r?.c ?? 0}</td><td className="py-2 text-[#e9ddff]">{fmt(r?.dep ?? 0)}</td><td className="py-2 text-[#e9ddff]">{a.agentCommissionPct ?? s.referral?.agentDepositCommissionPct ?? 8}%</td><td className="py-2 font-bold text-emerald-300">{fmt(a.commissionEarned ?? 0)}</td><td className="py-2 text-white">{fmt(a.balance)}</td><td className="py-2 text-xs text-[#b8a7e6]">{fmtDate(a.createdAt)}</td></tr>; })}
+                {agents.map((a) => { const r = rm.get(String(a._id)); return <tr key={String(a._id)}><td className="py-2"><Link href={`/admin/users/${a._id}`} className="font-medium text-white hover:text-[#ffb800]">{a.name}</Link></td><td className="py-2 text-[#e9ddff]">{a.phone}</td><td className="py-2 font-mono text-[#ffb800]">{a.referralCode}</td><td className="py-2 text-white">{r?.c ?? 0}</td><td className="py-2 text-[#e9ddff]">{fmt(r?.dep ?? 0)}</td><td className="py-2 text-[#e9ddff]">1.5%</td><td className="py-2 font-bold text-emerald-300">{fmt(a.commissionEarned ?? 0)}</td><td className="py-2 text-white">{fmt(a.balance)}</td><td className="py-2 text-xs text-[#b8a7e6]">{fmtDate(a.createdAt)}</td></tr>; })}
                 {agents.length === 0 && <tr><td colSpan={9} className="py-6 text-center text-[#6f5fa3]">Abhi koi agent nahi. Users page se kisi user ko agent banayein.</td></tr>}
               </tbody>
             </table>

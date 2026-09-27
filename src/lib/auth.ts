@@ -59,7 +59,7 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
   if (isBrowser()) {
     // Fetch from the server API — client-side model access can't see server env vars (MYSQL_*).
     try {
-      const res = await fetch(`/api/auth/me?id=${encodeURIComponent(s.id)}`, { cache: "no-store" });
+      const res = await fetch("/api/auth/me", { cache: "no-store" });
       const data = await res.json();
       if (!data.user) { await destroySession(); return null; }
       return data.user as CurrentUser;

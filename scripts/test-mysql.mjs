@@ -36,6 +36,14 @@ try {
     }
     console.log("All tables ensured:", COLLECTIONS.length);
 
+    for (const table of ["supportthreads", "supportmessages"]) {
+        const [columns] = await pool.query(`SHOW COLUMNS FROM \`${table}\``);
+        const columnNames = new Set(columns.map((column) => column.Field));
+        const missing = ["id", "data", "created_at", "updated_at"].filter((column) => !columnNames.has(column));
+        if (missing.length) throw new Error(`Missing ${table} column(s): ${missing.join(", ")}`);
+        console.log(`${table} columns verified: id, data, created_at, updated_at`);
+    }
+
     const [rows] = await pool.query("SHOW TABLES");
     console.log("Tables in database:", rows.map((r) => Object.values(r)[0]));
 } catch (e) {

@@ -24,7 +24,6 @@ export default function InfoPageRouteClient({ params, searchParams }: { params?:
     const online = supportOnline(settings.support);
     const l: { whatsapp?: string; telegram?: string; whatsappChannel?: string; telegramChannel?: string } = settings.links ?? {};
     const vip = [...settings.vipLevels].sort((a, b) => (a.level ?? 0) - (b.level ?? 0));
-    const ref = settings.referral;
 
     const renderP = (txt: string) => {
       if (txt === "VIP_TABLE") return (
@@ -36,8 +35,8 @@ export default function InfoPageRouteClient({ params, searchParams }: { params?:
         </div>
       );
       if (txt === "REF_RATES") return (
-        <div className="grid gap-2 sm:grid-cols-3">
-          {[[`${ref?.depositCommissionPct ?? 2}%`, ur ? "دوست کے ہر ڈپازٹ پر" : "on every friend's deposit"], [`${ref?.betCommissionPct ?? 1.5}%`, ur ? "دوست کی ہر بیٹ پر" : "on every friend's bet"], [`${ref?.agentDepositCommissionPct ?? 8}%`, ur ? "ایجنٹ اکاؤنٹس کے لیے ڈپازٹ کمیشن" : "deposit commission for Agent accounts"]].map(([v, d]) => (
+        <div className="grid gap-2 sm:grid-cols-1">
+          {[["1.5%", ur ? "ہر ریفرر کے ذریعے آنے والے کلائنٹ کے پہلے منظور شدہ ڈپازٹ پر" : "on the first approved deposit from each referred client"]].map(([v, d]) => (
             <div key={d} className="rounded-xl bg-black/30 p-3 ring-1 ring-[#3a2470]"><div className="text-2xl font-black text-[#ffb800]">{v}</div><div className="text-xs text-[#b8a7e6]">{d}</div></div>
           ))}
         </div>

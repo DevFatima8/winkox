@@ -5,6 +5,7 @@ import { User, LoginEvent, Commission } from "@/models";
 import { hashPassword } from "@/lib/auth";
 import { assignPaymentAccounts, genReferralCode, genUsername, getSettings } from "@/lib/platform";
 import { ensurePaymentAccounts } from "@/lib/seed";
+import { setAuthCookie } from "@/lib/serverAuth";
 
 // This route always runs on the server, so it reliably uses MySQL when configured (unlike client-side actions).
 export async function POST(req: Request) {
@@ -57,7 +58,7 @@ export async function POST(req: Request) {
             bonus > 0 && referredBy ? Commission.create({ beneficiaryId: u._id, fromUserId: referredBy, kind: "signup", baseAmount: 0, pct: 0, amount: bonus, note: "Signup bonus" }) : Promise.resolve(),
             ensurePaymentAccounts().then(() => assignPaymentAccounts(String(u._id))),
         ]).catch(() => { });
-        return NextResponse.json({ id: String(u._id), role: "client", name: u.name });
+        return setAuthCookie(NextResponse.json({ id: String(u._id), role: "client", name: u.name }), String(u._id));
     } catch (e) {
         console.error("[signup]", e);
         return NextResponse.json({ error: "Server abhi database se connect nahi ho pa raha. Thodi dair baad dobara try karein." }, { status: 500 });

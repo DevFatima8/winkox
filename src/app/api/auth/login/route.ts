@@ -5,6 +5,7 @@ import { User, LoginEvent, AdminLog, oid } from "@/models";
 import { verifyPassword, isStaff } from "@/lib/auth";
 import { assignPaymentAccounts, genReferralCode, genUsername } from "@/lib/platform";
 import { ensureAdmin } from "@/lib/seed";
+import { setAuthCookie } from "@/lib/serverAuth";
 
 // This route always runs on the server, so it reliably uses MySQL when configured (unlike client-side actions).
 export async function POST(req: Request) {
@@ -45,7 +46,7 @@ export async function POST(req: Request) {
             void assignPaymentAccounts(String(u._id)).catch(() => { });
         }
         void LoginEvent.create({ userId: String(u._id), ip: loginIp, role: u.role }).catch(() => { });
-        return NextResponse.json({ id: String(u._id), role, name: u.name });
+        return setAuthCookie(NextResponse.json({ id: String(u._id), role, name: u.name }), String(u._id));
     } catch (e) {
         console.error("[login]", e);
         return NextResponse.json({ error: "Server abhi database se connect nahi ho pa raha. Thodi dair baad dobara try karein." }, { status: 500 });

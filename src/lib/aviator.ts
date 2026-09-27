@@ -1,8 +1,7 @@
 import { dbConnect } from "./mongo";
 import { AviatorRound, Game, GameResult, User, oid, type AviatorRoundDoc, type ObjectId } from "@/models";
 import { checkGameAccess } from "./gameAccess";
-import { payBetCommission } from "./platform";
-import { capWinAmount } from "./outcomes";
+import { payoutAfterHouseShare } from "./outcomes";
 
 /** browser/node-safe random hex (provably-fair style seed) */
 function randomHex(bytes = 32) {
@@ -177,7 +176,6 @@ export async function placeBet(userId: string, table: Table, amount: number, slo
     if (r.modifiedCount === 0) return { error: "Insufficient balance." };
     try {
       await GameResult.create({ gameId, userId: uid, roundNo: targetRound, betAmount: amount, outcome: "pending", betSlot: slot });
-      void payBetCommission(uid, amount);
     } catch {
       await User.updateOne({ _id: uid }, { $inc: { balance: amount } });
       return { error: "Could not place bet. Try again." };
@@ -204,7 +202,7 @@ export async function cashOut(userId: string, table: Table, slot = 0) {
     if (m >= round.crashPoint) return { error: "Flew away!" };
     const b = await GameResult.findOne({ gameId, roundNo: round.roundNo, userId: oid(userId), betSlot: slot, outcome: "pending" });
     if (!b) return { error: "No active bet." };
-    const win = Math.floor(capWinAmount(b.betAmount, b.betAmount * m) * 100) / 100;
+    const win = payoutAfterHouseShare(b.betAmount * m);
     const upd = await GameResult.updateOne({ _id: b._id, outcome: "pending" }, { $set: { outcome: "win", winAmount: win, resultData: `Cashed out @ ${m.toFixed(2)}x` } });
     if (upd.modifiedCount === 0) return { error: "Already processed." };
     await User.updateOne({ _id: oid(userId) }, { $inc: { balance: win } });

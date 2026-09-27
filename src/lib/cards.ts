@@ -1,8 +1,7 @@
 import { dbConnect } from "./mongo";
 import { CardBet, CardRound, Game, GameResult, User, oid, type CardRoundDoc, type ObjectId } from "@/models";
 import { checkGameAccess } from "./gameAccess";
-import { payBetCommission } from "./platform";
-import { capWinAmount, isWinOutcome, MAX_MULTIPLIER } from "./outcomes";
+import { payoutAfterHouseShare, isWinOutcome, MAX_MULTIPLIER } from "./outcomes";
 
 
 export const MIN_BET = 10;
@@ -81,7 +80,7 @@ export function payoutFor(result: Result, option: string, amount: number) {
   } else if (option === result.winner) {
     raw = option === "andar" ? amount * 1.9 : amount * 2;
   }
-  return capWinAmount(amount, Math.min(MAX_MULTIPLIER * amount, raw));
+  return payoutAfterHouseShare(Math.min(MAX_MULTIPLIER * amount, raw));
 }
 
 const RANKS = ["", "A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
@@ -251,7 +250,6 @@ export async function placeBet(userId: string, table: Table, option: string, amo
     const upd = await User.updateOne({ _id: uid, balance: { $gte: amount } }, { $inc: { balance: -amount } });
     if (!upd.modifiedCount) return { error: "Insufficient balance. Pehle deposit karein." };
     await CardBet.create({ userId: uid, table, roundNo: r.roundNo, option, amount });
-    void payBetCommission(uid, amount);
     const gid = await gameIdFor(table);
     await GameResult.updateOne(
       { gameId: gid, roundNo: r.roundNo, userId: uid },

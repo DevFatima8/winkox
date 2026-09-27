@@ -14,7 +14,6 @@ import * as mines from "./mines";
 import * as slot from "./slot777";
 import * as cards from "./cards";
 import * as gateway from "./gateway";
-import * as support from "./support";
 import * as notif from "./notifications";
 import * as feedback from "./feedback";
 
@@ -81,17 +80,8 @@ export async function localApi(url: string, init?: RequestInit): Promise<Res> {
         return out(r);
       }
       // ---- Support / notifications / feedback
-      case path === "/api/support" && method === "GET": return res(await support.getSupportState());
-      case path === "/api/support": return out(await support.sendSupportMessage(String(body.text ?? ""), body.name ? String(body.name) : undefined));
       case path === "/api/notifications" && method === "GET": return res(await notif.getNotifications());
       case path === "/api/notifications": return sess ? res(await notif.markAllNotificationsRead()) : err("Unauthorized", 401);
-      case path === "/api/admin/support" && method === "GET": {
-        const t = q.get("thread");
-        if (t) { const r = await support.adminThreadMessages(t); return "error" in r ? err(String(r.error), r.status ?? 400) : res(r); }
-        const r = await support.adminListThreads(); return "error" in r ? err(String(r.error), 401) : res(r);
-      }
-      case path === "/api/admin/support" && method === "POST": return out(await support.adminReply(String(body.threadId ?? ""), String(body.text ?? "")));
-      case path === "/api/admin/support" && method === "PATCH": return out(await support.adminReleaseThread(String(body.threadId ?? "")));
       case path === "/api/feedback": return out(await feedback.submitFeedback(body as { name?: string; phone?: string; type?: string; message?: string }));
       default: return err("Not found: " + path, 404);
     }

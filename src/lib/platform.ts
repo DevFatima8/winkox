@@ -1,5 +1,5 @@
 import { dbConnect } from "./mongo";
-import { Commission, HelpArticle, Notification, PaymentAccount, Settings, Transaction, User, type PaymentAccountDoc, type SettingsDoc, type UserDoc, type ObjectId } from "@/models";
+import { Commission, HelpArticle, PaymentAccount, Settings, Transaction, User, type PaymentAccountDoc, type SettingsDoc, type UserDoc, type ObjectId } from "@/models";
 
 // VIP defaults modelled on 9K-style tiers (PKR). Admin can edit in panel.
 export const DEFAULT_VIP = [
@@ -23,8 +23,12 @@ export async function getSettings(): Promise<SettingsDoc> {
     await Settings.updateOne({ key: "main" }, { $set: { vipLevels: DEFAULT_VIP } });
     s = { ...s, vipLevels: DEFAULT_VIP as SettingsDoc["vipLevels"] };
   }
-  if (s.referral?.referralDepositBonus == null) {
-    const referral = { ...(s.referral ?? {}), depositCommissionPct: 2, referralDepositBonus: 288 };
+  const referral = { ...(s.referral ?? {}) };
+  if (referral.depositCommissionPct !== 1.5 || referral.referralDepositBonus !== 0 || referral.betCommissionPct !== 0 || referral.agentDepositCommissionPct !== 0) {
+    referral.depositCommissionPct = 1.5;
+    referral.referralDepositBonus = 0;
+    referral.betCommissionPct = 0;
+    referral.agentDepositCommissionPct = 0;
     await Settings.updateOne({ key: "main" }, { $set: { referral } });
     s = { ...s, referral: { ...s.referral, ...referral } as SettingsDoc["referral"] };
   }
@@ -73,44 +77,16 @@ export async function withdrawnToday(userId: ObjectId) {
 export async function payDepositCommission(depositorId: ObjectId, amount: number) {
   const dep = await User.findById(depositorId, "referredBy name").lean();
   if (!dep?.referredBy) return;
-  const ref = await User.findById(dep.referredBy, "role agentCommissionPct isActive").lean();
+  const ref = await User.findById(dep.referredBy, "isActive").lean();
   if (!ref || !ref.isActive) return;
-  const s = await getSettings();
-  const pct = ref.role === "agent" ? (ref.agentCommissionPct ?? s.referral?.agentDepositCommissionPct ?? 8) : (s.referral?.depositCommissionPct ?? 2);
   const approvedDeposits = await Transaction.countDocuments({ userId: depositorId, type: "deposit", status: "approved" });
-  const referralBonus = s.referral?.referralDepositBonus ?? 288;
-  if (approvedDeposits === 1 && referralBonus > 0) {
-    await User.updateOne({ _id: ref._id }, { $inc: { balance: referralBonus, commissionEarned: referralBonus } });
-    await Commission.create({ beneficiaryId: ref._id, fromUserId: depositorId, kind: "referral", baseAmount: amount, pct: 0, amount: referralBonus, note: `Referral deposit bonus from ${dep.name}` });
-  }
+  if (approvedDeposits !== 1) return;
+  const pct = 1.5;
   if (pct <= 0) return;
   const c = Math.round(amount * pct) / 100;
   if (c <= 0) return;
   await User.updateOne({ _id: ref._id }, { $inc: { balance: c, commissionEarned: c } });
-  await Commission.create({ beneficiaryId: ref._id, fromUserId: depositorId, kind: "deposit", baseAmount: amount, pct, amount: c, note: `Deposit commission from ${dep.name}` });
-}
-
-/** Pay bet commission (called from game engines on each settled bet). Fire-and-forget safe. */
-export async function payBetCommission(bettorId: ObjectId, betAmount: number) {
-  try {
-    const dep = await User.findById(bettorId, "referredBy name").lean();
-    if (!dep?.referredBy) return;
-    const s = await getSettings();
-    const pct = s.referral?.betCommissionPct ?? 1.5;
-    if (pct <= 0) return;
-    const c = Math.round(betAmount * pct) / 100;
-    if (c < 0.01) return;
-    await User.updateOne({ _id: dep.referredBy, isActive: true }, { $inc: { balance: c, commissionEarned: c } });
-    await Commission.create({ beneficiaryId: dep.referredBy, fromUserId: bettorId, kind: "bet", baseAmount: betAmount, pct, amount: c, note: `Bet commission from ${dep.name}` });
-    await Notification.create({
-      audience: "user",
-      userId: dep.referredBy,
-      type: "success",
-      title: "Congratulations! Referral earning received",
-      body: `You earned Rs. ${c.toLocaleString("en-PK")} from ${dep.name}'s bet. You will earn ${pct}% of this referral's bets.`,
-      isActive: true,
-    });
-  } catch { }
+  await Commission.create({ beneficiaryId: ref._id, fromUserId: depositorId, kind: "deposit", baseAmount: amount, pct, amount: c, note: `First deposit commission from ${dep.name}` });
 }
 
 export function genReferralCode(name: string) {

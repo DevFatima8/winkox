@@ -25,7 +25,7 @@ const linkActive = "bg-[#8b5cf6]/20 text-white ring-1 ring-[#8b5cf6]/40";
 
 export function Shell({ title, nav, userName, badge, children, support = true, showInstallPrompt = true, hideSidebar = false }: { title: string; nav: NavItem[]; userName: string; badge?: ReactNode; children: ReactNode; support?: boolean; showInstallPrompt?: boolean; hideSidebar?: boolean }) {
   const { t } = useI18n();
-  const logout = async () => { await destroySession(); window.location.assign("/login"); };
+  const logout = async () => { await fetch("/api/auth/logout", { method: "POST" }); await destroySession(); window.location.assign("/login"); };
   const mobileItems = [...nav.map((n) => ({ href: n.href, label: n.label, icon: ico(n.icon) })), { href: "/", label: t("home"), icon: <HomeIcon size={20} /> }];
   const tabs = nav.slice(0, 4);
 

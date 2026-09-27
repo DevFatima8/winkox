@@ -36,6 +36,7 @@ MYSQL_DATABASE=winkox
 MYSQL_USER=winkox_user
 MYSQL_PASSWORD=replace-with-your-password
 MYSQL_SSL=false
+NEXTAUTH_SECRET=replace-with-a-random-secret-at-least-32-characters
 
 SUPER_ADMIN_NAME=Super Admin
 SUPER_ADMIN_ID=WX-ADM-0001
@@ -58,6 +59,8 @@ node scripts/test-mysql.mjs
 ```
 
 The script requires the same `MYSQL_*` variables as the application and does not create a database; create the database and user first.
+
+Live chat uses the `supportthreads` and `supportmessages` JSON-document tables. The application creates them on startup; to create them manually, run [scripts/live-chat-schema.sql](scripts/live-chat-schema.sql) against the selected database. Users must sign in again after deploying the authenticated chat update so the server can issue a secure session cookie.
 
 The schema reference for Hostinger deployments is in [scripts/hostinger-schema.sql](scripts/hostinger-schema.sql). The runtime model abstraction is in [src/lib/db-model.ts](src/lib/db-model.ts), with MySQL connection handling in [src/lib/mysql.ts](src/lib/mysql.ts).
 

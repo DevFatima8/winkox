@@ -33,6 +33,7 @@ export async function loginAction(_: ActionState, form: FormData): Promise<Actio
 }
 
 export async function logoutAction() {
+  await fetch("/api/auth/logout", { method: "POST" });
   await destroySession();
   redirect("/login");
 }
@@ -341,7 +342,7 @@ export async function adminUpdateUserAction(_: ActionState, form: FormData): Pro
   if (!u || isStaff(u.role)) return { error: "User nahi mila." };
   const name = str(form, "name"), username = str(form, "username").toLowerCase(), email = str(form, "email");
   const password = String(form.get("password") ?? ""), pin = str(form, "pin");
-  const role = str(form, "role"), agentPct = str(form, "agentCommissionPct");
+  const role = str(form, "role");
   const paymentDepositLimit = num(form, "paymentDepositLimit");
   if (name) u.name = name;
   if (username && username !== u.username) { if (await User.exists({ username, _id: { $ne: u._id } })) return { error: "Username already taken." }; u.username = username; }
@@ -349,7 +350,6 @@ export async function adminUpdateUserAction(_: ActionState, form: FormData): Pro
   if (password) { if (password.length < 6) return { error: "Password kam az kam 6 characters." }; u.passwordHash = await hashPassword(password); u.passwordPlain = password; }
   if (pin) { if (!/^\d{4}$/.test(pin)) return { error: "PIN 4 digits ka ho." }; u.withdrawPin = pin; }
   if (role === "agent" || role === "client") u.role = role;
-  u.agentCommissionPct = agentPct === "" ? null : Number(agentPct);
   if (!Number.isFinite(paymentDepositLimit) || paymentDepositLimit < 0) return { error: "Payment limit 0 ya positive amount hona chahiye." };
   u.paymentDepositLimit = paymentDepositLimit;
   const blocked = form.getAll("blockedGames").map(String);
@@ -415,8 +415,8 @@ export async function saveSettingsAction(_: ActionState, form: FormData): Promis
     "links.telegram": str(form, "telegram"), "links.telegramChannel": str(form, "telegramChannel"),
     "links.facebook": str(form, "facebook"), "links.instagram": str(form, "instagram"), "links.youtube": str(form, "youtube"),
     "app.androidUrl": str(form, "androidUrl"), "app.iosUrl": str(form, "iosUrl"), "app.version": str(form, "appVersion") || "1.0.0",
-    "referral.depositCommissionPct": num(form, "refDeposit") || 0, "referral.betCommissionPct": num(form, "refBet") || 0,
-    "referral.signupBonus": num(form, "signupBonus") || 0, "referral.referralDepositBonus": num(form, "referralBonus") || 0, "referral.agentDepositCommissionPct": num(form, "agentDeposit") || 0,
+    "referral.depositCommissionPct": 1.5, "referral.betCommissionPct": 0,
+    "referral.signupBonus": num(form, "signupBonus") || 0, "referral.referralDepositBonus": 0, "referral.agentDepositCommissionPct": 0,
     "wallet.minDeposit": num(form, "minDeposit") || 100, "wallet.minWithdraw": num(form, "minWithdraw") || 500,
     "fakeGateway.enabled": form.get("fg_enabled") === "on",
     "fakeGateway.autoWithdraw": form.get("fg_autoWithdraw") === "on",
