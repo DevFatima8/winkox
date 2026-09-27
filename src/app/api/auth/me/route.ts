@@ -6,6 +6,6 @@ export async function GET(req: Request) {
     try {
         return NextResponse.json({ user: await getServerSessionUser() });
     } catch {
-        return NextResponse.json({ user: null });
+        return NextResponse.json({ error: "Session could not be verified." }, { status: 503 });
     }
 }
