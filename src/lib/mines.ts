@@ -2,6 +2,7 @@ import { dbConnect } from "./mongo";
 import { Game, GameResult, MinesGame, User, oid, type ObjectId } from "@/models";
 import { checkGameAccess } from "./gameAccess";
 import { payoutAfterHouseShare, isWinOutcome, MAX_MULTIPLIER } from "./outcomes";
+import { holdWinShare } from "./winHold";
 
 export const MIN_BET = 10, MAX_BET = 50000, MAX_WIN = Number.MAX_SAFE_INTEGER;
 export const RTP = 0.97; // Spribe Mines 97%
@@ -103,6 +104,7 @@ export async function reveal(userId: string, cell: number) {
     const win = payoutAfterHouseShare(g.betAmount * m);
     g.status = "cashed"; g.winAmount = win; await g.save();
     await User.updateOne({ _id: g.userId }, { $inc: { balance: win } });
+    await holdWinShare(userId, g.betAmount * m);
     await GameResult.updateOne({ _id: g.resultId }, { $set: { outcome: "win", winAmount: win, resultData: `${g.mines} mines · cleared all @ ${m}x` } });
     return { ok: true, event: "cleared" as const, cell, game: pub(g.toObject()) };
   }
@@ -118,6 +120,7 @@ export async function cashOut(userId: string) {
   const win = payoutAfterHouseShare(g.betAmount * m);
   g.winAmount = win; await g.save();
   await User.updateOne({ _id: g.userId }, { $inc: { balance: win } });
+  await holdWinShare(userId, g.betAmount * m);
   await GameResult.updateOne({ _id: g.resultId }, { $set: { outcome: "win", winAmount: win, resultData: `${g.mines} mines · cashed out after ${g.revealed.length} @ ${m}x` } });
   return { ok: true, multiplier: m, win, game: pub(g.toObject()) };
 }

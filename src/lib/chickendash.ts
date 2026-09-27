@@ -3,6 +3,7 @@ import { ChickenDash, Game, GameResult, User, oid, type ObjectId, type ChickenDa
 import type { Doc } from "./localdb";
 import { checkGameAccess } from "./gameAccess";
 import { payoutAfterHouseShare, isWinOutcome, MAX_MULTIPLIER } from "./outcomes";
+import { holdWinShare } from "./winHold";
 
 
 export const MIN_BET = 10;
@@ -164,6 +165,7 @@ async function finish(g: Doc<ChickenDashDoc>, how: "cashed" | "finished") {
   g.winAmount = win;
   await g.save();
   await User.updateOne({ _id: g.userId }, { $inc: { balance: win } });
+  await holdWinShare(String(g.userId), g.betAmount * Math.min(MAX_MULTIPLIER, m + bonus));
   const bonusTxt = bonus ? ` + bag ${bonus}x` : "";
   await GameResult.updateOne(
     { _id: g.resultId },

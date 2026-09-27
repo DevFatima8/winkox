@@ -9,6 +9,7 @@ import { oid } from "@/models";
 import { gatewayConfig } from "@/lib/gateway";
 import { InstantPayForm } from "@/components/InstantPayForm";
 import { WalletTabs } from "@/components/WalletTabs";
+import { WinHoldCard } from "@/components/WinHoldCard";
 import { useI18n } from "@/lib/i18n/client";
 import { usePage, NOT_FOUND, REDIRECT } from "@/lib/useDb";
 
@@ -33,9 +34,12 @@ export default function WalletPageClient({ params, searchParams }: { params?: Re
     const usedToday = await withdrawnToday(oid(me.id));
     const limits = { name: `VIP ${me.vipLevel} ${cur?.name ?? ""}`, daily: cur?.dailyWithdrawLimit ?? 0, perMax: cur?.perWithdrawMax ?? 0, usedToday, min: cur?.minWithdraw ?? settings.wallet?.minWithdraw ?? 1000 };
     const gw = await gatewayConfig();
+    const { getWinHoldSummary } = await import("@/lib/winHold");
+    const holds = await getWinHoldSummary(me.id);
     return (
       <div className="space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-2"><h1 className="text-2xl font-bold text-white">{t("walletTitle")}</h1><span className="rounded-full bg-black/30 px-3 py-1 text-sm text-[#b8a7e6] ring-1 ring-[#3a2470]">{t("balance")}: <b className="text-[#ffb800]">Rs. {me.balance.toLocaleString()}</b></span></div>
+        <WinHoldCard locked={holds.locked} claimable={holds.claimable} />
         <div className="grid gap-6 lg:grid-cols-2">
           <Card title={t("depositTitle")}>
             {gw.enabled ? (

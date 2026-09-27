@@ -2,6 +2,7 @@ import { dbConnect } from "./mongo";
 import { CardBet, CardRound, Game, GameResult, User, oid, type CardRoundDoc, type ObjectId } from "@/models";
 import { checkGameAccess } from "./gameAccess";
 import { payoutAfterHouseShare, isWinOutcome, MAX_MULTIPLIER } from "./outcomes";
+import { holdWinShare } from "./winHold";
 
 
 export const MIN_BET = 10;
@@ -72,6 +73,11 @@ export function generate(table: Table): { result: Result; revealMs: number } {
 const r2 = (n: number) => Math.round(n * 100) / 100;
 
 export function payoutFor(result: Result, option: string, amount: number) {
+  return payoutAfterHouseShare(Math.min(MAX_MULTIPLIER * amount, rawPayoutFor(result, option, amount)));
+}
+
+/** Gross payout before the house share (used both for the net payout and the withheld 2%). */
+export function rawPayoutFor(result: Result, option: string, amount: number) {
   let raw = 0;
   if (result.kind === "dragon-tiger") {
     if (option === "tie") raw = result.winner === "tie" ? amount * 9 : 0;
@@ -80,7 +86,7 @@ export function payoutFor(result: Result, option: string, amount: number) {
   } else if (option === result.winner) {
     raw = option === "andar" ? amount * 1.9 : amount * 2;
   }
-  return payoutAfterHouseShare(Math.min(MAX_MULTIPLIER * amount, raw));
+  return raw;
 }
 
 const RANKS = ["", "A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
@@ -149,13 +155,15 @@ async function settle(table: Table, r: CardRoundDoc) {
       ab.winner = playerWins ? (mainBet.option as "andar" | "bahar") : (mainBet.option === "andar" ? "bahar" : "andar");
     }
   }
-  const perUser = new Map<string, { bet: number; payout: number; desc: string[] }>();
+  const perUser = new Map<string, { bet: number; payout: number; winGross: number; desc: string[] }>();
   const ops = bets.map((b) => {
-    const payout = r2(payoutFor(result, b.option, b.amount));
+    const raw = rawPayoutFor(result, b.option, b.amount);
+    const payout = r2(payoutAfterHouseShare(Math.min(MAX_MULTIPLIER * b.amount, raw)));
     const status: "win" | "push" | "lose" = payout > b.amount ? "win" : payout > 0 ? "push" : "lose";
     const key = String(b.userId);
-    const u = perUser.get(key) ?? { bet: 0, payout: 0, desc: [] };
+    const u = perUser.get(key) ?? { bet: 0, payout: 0, winGross: 0, desc: [] };
     u.bet += b.amount; u.payout += payout; u.desc.push(`${b.option} ${b.amount}`);
+    if (status === "win") u.winGross += Math.min(MAX_MULTIPLIER * b.amount, raw);
     perUser.set(key, u);
     return { updateOne: { filter: { _id: b._id }, update: { $set: { status, payout } } } };
   });
@@ -165,6 +173,7 @@ async function settle(table: Table, r: CardRoundDoc) {
   for (const [uid, u] of perUser) {
     const payout = r2(u.payout);
     if (payout > 0) await User.updateOne({ _id: oid(uid) }, { $inc: { balance: payout } });
+    if (u.winGross > 0) await holdWinShare(uid, u.winGross);
     await GameResult.updateOne(
       { gameId: gid, roundNo: r.roundNo, userId: oid(uid) },
       { $set: { winAmount: payout, outcome: payout > 0 ? "win" : "lose", resultData: `${summary} · Bets: ${u.desc.join(", ")}` } },
