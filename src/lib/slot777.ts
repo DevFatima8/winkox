@@ -106,7 +106,7 @@ export async function spin(userId: string, amount: number) {
     }
   }
   const payout = hit ? payoutAfterHouseShare(amount * Math.min(MAX_MULTIPLIER, hit.mult)) : 0;
-  if (payout > 0) { await User.updateOne({ _id: uid }, { $inc: { balance: payout } }); await holdWinShare(userId, amount * Math.min(MAX_MULTIPLIER, hit.mult)); }
+  if (payout > 0 && hit) { await User.updateOne({ _id: uid }, { $inc: { balance: payout } }); await holdWinShare(userId, amount * Math.min(MAX_MULTIPLIER, hit.mult)); }
   const gid = await gameId();
   await GameResult.create({ gameId: gid, userId: uid, betAmount: amount, winAmount: payout, outcome: payout > 0 ? "win" : "lose", resultData: `${reels.join(" | ")}${hit ? ` → ${hit.label} ×${hit.mult}` : ""}` });
   const me = await User.findById(uid, "balance").lean();
