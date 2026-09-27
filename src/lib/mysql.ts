@@ -128,23 +128,34 @@ export async function ensureMysqlReady(): Promise<boolean> {
             database: cfg.database,
             waitForConnections: true,
             connectionLimit: 10,
+            connectTimeout: Number(process.env.MYSQL_CONNECT_TIMEOUT || 5000),
             charset: "utf8mb4",
             ssl: cfg.ssl ? { rejectUnauthorized: false } : undefined,
         });
+        const currentPool = pool;
         // Idle connections dropped by the server/firewall (e.g. ECONNRESET) surface as pool
         // 'error' events; mysql2's Pool type omits this event, so listen via EventEmitter.
         (pool as unknown as EventEmitter).on("error", (err: Error) => {
             console.error("[mysql] pool error:", err.message);
         });
 
-        await Promise.all(COLLECTIONS.map((table) => pool!.execute(`
+        try {
+            for (const table of COLLECTIONS) {
+                await currentPool.execute(`
         CREATE TABLE IF NOT EXISTS ${tableName(table)} (
           id VARCHAR(64) PRIMARY KEY,
           data JSON NOT NULL,
           created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
           updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-            `)));
+                `);
+            }
+        } catch (error) {
+            pool = null;
+            initPromise = null;
+            void currentPool.end().catch(() => undefined);
+            throw error;
+        }
 
         return true;
     })();

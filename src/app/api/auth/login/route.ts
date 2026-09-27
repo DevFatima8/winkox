@@ -7,6 +7,17 @@ import { assignPaymentAccounts, genReferralCode, genUsername } from "@/lib/platf
 import { ensureAdmin } from "@/lib/seed";
 import { setAuthCookie } from "@/lib/serverAuth";
 
+async function retryTransientDbError<T>(operation: () => T | PromiseLike<T>): Promise<Awaited<T>> {
+    try {
+        return await operation();
+    } catch (error) {
+        const code = (error as { code?: string })?.code;
+        if (!["ETIMEDOUT", "ECONNRESET", "ECONNREFUSED", "EPIPE", "PROTOCOL_CONNECTION_LOST"].includes(code ?? "")) throw error;
+        await new Promise((resolve) => setTimeout(resolve, 250));
+        return await operation();
+    }
+}
+
 // This route always runs on the server, so it reliably uses MySQL when configured (unlike client-side actions).
 export async function POST(req: Request) {
     try {
@@ -15,14 +26,14 @@ export async function POST(req: Request) {
         const password = String(form.get("password") ?? "");
         const loginIp = String(form.get("loginIp") ?? "").trim() || null;
 
-        if (!(await ensureMysqlReady())) await dbConnect();
+        if (!(await retryTransientDbError(ensureMysqlReady))) await dbConnect();
 
         const idLike = /^WX[-\s]?(ADM|SYS)/i.test(rawLogin);
         const login = idLike
             ? rawLogin.toUpperCase().replace(/\s/g, "").replace(/^WX(ADM|SYS)/, "WX-$1").replace(/^(WX-(?:ADM|SYS))-?(\d+)$/, (_m, a, d) => `${a}-${String(parseInt(d, 10)).padStart(4, "0")}`)
             : rawLogin.replace(/\s|-/g, "");
         const userFilter = idLike ? { adminId: login } : /^03\d{9}$/.test(login) ? { phone: login } : { username: login.toLowerCase() };
-        let u = await User.findOne(userFilter);
+        let u = await retryTransientDbError(() => User.findOne(userFilter));
         const adminLogin = idLike
             || login.toLowerCase() === (process.env.SUPER_ADMIN_USERNAME || "superadmin").toLowerCase()
             || login === (process.env.SUPER_ADMIN_PHONE || "03000000000");
