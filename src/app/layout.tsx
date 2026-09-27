@@ -33,7 +33,9 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: "(function(){try{var t=localStorage.getItem('wx_theme');if(t!=='light'&&t!=='dark'){var m=document.cookie.match(/(?:^|; )theme=([^;]+)/);t=(m&&m[1])||'';}if(t==='light'){document.documentElement.classList.add('light');}else if(t==='dark'){document.documentElement.classList.remove('light');}}catch(_e){}})();",
+            // Resolve the saved theme from localStorage/cookie and re-sync both, so a manually
+            // chosen theme (e.g. light) always survives full-page reloads/redirects like login.
+            __html: "(function(){try{var ls=localStorage.getItem('wx_theme');var m=document.cookie.match(/(?:^|; )theme=([^;]+)/);var ck=(m&&m[1])||'';var t=(ls==='light'||ls==='dark')?ls:ck;if(t==='light'||t==='dark'){if(t==='light'){document.documentElement.classList.add('light');}else{document.documentElement.classList.remove('light');}if(ls!==t){localStorage.setItem('wx_theme',t);}if(ck!==t){document.cookie='theme='+t+'; path=/; max-age='+(60*60*24*365)+'; samesite=lax';}}}catch(_e){}})();",
           }}
         />
         {ur && <link href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;600;700&display=swap" rel="stylesheet" />}
