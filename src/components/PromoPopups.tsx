@@ -69,8 +69,7 @@ function LuckyDrawPopup({ onClose, onNext }: { onClose: () => void; onNext: () =
   const [left, setLeft] = useState(7 * 3600 + 36 * 60 + 19);
   const [copied, setCopied] = useState(false);
   const [refLink, setRefLink] = useState<string>("https://winkox.shop/signup");
-  const [depositPct, setDepositPct] = useState<number>(2);
-  const [betPct, setBetPct] = useState<number>(1.5);
+  const [depositPct, setDepositPct] = useState<number>(1.5);
 
   useEffect(() => {
     const id = window.setInterval(() => setLeft((s) => (s > 0 ? s - 1 : 0)), 1000);
@@ -88,13 +87,11 @@ function LuckyDrawPopup({ onClose, onNext }: { onClose: () => void; onNext: () =
         const link = `${origin}/signup?ref=${encodeURIComponent(code)}`;
         if (!alive) return;
         setRefLink(link);
-        setDepositPct(settings.referral?.depositCommissionPct ?? 2);
-        setBetPct(settings.referral?.betCommissionPct ?? 1.5);
+        setDepositPct(settings.referral?.depositCommissionPct ?? 1.5);
       } catch {
         if (alive) {
           setRefLink("https://winkox.shop/signup");
-          setDepositPct(2);
-          setBetPct(1.5);
+          setDepositPct(1.5);
         }
       }
     })();
@@ -125,7 +122,7 @@ function LuckyDrawPopup({ onClose, onNext }: { onClose: () => void; onNext: () =
             <span>🔊</span>
             <div className="relative flex-1 overflow-hidden whitespace-nowrap" dir="ltr">
               <div className="inline-block pl-[100%]" style={{ animation: "wxpromo-marq 14s linear infinite" }}>
-                <bdi>Earn {depositPct}% deposit + {betPct}% bet referral commission</bdi>
+                <bdi>Earn {depositPct}% of each friend&apos;s first approved deposit</bdi>
               </div>
             </div>
             <span className="rounded-full bg-white/20 px-1.5">?</span><span>🎁</span>
@@ -147,7 +144,7 @@ function LuckyDrawPopup({ onClose, onNext }: { onClose: () => void; onNext: () =
               <span className="text-base leading-none">👆</span>
             </div>
           </div>
-          <div className="relative z-10 mx-auto -mb-3 mt-2 w-max rounded-md bg-[#e02f2f] px-3 py-1 text-[11px] font-bold text-white shadow">Earn {depositPct}% on every invited deposit and {betPct}% on every bet</div>
+          <div className="relative z-10 mx-auto -mb-3 mt-2 w-max rounded-md bg-[#e02f2f] px-3 py-1 text-[11px] font-bold text-white shadow">Earn {depositPct}% of each friend&apos;s first approved deposit</div>
           <button type="button" onClick={() => { void copyCode(); }} className="mt-3 w-full rounded-xl bg-white/90 py-3 text-sm font-black text-[#1257c4]">{copied ? "Referral link copied" : "Invite friend, Win bonus"}</button>
           <div className="mt-2 flex items-center justify-between gap-2 px-1 text-[11px] font-bold text-white">
             <button type="button" onClick={copyCode} className="inline-flex max-w-[72%] items-center gap-1 overflow-hidden rounded bg-white/10 px-1.5 py-1 text-left text-[11px] font-bold text-white">

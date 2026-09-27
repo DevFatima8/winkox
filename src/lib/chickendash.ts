@@ -2,8 +2,7 @@ import { dbConnect } from "./mongo";
 import { ChickenDash, Game, GameResult, User, oid, type ObjectId, type ChickenDashDoc } from "@/models";
 import type { Doc } from "./localdb";
 import { checkGameAccess } from "./gameAccess";
-import { payBetCommission } from "./platform";
-import { capWinAmount, isWinOutcome, MAX_MULTIPLIER } from "./outcomes";
+import { payoutAfterHouseShare, isWinOutcome, MAX_MULTIPLIER } from "./outcomes";
 
 
 export const MIN_BET = 10;
@@ -109,7 +108,7 @@ function pub(g: GameLike) {
   };
 }
 
-const winFor = (bet: number, m: number, bonus: number) => r2(capWinAmount(bet, bet * Math.min(MAX_MULTIPLIER, m + bonus)));
+const winFor = (bet: number, m: number, bonus: number) => payoutAfterHouseShare(bet * Math.min(MAX_MULTIPLIER, m + bonus));
 
 export async function getState(userId: string | null) {
   await dbConnect();
@@ -152,7 +151,6 @@ export async function startGame(userId: string, amount: number, level: string) {
   }
   const gid = await gameId();
   const result = await GameResult.create({ gameId: gid, userId: uid, betAmount: amount, outcome: "pending", resultData: `${spec.label} · started` });
-  void payBetCommission(uid, amount);
   const g = await ChickenDash.create({ userId: uid, resultId: String(result._id), level, betAmount: amount, lanes: spec.steps, crashLane, bagLane, bagMult });
   return { ok: true, game: pub(g.toObject()) };
 }

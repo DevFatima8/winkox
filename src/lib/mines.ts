@@ -1,8 +1,7 @@
 import { dbConnect } from "./mongo";
 import { Game, GameResult, MinesGame, User, oid, type ObjectId } from "@/models";
 import { checkGameAccess } from "./gameAccess";
-import { payBetCommission } from "./platform";
-import { capWinAmount, isWinOutcome, MAX_MULTIPLIER } from "./outcomes";
+import { payoutAfterHouseShare, isWinOutcome, MAX_MULTIPLIER } from "./outcomes";
 
 export const MIN_BET = 10, MAX_BET = 50000, MAX_WIN = Number.MAX_SAFE_INTEGER;
 export const RTP = 0.97; // Spribe Mines 97%
@@ -64,7 +63,6 @@ export async function start(userId: string, amount: number, mines: number) {
   if (await MinesGame.exists({ userId: uid, status: "active" })) return { error: "Pehle wali game abhi chal rahi hai." };
   const upd = await User.updateOne({ _id: uid, balance: { $gte: amount } }, { $inc: { balance: -amount } });
   if (!upd.modifiedCount) return { error: "Insufficient balance." };
-  void payBetCommission(uid, amount);
   // Mine layout: 35% of rounds are "generous" (normal random), 65% are "tight" — mines cluster
   // among the cells players reach early, so ~65% of runs end in a loss while ~35% can be won.
   const tight = !isWinOutcome();
@@ -102,7 +100,7 @@ export async function reveal(userId: string, cell: number) {
   if (safe >= CELLS - g.mines) {
     // all safe tiles revealed → auto cash out at max
     const m = multiplier(g.mines, safe);
-    const win = Math.floor(capWinAmount(g.betAmount, g.betAmount * m) * 100) / 100;
+    const win = payoutAfterHouseShare(g.betAmount * m);
     g.status = "cashed"; g.winAmount = win; await g.save();
     await User.updateOne({ _id: g.userId }, { $inc: { balance: win } });
     await GameResult.updateOne({ _id: g.resultId }, { $set: { outcome: "win", winAmount: win, resultData: `${g.mines} mines · cleared all @ ${m}x` } });
@@ -117,7 +115,7 @@ export async function cashOut(userId: string) {
   const g = await MinesGame.findOneAndUpdate({ userId: oid(userId), status: "active", "revealed.0": { $exists: true } }, { $set: { status: "cashed" } }, { returnDocument: "after" });
   if (!g) return { error: "Kam az kam ek gem kholen." };
   const m = multiplier(g.mines, g.revealed.length);
-  const win = Math.floor(capWinAmount(g.betAmount, g.betAmount * m) * 100) / 100;
+  const win = payoutAfterHouseShare(g.betAmount * m);
   g.winAmount = win; await g.save();
   await User.updateOne({ _id: g.userId }, { $inc: { balance: win } });
   await GameResult.updateOne({ _id: g.resultId }, { $set: { outcome: "win", winAmount: win, resultData: `${g.mines} mines · cashed out after ${g.revealed.length} @ ${m}x` } });

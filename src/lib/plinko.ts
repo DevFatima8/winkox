@@ -1,8 +1,7 @@
 import { dbConnect } from "./mongo";
 import { Game, GameResult, PlinkoBet, User, oid, type ObjectId } from "@/models";
 import { checkGameAccess } from "./gameAccess";
-import { payBetCommission } from "./platform";
-import { capWinAmount, isWinOutcome, MAX_MULTIPLIER } from "./outcomes";
+import { payoutAfterHouseShare, isWinOutcome, MAX_MULTIPLIER } from "./outcomes";
 
 
 export const MIN_BET = 10;
@@ -121,10 +120,9 @@ export async function drop(userId: string, amount: number, risk: string, rows: n
     path.push(dir);
   }
   const multiplier = table[bucket];
-  const payout = r2(capWinAmount(amount, amount * Math.min(MAX_MULTIPLIER, multiplier)));
+  const payout = payoutAfterHouseShare(amount * Math.min(MAX_MULTIPLIER, multiplier));
 
   if (payout > 0) await User.updateOne({ _id: uid }, { $inc: { balance: payout } });
-  void payBetCommission(uid, amount);
   const bet = await PlinkoBet.create({ userId: uid, betAmount: amount, risk, rows, path, bucket, multiplier, payout });
   const gid = await gameId();
   await GameResult.create({

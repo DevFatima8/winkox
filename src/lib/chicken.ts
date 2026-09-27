@@ -1,8 +1,7 @@
 import { dbConnect } from "./mongo";
 import { ChickenGame, Game, GameResult, User, oid, type ObjectId } from "@/models";
 import { checkGameAccess } from "./gameAccess";
-import { payBetCommission } from "./platform";
-import { capWinAmount, isWinOutcome, MAX_MULTIPLIER } from "./outcomes";
+import { payoutAfterHouseShare, isWinOutcome, MAX_MULTIPLIER } from "./outcomes";
 
 
 export const MIN_BET = 10;
@@ -70,7 +69,7 @@ function publicState(g: GameLike) {
   };
 }
 
-const winFor = (bet: number, m: number) => Math.floor(capWinAmount(bet, bet * Math.min(MAX_MULTIPLIER, m)) * 100) / 100;
+const winFor = (bet: number, m: number) => payoutAfterHouseShare(bet * Math.min(MAX_MULTIPLIER, m));
 
 export async function getState(userId: string | null) {
   await dbConnect();
@@ -107,7 +106,6 @@ export async function startGame(userId: string, amount: number, difficulty: stri
 
   const gid = await gameId();
   const result = await GameResult.create({ gameId: gid, userId: uid, betAmount: amount, outcome: "pending", resultData: `${DIFFICULTIES[difficulty].label} · started` });
-  void payBetCommission(uid, amount);
   const g = await ChickenGame.create({ userId: uid, resultId: String(result._id), difficulty, betAmount: amount, lanes: lanesFor(difficulty), crashLane: rollCrashLane(difficulty) });
   return { ok: true, game: publicState(g.toObject()) };
 }
