@@ -31,6 +31,11 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   return (
     <html lang={locale} dir={ur ? "rtl" : "ltr"} data-scroll-behavior="smooth" className={`${ur ? "lang-ur" : ""} ${theme === "light" ? "light" : ""}`.trim()} suppressHydrationWarning>
       <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: "(function(){try{var t=localStorage.getItem('wx_theme');if(t!=='light'&&t!=='dark'){var m=document.cookie.match(/(?:^|; )theme=([^;]+)/);t=(m&&m[1])||'';}if(t==='light'){document.documentElement.classList.add('light');}else if(t==='dark'){document.documentElement.classList.remove('light');}}catch(_e){}})();",
+          }}
+        />
         {ur && <link href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;600;700&display=swap" rel="stylesheet" />}
       </head>
       <body className="wx-bg min-h-screen text-slate-100 antialiased">
