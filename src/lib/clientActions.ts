@@ -5,7 +5,7 @@ import { createSession, destroySession } from "@/lib/auth";
 
 const readCookie = (name: string) => document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]+)`))?.[1] ?? "";
 
-export async function signupAction(_: ActionState, form: FormData): Promise<ActionState> {
+export async function signupAction(_: ActionState, form: FormData): Promise<any> {
     if (!String(form.get("ref") ?? "").trim()) {
         const code = readCookie("ref").toUpperCase();
         if (code) form.set("ref", code);
@@ -14,15 +14,15 @@ export async function signupAction(_: ActionState, form: FormData): Promise<Acti
     const data = await response.json().catch(() => ({ error: "Signup failed. Server se connect nahi ho saka." }));
     if (!response.ok || data.error) return { error: data.error ?? "Signup failed." };
     await createSession({ id: data.id, role: data.role, name: data.name });
-    window.location.assign("/player");
+    return { success: "Account created successfully! Redirecting...", redirect: "/player" };
 }
 
-export async function loginAction(_: ActionState, form: FormData): Promise<ActionState> {
+export async function loginAction(_: ActionState, form: FormData): Promise<any> {
     const response = await fetch("/api/auth/login", { method: "POST", body: form });
     const data = await response.json().catch(() => ({ error: "Login failed. Server se connect nahi ho saka." }));
     if (!response.ok || data.error) return { error: data.error ?? "Login failed." };
     await createSession({ id: data.id, role: data.role, name: data.name });
-    window.location.assign(data.role === "admin" ? "/admin" : "/player");
+    return { success: "Login successful! Redirecting...", redirect: data.role === "admin" ? "/admin" : "/player" };
 }
 
 export async function logoutAction() {
