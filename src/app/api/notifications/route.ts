@@ -24,7 +24,8 @@ export async function GET() {
     }));
     return NextResponse.json({ items: mapped, unread: mapped.filter((item) => !item.read).length }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
-    console.error("[notifications:get]", error);
+    const code = (error as { code?: string })?.code;
+    if (code !== "ETIMEDOUT") console.error("[notifications:get]", error);
     return NextResponse.json({ error: "Notifications load nahi ho sakin." }, { status: 503 });
   }
 }
@@ -37,7 +38,8 @@ export async function POST() {
     await Notification.updateMany({ isActive: true, readBy: { $ne: oid(user.id) } }, { $addToSet: { readBy: oid(user.id) } });
     return NextResponse.json({ ok: true });
   } catch (error) {
-    console.error("[notifications:read]", error);
+    const code = (error as { code?: string })?.code;
+    if (code !== "ETIMEDOUT") console.error("[notifications:read]", error);
     return NextResponse.json({ error: "Notifications update nahi ho sakin." }, { status: 503 });
   }
 }

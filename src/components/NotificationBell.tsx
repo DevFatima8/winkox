@@ -17,13 +17,18 @@ export function NotificationBell({ loggedIn }: { loggedIn: boolean }) {
   const [toast, setToast] = useState<N | null>(null);
   const seenLiveIdRef = useRef<string | null>(null);
   const knownIdsRef = useRef<Set<string> | null>(null);
+  const serverRetryAtRef = useRef(0);
   const { notification: liveNotification } = useRealtime();
   const { t } = useI18n();
   const load = useCallback(async () => {
+    const serverRequest = Date.now() >= serverRetryAtRef.current
+      ? fetch("/api/notifications", { cache: "no-store" }).catch(() => null)
+      : Promise.resolve(null);
     const [serverResponse, localResponse] = await Promise.all([
-      fetch("/api/notifications", { cache: "no-store" }).catch(() => null),
+      serverRequest,
       localApi("/api/notifications", { cache: "no-store" }).catch(() => null),
     ]);
+    if (serverResponse?.status === 503) serverRetryAtRef.current = Date.now() + 30000;
     const serverData = serverResponse?.ok ? await serverResponse.json() : { items: [] };
     const localData = localResponse?.ok ? await localResponse.json() : { items: [] };
     const merged = [...(serverData.items ?? []), ...(localData.items ?? [])] as N[];

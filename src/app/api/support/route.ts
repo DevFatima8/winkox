@@ -8,7 +8,8 @@ export async function GET() {
         const { data, guestIdToSet } = await getClientSupportState();
         return setGuestCookie(NextResponse.json(data, { headers: { "Cache-Control": "no-store" } }), guestIdToSet);
     } catch (error) {
-        console.error("[support:get]", error);
+        const code = (error as { code?: string })?.code;
+        if (code !== "ETIMEDOUT") console.error("[support:get]", error);
         return NextResponse.json({ error: "Support abhi load nahi ho saka." }, { status: 503 });
     }
 }
@@ -20,7 +21,8 @@ export async function POST(request: Request) {
         if ("error" in result) return NextResponse.json({ error: result.error }, { status: result.status });
         return setGuestCookie(NextResponse.json({ ok: result.ok, online: result.online }), result.guestIdToSet);
     } catch (error) {
-        console.error("[support:post]", error);
+        const code = (error as { code?: string })?.code;
+        if (code !== "ETIMEDOUT") console.error("[support:post]", error);
         return NextResponse.json({ error: "Message bheja nahi ja saka." }, { status: 503 });
     }
 }

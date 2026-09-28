@@ -3,6 +3,8 @@ import { ensureMysqlReady, ensureMysqlTable, getMysqlPool, isMysqlEnabled } from
 
 const { getPath, matches, newId, setPath, Model: LocalModel } = LocalDb;
 
+const allowLocalFallback = process.env.NODE_ENV !== "production" || process.env.ALLOW_LOCAL_DB_FALLBACK === "true";
+
 export type ModelOptions<T> = {
     collection: string;
     defaults?: () => Partial<T>;
@@ -169,8 +171,24 @@ export class Model<T extends { _id: string }> {
     }
 
     private async ensureMysql(): Promise<boolean> {
-        if (!isMysqlEnabled()) throw new Error("MySQL is required; local/browser database fallback is disabled.");
-        return ensureMysqlReady();
+        if (!isMysqlEnabled()) {
+            if (allowLocalFallback) return false;
+            throw new Error("MySQL is required; local/browser database fallback is disabled.");
+        }
+        try {
+            return await ensureMysqlReady();
+        } catch (error) {
+            if (allowLocalFallback) return false;
+            throw error;
+        }
+    }
+
+    private localQuery(filter: any, q: Query<any>) {
+        const local = this.fallback.find(filter);
+        if (q.opts.sort) local.sort(q.opts.sort);
+        if (q.opts.limit != null) local.limit(q.opts.limit);
+        if (q.opts.lean) local.lean();
+        return q.opts.single ? this.fallback.findOne(filter) : local;
     }
 
     private async mysqlDocs(): Promise<any[]> {
@@ -325,17 +343,17 @@ export class Model<T extends { _id: string }> {
     }
 
     find(filter: any = {}, _proj?: any): Query<any[]> {
-        if (isMysqlEnabled()) return new Query(this, async (q) => this.mysqlRun(filter, q), false) as any;
+        if (isMysqlEnabled() || allowLocalFallback) return new Query(this, async (q) => (await this.ensureMysql()) ? this.mysqlRun(filter, q) : this.localQuery(filter, q), false) as any;
         throw new Error("MySQL is required; local/browser database fallback is disabled.");
     }
 
     findOne(filter: any = {}, _proj?: any): Query<any> {
-        if (isMysqlEnabled()) return new Query(this, async (q) => this.mysqlRun(filter, q), true) as any;
+        if (isMysqlEnabled() || allowLocalFallback) return new Query(this, async (q) => (await this.ensureMysql()) ? this.mysqlRun(filter, q) : this.localQuery(filter, q), true) as any;
         throw new Error("MySQL is required; local/browser database fallback is disabled.");
     }
 
     findById(id: any, _proj?: any): Query<any> {
-        if (isMysqlEnabled()) return new Query(this, async (q) => this.mysqlRun({ _id: String(id) }, q), true) as any;
+        if (isMysqlEnabled() || allowLocalFallback) return new Query(this, async (q) => (await this.ensureMysql()) ? this.mysqlRun({ _id: String(id) }, q) : this.localQuery({ _id: String(id) }, q), true) as any;
         throw new Error("MySQL is required; local/browser database fallback is disabled.");
     }
 
