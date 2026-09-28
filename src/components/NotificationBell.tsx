@@ -21,7 +21,7 @@ export function NotificationBell({ loggedIn }: { loggedIn: boolean }) {
   const { notification: liveNotification } = useRealtime();
   const { t } = useI18n();
   const load = useCallback(async () => {
-    const serverRequest = Date.now() >= serverRetryAtRef.current
+    const serverRequest = loggedIn && Date.now() >= serverRetryAtRef.current
       ? fetch("/api/notifications", { cache: "no-store" }).catch(() => null)
       : Promise.resolve(null);
     const [serverResponse, localResponse] = await Promise.all([
@@ -56,11 +56,11 @@ export function NotificationBell({ loggedIn }: { loggedIn: boolean }) {
   }, [loggedIn]);
   useEffect(() => {
     void load();
-    const id = setInterval(load, 5000);
+    const id = setInterval(load, loggedIn ? 15000 : 30000);
     const handleLocalNotification = () => { void load(); };
     window.addEventListener("wx:notification-local", handleLocalNotification);
     return () => { clearInterval(id); window.removeEventListener("wx:notification-local", handleLocalNotification); };
-  }, [load]);
+  }, [load, loggedIn]);
   useEffect(() => {
     if (!loggedIn || !liveNotification || seenLiveIdRef.current === liveNotification.id) return;
     seenLiveIdRef.current = liveNotification.id;

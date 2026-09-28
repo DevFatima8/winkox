@@ -7,7 +7,7 @@ import { PinForm, PasswordForm, CopyLink } from "@/components/ProfileForms";
 import { getSettings, vipInfo } from "@/lib/platform";
 import { InstallApp } from "@/components/InstallApp";
 import { OpenSupportButton } from "@/components/OpenSupport";
-import { logoutAction } from "@/lib/actions";
+import { logoutAction } from "@/lib/clientActions";
 import { WhatsAppIcon, TelegramIcon, BookIcon, CrownIcon } from "@/components/Icons";
 import { useI18n } from "@/lib/i18n/client";
 import { usePage, NOT_FOUND, REDIRECT } from "@/lib/useDb";

@@ -38,7 +38,12 @@ export function SupportWidget({ userName }: { userName?: string }) {
     }
   }, [open]);
 
-  useEffect(() => { load(); const id = setInterval(load, open ? 3000 : 15000); return () => clearInterval(id); }, [load, open]);
+  useEffect(() => {
+    if (!open) return;
+    void load();
+    const id = setInterval(load, 5000);
+    return () => clearInterval(id);
+  }, [load, open]);
   useEffect(() => { if (open) { setUnread(0); setTimeout(() => endRef.current?.scrollIntoView({ behavior: "smooth" }), 50); } }, [open, s?.messages.length]);
   useEffect(() => { const h = () => setOpen(true); window.addEventListener("wx:open-support", h); return () => window.removeEventListener("wx:open-support", h); }, []);
 
