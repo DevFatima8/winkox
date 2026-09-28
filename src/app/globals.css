@@ -744,6 +744,18 @@ html.light .bg-black\/70 {
   background-color: rgba(15, 23, 42, .45) !important;
 }
 
+/* Google Play / App Store badges: white surface in light mode instead of solid black */
+html.light button.store-badge {
+  background-color: #ffffff !important;
+  border: 1px solid #d5dde6;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, .08);
+}
+
+html.light button.store-badge,
+html.light button.store-badge * {
+  color: #0f172a !important;
+}
+
 html.light .bg-slate-950,
 html.light .bg-slate-900,
 html.light .bg-slate-900\/60,
