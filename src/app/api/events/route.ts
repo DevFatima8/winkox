@@ -55,7 +55,7 @@ export async function GET(request: Request) {
             known.add(String(item._id));
             send("notification", {
               id: String(item._id), title: item.title, body: item.body, type: item.type,
-              audience: item.audience, at: item.createdAt, read: false,
+              audience: item.audience, href: item.href ?? null, at: item.createdAt, read: false,
             });
           }
           if (known.size > 500) {

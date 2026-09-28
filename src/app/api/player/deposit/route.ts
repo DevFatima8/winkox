@@ -14,11 +14,19 @@ export async function POST(request: Request) {
     const paymentAccountId = String(form.get("paymentAccountId") ?? "").trim();
     const senderNumber = String(form.get("senderNumber") ?? "").trim();
     const referenceId = String(form.get("referenceId") ?? "").trim();
+    const proof = form.get("proofImage");
+    let proofImage: string | null = null;
+    if (proof instanceof File && proof.size > 0) {
+      if (!proof.type.startsWith("image/")) return NextResponse.json({ error: "Payment proof image honi chahiye." }, { status: 400 });
+      if (proof.size > 2 * 1024 * 1024) return NextResponse.json({ error: "Screenshot 2MB se chhota hona chahiye." }, { status: 400 });
+      proofImage = `data:${proof.type};base64,${Buffer.from(await proof.arrayBuffer()).toString("base64")}`;
+    }
     const settings = await getSettings();
     const minDeposit = settings.wallet?.minDeposit ?? 100;
     if (!Number.isFinite(amount) || amount < minDeposit) return NextResponse.json({ error: `Minimum deposit Rs. ${minDeposit} hai.` }, { status: 400 });
     if (!paymentAccountId) return NextResponse.json({ error: "Payment account select karein." }, { status: 400 });
-    if (!senderNumber || !referenceId) return NextResponse.json({ error: "Sender number aur Transaction ID (TID) zaroori hai." }, { status: 400 });
+    if (!senderNumber) return NextResponse.json({ error: "Sender number zaroori hai." }, { status: 400 });
+    if (!referenceId && !proofImage) return NextResponse.json({ error: "Transaction ID (TID) ya payment screenshot zaroor dein." }, { status: 400 });
 
     const user = await User.findById(me.id, "paymentDepositLimit").lean();
     if (user?.paymentDepositLimit && user.paymentDepositLimit > 0) {
@@ -39,10 +47,10 @@ export async function POST(request: Request) {
     await Transaction.create({
       userId: oid(me.id), type: "deposit", provider: account.provider, amount,
       paymentAccountId: account._id, assignedAccountId: account._id, accountName: account.accountTitle,
-      senderNumber, referenceId, method: "manual",
+      senderNumber, referenceId: referenceId || null, proofImage, method: "manual",
     });
-    await notifyUser(me.id, "Purchase request received", `Your deposit request of Rs. ${amount.toLocaleString()} has been sent for admin verification.`, "info");
-    await notifyAdmins("New deposit request", `${me.name} requested a deposit of Rs. ${amount.toLocaleString()} via ${account.provider}.`, "info");
+    await notifyUser(me.id, "Purchase request received", `Your deposit request of Rs. ${amount.toLocaleString()} has been sent for admin verification.`, "info", { href: "/player/wallet" });
+    await notifyAdmins("New deposit request", `${me.name} requested a deposit of Rs. ${amount.toLocaleString()} via ${account.provider}.`, "info", { href: "/admin/deposits?status=pending" });
     return NextResponse.json({ success: "Deposit request submit ho gayi. Admin verify kar ke balance add karega." });
   } catch (error) {
     console.error("[player deposit]", error);

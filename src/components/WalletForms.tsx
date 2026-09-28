@@ -55,7 +55,11 @@ export function DepositForm({ accounts, initialAmount }: { accounts: Account[]; 
       </label>
       <label className="block">
         <span className="mb-1 block text-sm font-medium text-slate-300">{t("tid")}</span>
-        <input name="referenceId" required placeholder="e.g. 1234567890" className={input} />
+        <input name="referenceId" placeholder="e.g. 1234567890" className={input} />
+      </label>
+      <label className="block">
+        <span className="mb-1 block text-sm font-medium text-slate-300">Payment screenshot <span className="text-xs text-slate-500">(TID ya screenshot mein se ek lazmi)</span></span>
+        <input name="proofImage" type="file" accept="image/*" className="w-full text-sm text-slate-300 file:mr-3 file:rounded-lg file:border-0 file:bg-yellow-400 file:px-3 file:py-2 file:font-bold file:text-slate-950" />
       </label>
       {state?.error && <p className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-400">{state.error}</p>}
       {state?.success && <p className="rounded-lg bg-emerald-500/10 px-3 py-2 text-sm text-emerald-400">{state.success}</p>}

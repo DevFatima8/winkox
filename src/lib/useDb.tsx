@@ -25,7 +25,8 @@ export function useDb<T>(loader: () => Promise<T>, deps: unknown[] = []) {
   useEffect(() => {
     const refresh = () => setTick((t) => t + 1);
     window.addEventListener("wx:admin-refresh", refresh);
-    return () => window.removeEventListener("wx:admin-refresh", refresh);
+    window.addEventListener("wx:data-refresh", refresh);
+    return () => { window.removeEventListener("wx:admin-refresh", refresh); window.removeEventListener("wx:data-refresh", refresh); };
   }, []);
   const reload = useCallback(() => setTick((t) => t + 1), []);
   return { data, error, reload };

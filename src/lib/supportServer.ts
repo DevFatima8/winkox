@@ -78,7 +78,7 @@ export async function sendClientSupportMessage(textRaw: string, name?: string) {
     const settings = await getSettings();
     const online = supportOnline(settings.support);
     await SupportThread.updateOne({ _id: thread._id }, { $set: { lastMessage: text, lastMessageAt: new Date(), status: "open" }, $inc: { unreadForAdmin: 1 } });
-    await notifyAdmins("New support message", `${authorName}: ${text.slice(0, 160)}`, "info");
+    await notifyAdmins("New support message", `${authorName}: ${text.slice(0, 160)}`, "info", { href: "/admin/support" });
     const userMessageCount = await SupportMessage.countDocuments({ threadId: thread._id, from: "user" });
     if (userMessageCount === 1 && settings.support?.welcomeMessage) {
         await SupportMessage.create({ threadId: thread._id, from: "system", text: settings.support.welcomeMessage.replace("{name}", identity.name) });

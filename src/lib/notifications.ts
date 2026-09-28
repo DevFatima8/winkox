@@ -3,17 +3,18 @@ import { Notification, User, oid } from "@/models";
 import type { NotificationDoc } from "@/models";
 
 type NotificationType = "info" | "promo" | "warning" | "success";
+type NotificationOptions = { href?: string };
 
-export async function notifyUser(userId: string, title: string, body: string, type: NotificationType = "info") {
+export async function notifyUser(userId: string, title: string, body: string, type: NotificationType = "info", options: NotificationOptions = {}) {
   await dbConnect();
-  const notification = await Notification.create({ title, body, type, audience: "user", userId: oid(userId) });
+  const notification = await Notification.create({ title, body, type, audience: "user", userId: oid(userId), href: options.href ?? null });
   if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("wx:notification-local"));
   return notification;
 }
 
-export async function notifyAdmins(title: string, body: string, type: NotificationType = "info") {
+export async function notifyAdmins(title: string, body: string, type: NotificationType = "info", options: NotificationOptions = {}) {
   await dbConnect();
-  const notification = await Notification.create({ title, body, type, audience: "admins", userId: null });
+  const notification = await Notification.create({ title, body, type, audience: "admins", userId: null, href: options.href ?? null });
   if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("wx:notification-local"));
   return notification;
 }
@@ -29,7 +30,7 @@ export async function getNotifications(userId: string | null, role: string | nul
   const q: Record<string, unknown> = uid ? { isActive: true, $or: [{ audience: { $in: aud } }, { audience: "user", userId: uid }] } : { isActive: true, audience: "all" };
   const list = await Notification.find(q).sort({ createdAt: -1 }).limit(30).lean<NotificationDoc[]>();
   return {
-    items: list.map((n) => ({ id: String(n._id), title: n.title, body: n.body, type: n.type, audience: n.audience, at: n.createdAt, read: uid ? (n.readBy ?? []).some((r) => String(r) === String(uid)) : false })),
+    items: list.map((n) => ({ id: String(n._id), title: n.title, body: n.body, type: n.type, audience: n.audience, href: n.href ?? null, at: n.createdAt, read: uid ? (n.readBy ?? []).some((r) => String(r) === String(uid)) : false })),
     unread: uid ? list.filter((n) => !(n.readBy ?? []).some((r) => String(r) === String(uid))).length : 0,
   };
 }
