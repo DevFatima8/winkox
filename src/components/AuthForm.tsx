@@ -19,6 +19,26 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
   const [pw, setPw] = useState("");
   const [registrationIp, setRegistrationIp] = useState("");
   const [loginIp, setLoginIp] = useState("");
+  const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
+
+  useEffect(() => {
+    const s = state as any;
+    if (s?.success) {
+      setToast({ type: "success", message: s.success });
+      if (s.redirect) {
+        const timer = setTimeout(() => window.location.assign(s.redirect), 1500);
+        return () => clearTimeout(timer);
+      } else {
+        const timer = setTimeout(() => setToast(null), 3000);
+        return () => clearTimeout(timer);
+      }
+    } else if (s?.error) {
+      setToast({ type: "error", message: s.error });
+      const timer = setTimeout(() => setToast(null), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [state]);
+
   useEffect(() => {
     const r = new URLSearchParams(window.location.search).get("ref");
     if (r) {
@@ -35,6 +55,11 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
 
   return (
     <main className="wx-bg flex min-h-screen items-center justify-center px-4 py-12">
+      {toast && (
+        <div className={`fixed left-1/2 top-4 z-[100] -translate-x-1/2 animate-[pop_.3s_ease-out] rounded-full px-6 py-3 text-sm font-bold shadow-2xl transition-all ${toast.type === "success" ? "bg-green-500 text-white" : "bg-[#e50539] text-white"}`}>
+          {toast.message}
+        </div>
+      )}
       <div className="wx-card w-full max-w-md rounded-3xl p-8 shadow-[0_20px_60px_rgba(139,92,246,.35)]">
         <div className="mb-4 flex items-center justify-between"><Link href="/" className="inline-flex items-center gap-1 text-xs text-[#b8a7e6] hover:text-white">{t("backHome")}</Link><div className="flex items-center gap-2"><LanguageSwitch compact /><ThemeToggle compact /></div></div>
         <div className="mb-6 text-center">
@@ -54,7 +79,6 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
           {mode === "signup" && <Field label={t("emailOptional")} name="email" type="email" placeholder="you@email.com" />}
           {mode === "signup" && <Field label={t("refOptional")} name="ref" value={ref} onChange={(e) => setRef(e.target.value.toUpperCase())} placeholder="e.g. ALIK7X2P" />}
           <Field label={t("password")} name="password" type="password" value={pw} onChange={(e) => setPw(e.target.value)} placeholder="••••••••" required />
-          {state?.error && <p className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-400">{state.error}</p>}
           <button
             disabled={pending}
             className="btn-gold w-full rounded-full py-3 font-black transition disabled:opacity-60"
