@@ -30,7 +30,7 @@ export const INFO_PAGES: InfoPage[] = [
       { h: "Rebate rates", hUr: "ریبیٹ ریٹس", p: ["Bronze / Silver: 0.5% of total daily bets", "Gold / Platinum: 0.8% of total daily bets", "Diamond / Royal / Legend: 1.2% of total daily bets", "Rebate is calculated on your total turnover for the day (00:00–23:59 PKT), regardless of win or loss."], pUr: ["برانز / سلور: روزانہ کل بیٹس کا 0.5%", "گولڈ / پلاٹینم: روزانہ کل بیٹس کا 0.8%", "ڈائمنڈ / رائل / لیجنڈ: روزانہ کل بیٹس کا 1.2%", "ریبیٹ دن (00:00–23:59 PKT) کے کل ٹرن اوور پر شمار ہوتا ہے، جیت یا ہار سے قطع نظر۔"] },
       { h: "How to claim", hUr: "کلیم کیسے کریں", p: ["Rebate for each day is available for claim after 00:00 the next day. Message Live Support with 'Rebate claim' — it is added to your wallet balance within 24 hours. Unclaimed rebate expires after 7 days."], pUr: ["ہر دن کا ریبیٹ اگلے دن 00:00 کے بعد کلیم کے لیے دستیاب ہوتا ہے۔ لائیو سپورٹ کو 'Rebate claim' لکھیں — 24 گھنٹوں میں والٹ میں شامل ہو جاتا ہے۔ 7 دن بعد غیر کلیم شدہ ریبیٹ ختم ہو جاتا ہے۔"] },
     ],
-    cta: { label: "View my bet history", labelUr: "میری بیٹ ہسٹری", href: "/client/history", auth: true },
+    cta: { label: "View my bet history", labelUr: "میری بیٹ ہسٹری", href: "/player/history", auth: true },
   },
   {
     slug: "vip", title: "VIP Club", titleUr: "VIP کلب", subtitle: "Higher level, higher withdrawal limits and better rewards.", subtitleUr: "جتنا اونچا لیول، اتنی زیادہ وِدڈرا حد اور بہتر انعامات۔", icon: I(CrownIcon),
@@ -39,7 +39,7 @@ export const INFO_PAGES: InfoPage[] = [
       { h: "Level table", hUr: "لیول ٹیبل", p: ["VIP_TABLE"], pUr: ["VIP_TABLE"] },
       { h: "VIP perks", hUr: "VIP فوائد", p: ["• Priority withdrawals (processed first)", "• Higher rebate & exclusive promos", "• Personal support agent for Diamond and above", "• Birthday & festival bonuses"], pUr: ["• ترجیحی وِدڈرا (سب سے پہلے پروسیس)", "• زیادہ ریبیٹ اور خصوصی پرومو", "• ڈائمنڈ اور اوپر کے لیے ذاتی سپورٹ ایجنٹ", "• سالگرہ اور تہوار بونس"] },
     ],
-    cta: { label: "See my VIP progress", labelUr: "میری VIP پروگریس", href: "/client/profile", auth: true },
+    cta: { label: "See my VIP progress", labelUr: "میری VIP پروگریس", href: "/player/profile", auth: true },
   },
   {
     slug: "invite", title: "Invite & Earn", titleUr: "انوائٹ کریں اور کمائیں", subtitle: "Share your referral link and earn lifetime commission.", subtitleUr: "اپنا ریفرل لنک شیئر کریں اور تاحیات کمیشن کمائیں۔", icon: I(UsersIcon),
@@ -48,7 +48,7 @@ export const INFO_PAGES: InfoPage[] = [
       { h: "Commission", hUr: "کمیشن", p: ["REF_RATES", "Commission is credited instantly to your wallet balance and can be withdrawn or used to play. There is no limit on how many friends you can invite."], pUr: ["REF_RATES", "کمیشن فوراً آپ کے والٹ بیلنس میں شامل ہوتا ہے اور اسے نکالا یا کھیلا جا سکتا ہے۔ دوستوں کی تعداد کی کوئی حد نہیں۔"] },
       { h: "Become an agent", hUr: "ایجنٹ بنیں", p: ["Active promoters can be upgraded to an Agent account with a higher commission rate. Contact Live Support to apply."], pUr: ["فعال پروموٹرز کو زیادہ کمیشن ریٹ کے ساتھ ایجنٹ اکاؤنٹ میں اپ گریڈ کیا جا سکتا ہے۔ درخواست کے لیے لائیو سپورٹ سے رابطہ کریں۔"] },
     ],
-    cta: { label: "Get my referral link", labelUr: "میرا ریفرل لنک", href: "/client/profile", auth: true },
+    cta: { label: "Get my referral link", labelUr: "میرا ریفرل لنک", href: "/player/profile", auth: true },
   },
   {
     slug: "event", title: "Events & Tournaments", titleUr: "ایونٹس اور ٹورنامنٹس", subtitle: "Weekly leaderboards and special events with big prize pools.", subtitleUr: "ہفتہ وار لیڈر بورڈ اور بڑے انعامی پول کے ساتھ خصوصی ایونٹس۔", icon: I(CalendarIcon),

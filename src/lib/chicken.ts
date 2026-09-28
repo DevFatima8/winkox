@@ -1,8 +1,8 @@
 import { dbConnect } from "./mongo";
 import { ChickenGame, Game, GameResult, User, oid, type ObjectId } from "@/models";
 import { checkGameAccess } from "./gameAccess";
-import { payBetCommission } from "./platform";
-import { isWinOutcome, MAX_MULTIPLIER } from "./outcomes";
+import { payoutAfterHouseShare, isWinOutcome, MAX_MULTIPLIER } from "./outcomes";
+import { holdWinShare } from "./winHold";
 
 
 export const MIN_BET = 10;
@@ -41,7 +41,7 @@ function rollCrashLane(d: Difficulty) {
 }
 
 let cachedGameId: ObjectId | null = null;
-async function gameId() {
+async function gameId(): Promise<ObjectId> {
   if (cachedGameId) return cachedGameId;
   const g = await Game.findOneAndUpdate(
     { slug: "chicken-road-2" },
@@ -49,7 +49,7 @@ async function gameId() {
     { upsert: true, returnDocument: "after" },
   ).lean();
   cachedGameId = g!._id;
-  return cachedGameId;
+  return cachedGameId!;
 }
 
 type GameLike = { _id: ObjectId; difficulty: string; betAmount: number; lanes: number; position: number; status: string; winAmount: number; crashLane: number };
@@ -70,7 +70,7 @@ function publicState(g: GameLike) {
   };
 }
 
-const winFor = (bet: number, m: number) => Math.floor(bet * Math.min(MAX_MULTIPLIER, m) * 100) / 100;
+const winFor = (bet: number, m: number) => payoutAfterHouseShare(bet * Math.min(MAX_MULTIPLIER, m));
 
 export async function getState(userId: string | null) {
   await dbConnect();
@@ -107,8 +107,7 @@ export async function startGame(userId: string, amount: number, difficulty: stri
 
   const gid = await gameId();
   const result = await GameResult.create({ gameId: gid, userId: uid, betAmount: amount, outcome: "pending", resultData: `${DIFFICULTIES[difficulty].label} · started` });
-  void payBetCommission(uid, amount);
-  const g = await ChickenGame.create({ userId: uid, resultId: result._id, difficulty, betAmount: amount, lanes: lanesFor(difficulty), crashLane: rollCrashLane(difficulty) });
+  const g = await ChickenGame.create({ userId: uid, resultId: String(result._id), difficulty, betAmount: amount, lanes: lanesFor(difficulty), crashLane: rollCrashLane(difficulty) });
   return { ok: true, game: publicState(g.toObject()) };
 }
 
@@ -136,6 +135,7 @@ export async function step(userId: string) {
     g.winAmount = win;
     await g.save();
     await User.updateOne({ _id: g.userId }, { $inc: { balance: win } });
+    await holdWinShare(userId, g.betAmount * Math.min(MAX_MULTIPLIER, m));
     await GameResult.updateOne({ _id: g.resultId }, { $set: { outcome: "win", winAmount: win, resultData: `${label} · crossed all ${g.lanes} lanes @ ${m.toFixed(2)}x` } });
     return { ok: true, game: publicState(g.toObject()), event: "finished" as const };
   }
@@ -154,6 +154,7 @@ export async function cashOut(userId: string) {
   g.winAmount = win;
   await g.save();
   await User.updateOne({ _id: g.userId }, { $inc: { balance: win } });
+  await holdWinShare(userId, g.betAmount * Math.min(MAX_MULTIPLIER, m));
   await GameResult.updateOne({ _id: g.resultId }, { $set: { outcome: "win", winAmount: win, resultData: `${DIFFICULTIES[diff].label} · cashed out at lane ${g.position} @ ${m.toFixed(2)}x` } });
   return { ok: true, game: publicState(g.toObject()), multiplier: m, win };
 }

@@ -1,8 +1,8 @@
 import { dbConnect } from "./mongo";
 import { Game, GameResult, MinesGame, User, oid, type ObjectId } from "@/models";
 import { checkGameAccess } from "./gameAccess";
-import { payBetCommission } from "./platform";
-import { isWinOutcome, MAX_MULTIPLIER } from "./outcomes";
+import { payoutAfterHouseShare, isWinOutcome, MAX_MULTIPLIER } from "./outcomes";
+import { holdWinShare } from "./winHold";
 
 export const MIN_BET = 10, MAX_BET = 50000, MAX_WIN = Number.MAX_SAFE_INTEGER;
 export const RTP = 0.97; // Spribe Mines 97%
@@ -21,10 +21,10 @@ export function nextMultipliers(mines: number, safe: number) {
 }
 
 let cachedGameId: ObjectId | null = null;
-async function gameId() {
+async function gameId(): Promise<ObjectId> {
   if (cachedGameId) return cachedGameId;
   const g = await Game.findOneAndUpdate({ slug: "mines" }, { $setOnInsert: { name: "Mines", slug: "mines", icon: "💎", category: "original", description: "5×5 grid, mines choose karein, gems kholen aur cash out — 10,000x tak!", isActive: true } }, { upsert: true, returnDocument: "after" }).lean();
-  cachedGameId = g!._id; return cachedGameId;
+  cachedGameId = g!._id; return cachedGameId!;
 }
 
 function pub(g: { _id: ObjectId; betAmount: number; mines: number; mineCells: number[]; revealed: number[]; status: string; winAmount: number }) {
@@ -64,7 +64,6 @@ export async function start(userId: string, amount: number, mines: number) {
   if (await MinesGame.exists({ userId: uid, status: "active" })) return { error: "Pehle wali game abhi chal rahi hai." };
   const upd = await User.updateOne({ _id: uid, balance: { $gte: amount } }, { $inc: { balance: -amount } });
   if (!upd.modifiedCount) return { error: "Insufficient balance." };
-  void payBetCommission(uid, amount);
   // Mine layout: 35% of rounds are "generous" (normal random), 65% are "tight" — mines cluster
   // among the cells players reach early, so ~65% of runs end in a loss while ~35% can be won.
   const tight = !isWinOutcome();
@@ -82,7 +81,7 @@ export async function start(userId: string, amount: number, mines: number) {
   const mineCells = cells.slice(0, mines).sort((a, b) => a - b);
   const gid = await gameId();
   const res = await GameResult.create({ gameId: gid, userId: uid, betAmount: amount, outcome: "pending", resultData: `${mines} mines · started` });
-  const g = await MinesGame.create({ userId: uid, resultId: res._id, betAmount: amount, mines, mineCells });
+  const g = await MinesGame.create({ userId: uid, resultId: String(res._id), betAmount: amount, mines, mineCells });
   return { ok: true, game: pub(g.toObject()) };
 }
 
@@ -102,9 +101,10 @@ export async function reveal(userId: string, cell: number) {
   if (safe >= CELLS - g.mines) {
     // all safe tiles revealed → auto cash out at max
     const m = multiplier(g.mines, safe);
-    const win = Math.floor(g.betAmount * m * 100) / 100;
+    const win = payoutAfterHouseShare(g.betAmount * m);
     g.status = "cashed"; g.winAmount = win; await g.save();
     await User.updateOne({ _id: g.userId }, { $inc: { balance: win } });
+    await holdWinShare(userId, g.betAmount * m);
     await GameResult.updateOne({ _id: g.resultId }, { $set: { outcome: "win", winAmount: win, resultData: `${g.mines} mines · cleared all @ ${m}x` } });
     return { ok: true, event: "cleared" as const, cell, game: pub(g.toObject()) };
   }
@@ -117,9 +117,10 @@ export async function cashOut(userId: string) {
   const g = await MinesGame.findOneAndUpdate({ userId: oid(userId), status: "active", "revealed.0": { $exists: true } }, { $set: { status: "cashed" } }, { returnDocument: "after" });
   if (!g) return { error: "Kam az kam ek gem kholen." };
   const m = multiplier(g.mines, g.revealed.length);
-  const win = Math.floor(g.betAmount * m * 100) / 100;
+  const win = payoutAfterHouseShare(g.betAmount * m);
   g.winAmount = win; await g.save();
   await User.updateOne({ _id: g.userId }, { $inc: { balance: win } });
+  await holdWinShare(userId, g.betAmount * m);
   await GameResult.updateOne({ _id: g.resultId }, { $set: { outcome: "win", winAmount: win, resultData: `${g.mines} mines · cashed out after ${g.revealed.length} @ ${m}x` } });
   return { ok: true, multiplier: m, win, game: pub(g.toObject()) };
 }

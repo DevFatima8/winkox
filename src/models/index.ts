@@ -1,8 +1,8 @@
 /**
- * Data models (LocalDB mode — browser localStorage, no server database).
- * The previous Mongoose schema is kept in ./mongoose-schema.bak for when a real MongoDB is connected again.
+ * Data models with MySQL-ready persistence and LocalDB fallback.
+ * The previous Mongoose schema is kept in ./mongoose-schema.bak for reference.
  */
-import { Model, type ObjectId as OId } from "@/lib/localdb";
+import { Model, type ObjectId as OId } from "@/lib/db-model";
 export type ObjectId = OId;
 export const oid = (id: string | ObjectId) => String(id);
 
@@ -55,7 +55,7 @@ export type CardRoundDoc = Base & { table: "dragon-tiger" | "andar-bahar"; round
 export type CardBetDoc = Base & { userId: string; table: string; roundNo: number; option: string; amount: number; status: "pending" | "win" | "lose" | "push"; payout: number };
 export type VipLevelRow = { level?: number | null; name?: string | null; minDeposit?: number | null; dailyWithdrawLimit?: number | null; perWithdrawMax?: number | null; minWithdraw?: number | null };
 export type SettingsDoc = Base & {
-  key: string; vipLevels: VipLevelRow[];
+  key: string; vipLevels: VipLevelRow[]; announcement?: string;
   support: { enabled: boolean; is247: boolean; startHour: number; endHour: number; offlineMessage: string; welcomeMessage: string };
   links: { whatsapp: string; whatsappChannel: string; telegram: string; telegramChannel: string; facebook: string; instagram: string; youtube: string };
   app: { androidUrl: string; iosUrl: string; version: string };
@@ -72,6 +72,8 @@ export type AdminLogDoc = Base & { actorId: string; actorName: string; actorRole
 export type FeedbackDoc = Base & { userId: string | null; name: string; phone: string; type: "reward" | "complaint" | "suggestion" | "other"; message: string; status: "new" | "reviewed" | "resolved"; adminNote: string };
 export type GatewaySessionDoc = Base & { userId: string; kind: "deposit" | "withdraw"; provider: Provider; amount: number; accountNumber: string; holderName?: string; proofImage?: string | null; status: "created" | "otp" | "pending" | "paid" | "failed" | "expired" | "cancelled"; otpAttempts: number; txnRef: string | null; transactionId: string | null; expiresAt: Date };
 export type MinesGameDoc = Base & { userId: string; resultId: string; betAmount: number; mines: number; mineCells: number[]; revealed: number[]; status: "active" | "cashed" | "dead"; winAmount: number };
+/** 2% withheld from every win; unlocks (claimable) after the next midnight following the win. */
+export type WinHoldDoc = Base & { userId: string; amount: number; unlockAt: Date; claimed: boolean; claimedAt: Date | null };
 
 export const User = new Model<UserDoc>("User", { collection: "users", unique: [["phone"]], defaults: () => ({ username: null, email: null, passwordPlain: null, withdrawPin: null, registrationIp: null, lastLoginIp: null, historicalIps: [], paymentDepositLimit: 0, role: "client", adminId: null, createdBy: null, adminNote: "", balance: 0, isActive: true, lastLoginAt: null, totalDeposited: 0, totalWithdrawn: 0, vipLevel: 0, blockedGames: [], referralCode: null, referredBy: null, commissionEarned: 0, agentCommissionPct: null }) });
 export const PaymentAccount = new Model<PaymentAccountDoc>("PaymentAccount", { collection: "paymentaccounts", defaults: () => ({ isActive: true }) });
@@ -84,7 +86,7 @@ export const ChickenDash = new Model<ChickenDashDoc>("ChickenDash", { collection
 export const PlinkoBet = new Model<PlinkoBetDoc>("PlinkoBet", { collection: "plinkobets", cap: 1000 });
 export const CardRound = new Model<CardRoundDoc>("CardRound", { collection: "cardrounds", unique: [["table", "roundNo"]], cap: 300, defaults: () => ({ status: "betting" }) });
 export const CardBet = new Model<CardBetDoc>("CardBet", { collection: "cardbets", refs: { userId: "User" }, cap: 2000, defaults: () => ({ status: "pending", payout: 0 }) });
-export const Settings = new Model<SettingsDoc>("Settings", { collection: "settings", unique: [["key"]], defaults: () => ({ key: "main", vipLevels: [], support: { enabled: true, is247: false, startHour: 9, endHour: 23, offlineMessage: "Customer support abhi off hai. Please subah 9 AM ke baad contact karein. Aapka message hamein mil gaya hai — hum jald jawab denge.", welcomeMessage: "winkox Support mein khush aamdeed! Aap kaise madad chahte hain?" }, links: { whatsapp: "", whatsappChannel: "", telegram: "", telegramChannel: "", facebook: "", instagram: "", youtube: "" }, app: { androidUrl: "", iosUrl: "", version: "1.0.0" }, referral: { depositCommissionPct: 2, betCommissionPct: 1.5, signupBonus: 0, referralDepositBonus: 288, agentDepositCommissionPct: 8 }, wallet: { minDeposit: 100, minWithdraw: 500 }, fakeGateway: { enabled: true, testOtp: "1234", maxPerTxn: 50000, dailyLimit: 200000, label: "Instant Deposit (Test Mode)", autoWithdraw: true } }) });
+export const Settings = new Model<SettingsDoc>("Settings", { collection: "settings", unique: [["key"]], defaults: () => ({ key: "main", vipLevels: [], support: { enabled: true, is247: false, startHour: 9, endHour: 23, offlineMessage: "Customer support abhi off hai. Please subah 9 AM ke baad contact karein. Aapka message hamein mil gaya hai — hum jald jawab denge.", welcomeMessage: "winkox Support mein khush aamdeed! Aap kaise madad chahte hain?" }, links: { whatsapp: "", whatsappChannel: "", telegram: "", telegramChannel: "", facebook: "", instagram: "", youtube: "" }, app: { androidUrl: "", iosUrl: "", version: "1.0.0" }, referral: { depositCommissionPct: 1.5, betCommissionPct: 0, signupBonus: 0, referralDepositBonus: 0, agentDepositCommissionPct: 8 }, wallet: { minDeposit: 100, minWithdraw: 500 }, fakeGateway: { enabled: true, testOtp: "1234", maxPerTxn: 50000, dailyLimit: 200000, label: "Instant Deposit (Test Mode)", autoWithdraw: true } }) });
 export const Notification = new Model<NotificationDoc>("Notification", { collection: "notifications", defaults: () => ({ type: "info", audience: "all", userId: null, isActive: true, readBy: [] }) });
 export const SupportThread = new Model<SupportThreadDoc>("SupportThread", { collection: "supportthreads", refs: { userId: "User" }, defaults: () => ({ userId: null, guestId: null, guestName: null, status: "open", lastMessageAt: new Date(), lastMessage: "", unreadForAdmin: 0, unreadForUser: 0, assignedTo: null, assignedName: null }) });
 export const SupportMessage = new Model<SupportMessageDoc>("SupportMessage", { collection: "supportmessages", cap: 3000, defaults: () => ({ agentName: null, agentId: null }) });
@@ -94,3 +96,4 @@ export const AdminLog = new Model<AdminLogDoc>("AdminLog", { collection: "adminl
 export const Feedback = new Model<FeedbackDoc>("Feedback", { collection: "feedbacks", defaults: () => ({ userId: null, name: "", phone: "", type: "reward", status: "new", adminNote: "" }) });
 export const GatewaySession = new Model<GatewaySessionDoc>("GatewaySession", { collection: "gatewaysessions", cap: 200, defaults: () => ({ kind: "deposit", accountNumber: "", status: "created", otpAttempts: 0, txnRef: null, transactionId: null }) });
 export const MinesGame = new Model<MinesGameDoc>("MinesGame", { collection: "minesgames", cap: 500, defaults: () => ({ revealed: [], status: "active", winAmount: 0 }) });
+export const WinHold = new Model<WinHoldDoc>("WinHold", { collection: "winholds", refs: { userId: "User" }, cap: 5000, defaults: () => ({ claimed: false, claimedAt: null }) });

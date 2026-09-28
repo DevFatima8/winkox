@@ -32,7 +32,7 @@ export function MinesGame() {
   const post = async (body: unknown) => { const r = await localApi("/api/mines", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }); if (r.status === 401) { window.location.href = "/login"; return null; } return r.json(); };
 
   const start = async () => { setBusy(true); setErr(null); setBanner(null); setFlash(null); const j = await post({ action: "start", amount: Number(amount), mines }); setBusy(false); if (!j) return; if (j.error) { setErr(j.error); return; } playGameSound("launch"); setSt((s) => (s ? { ...s, game: j.game, balance: s.balance - Number(amount) } : s)); };
-  const cashout = useCallback(async () => { setBusy(true); const j = await post({ action: "cashout" }); setBusy(false); if (!j) return; if (j.error) { setErr(j.error); return; } playGameSound("cashout"); speakGameVoice("gemFound"); setBanner({ mult: j.multiplier, win: j.win }); setSt((s) => (s ? { ...s, game: j.game } : s)); load(); }, [load]);
+  const cashout = useCallback(async () => { setBusy(true); const j = await post({ action: "cashout" }); setBusy(false); if (!j) return; if (j.error) { setErr(j.error); return; } playGameSound("cashout"); speakGameVoice("gemFound"); setBanner({ mult: j.multiplier, win: j.win }); window.dispatchEvent(new CustomEvent("wx:game-result", { detail: { game: "Mines", bet: j.game.bet, win: j.win, won: j.win > 0 } })); setSt((s) => (s ? { ...s, game: j.game } : s)); load(); }, [load]);
   const reveal = async (cell: number) => {
     if (!st?.game || st.game.status !== "active" || busy || st.game.revealed.includes(cell)) return;
     setBusy(true); const j = await post({ action: "reveal", cell }); setBusy(false); if (!j) return;
@@ -40,7 +40,7 @@ export function MinesGame() {
     setFlash({ cell, kind: j.event === "mine" ? "mine" : "star" });
     if (j.event === "mine") { playGameSound("crash"); speakGameVoice("mineHit"); } else { playGameSound("coin"); speakGameVoice("gemFound"); }
     setSt((s) => (s ? { ...s, game: j.game } : s));
-    if (j.event === "cleared") { setBanner({ mult: j.game.multiplier, win: j.game.win }); load(); }
+    if (j.event === "cleared") { setBanner({ mult: j.game.multiplier, win: j.game.win }); window.dispatchEvent(new CustomEvent("wx:game-result", { detail: { game: "Mines", bet: j.game.bet, win: j.game.win, won: j.game.win > 0 } })); load(); }
     if (j.event === "mine") setTimeout(load, 300);
     if (j.event === "gem" && autoCash && j.game.multiplier >= Number(autoCashAt)) setTimeout(cashout, 200);
   };
@@ -104,7 +104,7 @@ export function MinesGame() {
               <input value={amount} onChange={(e) => setAmount(e.target.value)} onBlur={() => setAmt(Number(amount) || st.limits.min)} className="w-full min-w-0 bg-transparent text-center text-lg font-bold text-white outline-none" />
               <button onClick={() => setAmt(amt + 10)} className="flex h-7 w-7 items-center justify-center rounded-full text-lg leading-none text-slate-300" style={{ border: `1px solid ${C.line}` }}>+</button>
             </div>
-            <div className="mt-2 grid grid-cols-4 gap-1">{[100, 300, 500, 1000].map((v) => <button key={v} onClick={() => setAmt(v)} className={`rounded-md py-1 text-[11px] font-bold ${amt === v ? "bg-[#28a909] text-white" : "text-slate-300 hover:text-white"}`} style={amt === v ? {} : { background: C.bg, border: `1px solid ${C.line}` }}>{v}</button>)}</div>
+            <div className="mt-2 grid grid-cols-4 gap-1">{[50, 100, 150, 200].map((v) => <button key={v} onClick={() => setAmt(v)} className={`rounded-md py-1 text-[11px] font-bold ${amt === v ? "bg-[#28a909] text-white" : "text-slate-300 hover:text-white"}`} style={amt === v ? {} : { background: C.bg, border: `1px solid ${C.line}` }}>{v}</button>)}</div>
             <div className="mt-2 flex items-center gap-2 rounded-md px-2 py-1.5" style={{ background: C.bg, border: `1px solid ${C.line}` }}>
               <input type="number" min={st.limits.min} max={st.limits.max} value={customAmount} onChange={(e) => setCustomAmount(Math.max(st.limits.min, Math.min(st.limits.max, Number(e.target.value) || st.limits.min)))} className="w-16 bg-transparent text-center text-[11px] font-bold text-white outline-none" />
               <button onClick={() => setAmt(customAmount)} className={`rounded-md px-2 py-1 text-[10px] font-black ${Number(amount) === customAmount ? "bg-[#28a909] text-white" : "bg-[#1f3b5f] text-slate-200"}`}>Custom</button>

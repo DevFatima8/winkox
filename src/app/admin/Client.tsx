@@ -1,80 +1,47 @@
 "use client";
 import Link from "next/link";
-import { dbConnect } from "@/lib/mongo";
-import { GameResult, LoginEvent, PaymentAccount, SupportThread, Transaction, User } from "@/models";
 import { Card, StatCard, StatusBadge, ProviderBadge, fmt, fmtDate } from "@/components/Shell";
-import { getCurrentUser } from "@/lib/auth";
-
-
-const sumOf = async (match: Record<string, unknown>, field: string) => {
-  const [r] = await Transaction.aggregate<{ s: number }>([{ $match: match }, { $group: { _id: null, s: { $sum: `$${field}` } } }]);
-  return r?.s ?? 0;
-};
 import { usePage, NOT_FOUND, REDIRECT } from "@/lib/useDb";
+
+type RecentGameResult = {
+  _id: unknown;
+  gameId: { name: string; icon: string } | null;
+  userId: { name: string } | null;
+  betAmount: number;
+  outcome: string;
+};
+type PendingTransaction = {
+  _id: unknown;
+  userId: { name: string } | null;
+  type: string;
+  provider: string;
+  amount: number;
+};
 
 export default function AdminDashboardClient({ params, searchParams }: { params?: Record<string, string>; searchParams?: Record<string, string> }) {
   void params; void searchParams;
   return usePage(async () => {
-    const me = (await getCurrentUser())!;
-    await dbConnect();
-    const startOfDay = new Date(); startOfDay.setHours(0, 0, 0, 0);
-    const endOfDay = new Date(startOfDay); endOfDay.setDate(endOfDay.getDate() + 1);
-    const statsStart = new Date(startOfDay); statsStart.setDate(statsStart.getDate() - 6);
-
-    const [totalUsers, todayUsers, dep, wd, pending, accActive, balAgg, resAgg, todayDeposits, todayGameResults, earlierGameUsers, todaySignups, statsLogins, statsResults, statsUsers] = await Promise.all([
-      User.countDocuments({ role: { $in: ["client", "agent"] } }),
-      User.countDocuments({ role: { $in: ["client", "agent"] }, createdAt: { $gte: startOfDay } }),
-      sumOf({ type: "deposit", status: "approved" }, "amount"),
-      sumOf({ type: "withdraw", status: "approved" }, "amount"),
-      Transaction.countDocuments({ status: "pending" }),
-      PaymentAccount.countDocuments({ isActive: true }),
-      User.aggregate<{ s: number }>([{ $match: { role: { $in: ["client", "agent"] } } }, { $group: { _id: null, s: { $sum: "$balance" } } }]),
-      GameResult.aggregate<{ c: number; bet: number; win: number }>([{ $group: { _id: null, c: { $sum: 1 }, bet: { $sum: "$betAmount" }, win: { $sum: "$winAmount" } } }]),
-      Transaction.find({ type: "deposit", status: "approved", createdAt: { $gte: startOfDay, $lt: endOfDay } }).lean(),
-      GameResult.find({ createdAt: { $gte: startOfDay, $lt: endOfDay }, outcome: { $ne: "pending" } }).lean(),
-      GameResult.find({ createdAt: { $lt: startOfDay }, outcome: { $ne: "pending" } }).lean(),
-      User.find({ role: { $in: ["client", "agent"] }, createdAt: { $gte: startOfDay, $lt: endOfDay } }).sort({ createdAt: -1 }).lean(),
-      LoginEvent.find({ createdAt: { $gte: statsStart, $lt: endOfDay }, role: { $in: ["client", "agent"] } }).lean(),
-      GameResult.find({ createdAt: { $gte: statsStart, $lt: endOfDay }, outcome: { $ne: "pending" } }).lean(),
-      User.find({ role: { $in: ["client", "agent"] } }).lean(),
-    ]);
-    const res = resAgg[0] ?? { c: 0, bet: 0, win: 0 };
+    const response = await fetch("/api/admin/data?view=dashboard", { cache: "no-store" });
+    const data = await response.json(); if (!response.ok) throw new Error(data.error ?? "Dashboard data load nahi ho saka.");
+    const me = data.me;
+    const totalUsers = Number(data.totalUsers), todayUsers = Number(data.todayUsers), dep = Number(data.totalDeposits), wd = Number(data.totalWithdrawals);
+    const pending = Number(data.pending), accActive = Number(data.activeAccounts), balance = Number(data.balance);
+    const res = data.resultStats as { c: number; bet: number; win: number };
+    const todayDeposits = data.todayDeposits as { amount: number }[];
+    const todayGameResults = data.todayResults as { userId: string | null; betAmount: number; winAmount: number }[];
+    const todaySignups = data.todaySignups as any[];
+    const repeatedPlayers = data.repeatedPlayers as any[];
+    const statsRows = (data.statsRows as any[]).map((row) => ({ ...row, date: new Date(row.date) }));
+    const agents = Number(data.agents), openChats = Number(data.openChats), unreadChats = Number(data.unreadChats);
+    const recentResults = data.recentResults as RecentGameResult[];
+    const recentUsers = data.recentUsers as any[];
+    const pendingTx = data.pendingTx as PendingTransaction[];
     const todayPaymentTotal = todayDeposits.reduce((sum, tx) => sum + tx.amount, 0);
     const todayBetTotal = todayGameResults.reduce((sum, game) => sum + game.betAmount, 0);
     const todayPayoutTotal = todayGameResults.reduce((sum, game) => sum + game.winAmount, 0);
     const todayEarned = todayBetTotal - todayPayoutTotal;
-    const earlierPlayerIds = new Set(earlierGameUsers.map((game) => game.userId).filter((id): id is string => !!id).map(String));
     const todayPlayerIds = [...new Set(todayGameResults.map((game) => game.userId).filter((id): id is string => !!id).map(String))];
-    const repeatedPlayerIds = todayPlayerIds.filter((id) => earlierPlayerIds.has(id));
-    const repeatedPlayers = await Promise.all(repeatedPlayerIds.map(async (id) => {
-      const user = await User.findById(id).lean();
-      return user ? { id, name: user.name, phone: user.phone, registrationIp: user.registrationIp, registeredAt: user.createdAt, playedAt: todayGameResults.find((game) => String(game.userId) === id)?.createdAt } : null;
-    }));
-    const statsRows = Array.from({ length: 7 }, (_, offset) => {
-      const day = new Date(startOfDay); day.setDate(day.getDate() - (6 - offset));
-      const next = new Date(day); next.setDate(next.getDate() + 1);
-      const dayKey = day.toISOString().slice(0, 10);
-      const logins = statsLogins.filter((event) => event.createdAt >= day && event.createdAt < next);
-      const loginIds = [...new Set(logins.map((event) => String(event.userId)))];
-      const signupIds = new Set(statsUsers.filter((user) => user.createdAt >= day && user.createdAt < next).map((user) => String(user._id)));
-      const repeatIds = loginIds.filter((id) => !signupIds.has(id));
-      const results = statsResults.filter((game) => game.createdAt >= day && game.createdAt < next);
-      const winnerIds = new Set(results.filter((game) => game.outcome === "win" && game.winAmount > 0 && game.userId).map((game) => String(game.userId)));
-      const repeatWinnerIds = repeatIds.filter((id) => winnerIds.has(id));
-      const bet = results.reduce((sum, game) => sum + game.betAmount, 0);
-      const payout = results.reduce((sum, game) => sum + game.winAmount, 0);
-      return { key: dayKey, date: day, logins: loginIds.length, repeats: repeatIds.length, repeatPct: loginIds.length ? (repeatIds.length / loginIds.length) * 100 : 0, winners: winnerIds.size, earningPct: loginIds.length ? (winnerIds.size / loginIds.length) * 100 : 0, repeatEarningPct: repeatIds.length ? (repeatWinnerIds.length / repeatIds.length) * 100 : 0, bet, payout, earned: bet - payout };
-    });
     const todayStats = statsRows[statsRows.length - 1];
-    const [agents, openChats, unreadChats] = await Promise.all([User.countDocuments({ role: "agent" }), SupportThread.countDocuments({ status: "open" }), SupportThread.countDocuments({ unreadForAdmin: { $gt: 0 } })]);
-
-    const [recentResults, recentUsers, pendingTx] = await Promise.all([
-      GameResult.find().sort({ createdAt: -1 }).limit(8)
-        .populate<{ gameId: { name: string; icon: string } | null }>("gameId", "name icon")
-        .populate<{ userId: { name: string } | null }>("userId", "name").lean(),
-      User.find({ role: { $in: ["client", "agent"] } }).sort({ createdAt: -1 }).limit(6).lean(),
-      Transaction.find({ status: "pending" }).sort({ createdAt: -1 }).limit(6).populate<{ userId: { name: string } | null }>("userId", "name").lean(),
-    ]);
 
     return (
       <div className="space-y-6">
@@ -93,7 +60,7 @@ export default function AdminDashboardClient({ params, searchParams }: { params?
           <StatCard label="Total Game Rounds" value={res.c} />
           <StatCard label="Total Bets" value={fmt(res.bet)} />
           <StatCard label="Total Payouts" value={fmt(res.win)} />
-          <StatCard label="Users Wallet Balance" value={fmt(balAgg[0]?.s ?? 0)} sub={`${accActive} payment accounts active`} />
+          <StatCard label="Users Wallet Balance" value={fmt(balance)} sub={`${accActive} payment accounts active`} />
           <StatCard label="House Profit (games)" value={fmt(res.bet - res.win)} accent={res.bet - res.win >= 0 ? "text-emerald-400" : "text-red-400"} sub="total bets − total payouts" />
           <StatCard label="Agents" value={agents} sub="staff accounts" />
           <StatCard label="Support chats" value={openChats} sub={`${unreadChats} unread`} accent={unreadChats > 0 ? "text-orange-400" : undefined} />

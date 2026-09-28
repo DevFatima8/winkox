@@ -27,7 +27,7 @@ type State = {
 
 const RANKS = ["", "A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
 const SUITS = ["♠", "♥", "♦", "♣"];
-const CHIPS = [100, 300, 500, 1000];
+const CHIPS = [50, 100, 150, 200];
 const money = (n: number) => "Rs. " + n.toLocaleString("en-PK", { maximumFractionDigits: 2 });
 
 const ZONE: Record<string, { bg: string; ring: string; text: string; bead: string; short: string }> = {
@@ -152,6 +152,7 @@ export function CardTable({ table }: { table: Table }) {
     if (st.myTotal > 0) {
       const win = st.myExpected > 0;
       if (win) { playGameSound("coin"); speakGameVoice("cardWin"); } else { playGameSound("crash"); }
+      window.dispatchEvent(new CustomEvent("wx:game-result", { detail: { game: table === "dragon-tiger" ? "Dragon Tiger" : "Andar Bahar", bet: st.myTotal, win: st.myExpected, won: win } }));
       setToast({ roundNo: round.roundNo, text: win ? `Aap jeete ${money(st.myExpected)}` : `${money(st.myTotal)} haar gaye`, win });
     }
     const id = setTimeout(() => setToast(null), 5500);
@@ -179,14 +180,14 @@ export function CardTable({ table }: { table: Table }) {
         </div>
         <div className="flex items-center gap-2">
           <div className="rounded-lg bg-[#0b0716] px-3 py-1.5 text-sm font-black text-[#ffb800]">{money(st.balance)}</div>
-          <Link href="/client" className="rounded-lg bg-[#0b0716] px-3 py-1.5 text-xs text-[#b8a7e6] hover:text-white"></Link>
+          <Link href="/player" className="rounded-lg bg-[#0b0716] px-3 py-1.5 text-xs text-[#b8a7e6] hover:text-white"></Link>
         </div>
       </div>
 
       {/* table tabs */}
       <div className="grid grid-cols-2 gap-2">
         {(["dragon-tiger", "andar-bahar"] as Table[]).map((t) => (
-          <Link key={t} href={`/client/games/${t}`} className={`rounded-xl px-3 py-2 text-center text-sm font-bold ${t === table ? "btn-violet" : "bg-[#1b1038] text-[#b8a7e6] hover:text-white"}`}>
+          <Link key={t} href={`/player/games/${t}`} className={`rounded-xl px-3 py-2 text-center text-sm font-bold ${t === table ? "btn-violet" : "bg-[#1b1038] text-[#b8a7e6] hover:text-white"}`}>
             {t === "dragon-tiger" ? "Dragon Tiger" : "🃏 Andar Bahar"}
           </Link>
         ))}

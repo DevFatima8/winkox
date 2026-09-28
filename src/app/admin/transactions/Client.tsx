@@ -1,11 +1,8 @@
 "use client";
 import Link from "next/link";
-import { dbConnect } from "@/lib/mongo";
-import { Transaction, PaymentAccount, type TxnStatus } from "@/models";
 import { Card, ProviderBadge, StatusBadge, fmt, fmtDate } from "@/components/Shell";
-import { processTransactionAction } from "@/lib/actions";
+import { processTransactionAction } from "@/lib/clientActions";
 import { usePage } from "@/lib/useDb";
-import { getCurrentUser } from "@/lib/auth";
 
 type TransactionType = "deposit" | "withdraw";
 
@@ -30,42 +27,16 @@ const getWeekRange = (value: string) => {
 export default function TransactionsPageClient({ type, params, searchParams }: { type: TransactionType; params?: Record<string, string>; searchParams?: Record<string, string> }) {
   return usePage(async () => {
     const { status, q, days, date, week, year } = searchParams ?? {};
-    await dbConnect();
-    const me = await getCurrentUser();
-    const isSuper = me && me.role === "admin" && me.level >= 2;
-    let filter: Record<string, unknown> = { type };
-    if (status && ["pending", "approved", "rejected"].includes(status)) filter.status = status as TxnStatus;
-    const selectedDate = date ? startOfDate(date) : null;
-    const selectedWeek = week ? getWeekRange(week) : null;
-    const selectedYear = year && /^\d{4}$/.test(year) ? Number(year) : null;
-    let range: { start: Date; end: Date } | null = null;
-    if (selectedDate) {
-      const end = new Date(selectedDate); end.setDate(end.getDate() + 1);
-      range = { start: selectedDate, end };
-    } else if (selectedWeek) range = selectedWeek;
-    else if (selectedYear) range = { start: new Date(selectedYear, 0, 1), end: new Date(selectedYear + 1, 0, 1) };
-    else if (days && /^\d+$/.test(days) && Number(days) > 0) {
-      const end = new Date();
-      const start = new Date(end); start.setDate(start.getDate() - Number(days));
-      range = { start, end };
-    }
-    if (range) filter.createdAt = { $gte: range.start, $lt: range.end };
-    if (!isSuper) {
-      // sub-admin sees only transactions against payment accounts they own
-      const owned = await PaymentAccount.find({ ownerId: me!.id }).select("_id").lean();
-      const ids = owned.map((a) => a._id);
-      filter = { ...filter, paymentAccountId: { $in: ids } };
-    }
-    if (q?.trim()) {
-      const term = q.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      const { User } = await import("@/models");
-      const matchingUsers = await User.find({ $or: [{ name: new RegExp(term, "i") }, { phone: new RegExp(term, "i") }] }).select("_id").lean();
-      filter.$or = [{ senderNumber: new RegExp(term, "i") }, { referenceId: new RegExp(term, "i") }, { provider: new RegExp(term, "i") }, { userId: { $in: matchingUsers.map((u) => u._id) } }];
-    }
-    const rows = await Transaction.find(filter).sort({ createdAt: -1 }).limit(500)
-      .populate<{ userId: { name: string; phone: string } | null }>("userId", "name phone")
-      .populate<{ paymentAccountId: { accountTitle: string; accountNumber: string } | null }>("paymentAccountId", "accountTitle accountNumber")
-      .lean();
+    const query = new URLSearchParams({ type });
+    for (const [key, value] of Object.entries({ status, q, days, date, week, year })) if (value) query.set(key, value);
+    const response = await fetch(`/api/admin/transactions?${query}`, { cache: "no-store" });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error ?? "Transactions load nahi ho sake.");
+    const rows = result.rows as {
+      _id: string; userId: { name: string; phone: string } | null; paymentAccountId: { accountTitle: string; accountNumber: string } | null;
+      provider: string; amount: number; type: TransactionType; senderNumber: string | null; referenceId: string | null; proofImage?: string | null;
+      status: string; method: string; adminNote: string | null; createdAt: Date | string; holderName?: string | null;
+    }[];
 
     const tabs = [["", "All"], ["pending", "Pending"], ["approved", "Approved"], ["rejected", "Rejected"]];
     const basePath = type === "deposit" ? "/admin/deposits" : "/admin/withdrawals";
@@ -128,10 +99,10 @@ export default function TransactionsPageClient({ type, params, searchParams }: {
                       <td className="py-2.5">
                         {t.status === "pending" && (
                           <div className="flex gap-1.5">
-                            <form onSubmit={async (e) => { e.preventDefault(); const r = await processTransactionAction(id, "approved"); if (r?.error) alert(r.error); }}>
+                            <form onSubmit={async (e) => { e.preventDefault(); const r = await processTransactionAction(id, "approved"); if (r?.error) alert(r.error); else window.location.reload(); }}>
                               <button className="rounded-lg bg-emerald-500/15 px-2.5 py-1 text-xs font-semibold text-emerald-400 hover:bg-emerald-500/25">Approve</button>
                             </form>
-                            <form onSubmit={async (e) => { e.preventDefault(); await processTransactionAction(id, "rejected", "Rejected by admin"); }}>
+                            <form onSubmit={async (e) => { e.preventDefault(); const r = await processTransactionAction(id, "rejected", "Rejected by admin"); if (r?.error) alert(r.error); else window.location.reload(); }}>
                               <button className="rounded-lg bg-red-500/15 px-2.5 py-1 text-xs font-semibold text-red-400 hover:bg-red-500/25">Reject</button>
                             </form>
                           </div>

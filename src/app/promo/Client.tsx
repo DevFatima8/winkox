@@ -52,7 +52,7 @@ export default function PromoPageClient({ params, searchParams }: { params?: Rec
                 <div className="flex-1">
                   <div className="flex items-center justify-between gap-2"><h2 className="font-bold">{locale === "ur" ? (PROMOS_UR[p.title]?.[0] ?? p.title) : p.title}</h2><span className="btn-gold rounded-md px-1.5 py-0.5 text-[10px] font-black">{p.tag}</span></div>
                   <p className="mt-1 text-xs text-[#b8a7e6]">{locale === "ur" ? (PROMOS_UR[p.title]?.[1] ?? p.desc) : p.desc}</p>
-                  <Link href={viewer.loggedIn ? "/client/wallet" : "/signup"} className="btn-violet mt-2 inline-block rounded-full px-3 py-1 text-xs font-bold">{viewer.loggedIn ? t("depositNow") : t("registerToClaim")}</Link>
+                  <Link href={viewer.loggedIn ? "/player/wallet" : "/signup"} className="btn-violet mt-2 inline-block rounded-full px-3 py-1 text-xs font-bold">{viewer.loggedIn ? t("depositNow") : t("registerToClaim")}</Link>
                 </div>
               </div>
             ))}

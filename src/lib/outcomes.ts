@@ -11,6 +11,10 @@ export function isWinOutcome(): boolean {
 
 export const MAX_MULTIPLIER = 100;
 
+/** Retain the platform's share of a gross winning payout and return the player's net amount. */
+export const payoutAfterHouseShare = (grossPayout: number) =>
+  Math.floor(Math.max(0, grossPayout) * 0.98 * 100) / 100;
+
 /** Uniform float in [a,b) */
 export const urand = (a: number, b: number) => a + Math.random() * (b - a);
 

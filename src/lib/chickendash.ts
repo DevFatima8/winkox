@@ -2,8 +2,8 @@ import { dbConnect } from "./mongo";
 import { ChickenDash, Game, GameResult, User, oid, type ObjectId, type ChickenDashDoc } from "@/models";
 import type { Doc } from "./localdb";
 import { checkGameAccess } from "./gameAccess";
-import { payBetCommission } from "./platform";
-import { isWinOutcome, MAX_MULTIPLIER } from "./outcomes";
+import { payoutAfterHouseShare, isWinOutcome, MAX_MULTIPLIER } from "./outcomes";
+import { holdWinShare } from "./winHold";
 
 
 export const MIN_BET = 10;
@@ -70,7 +70,7 @@ const rnd = (a: number, b: number) => a + Math.random() * (b - a);
 const r2 = (n: number) => Math.round(n * 100) / 100;
 
 let cachedGameId: ObjectId | null = null;
-async function gameId() {
+async function gameId(): Promise<ObjectId> {
   if (cachedGameId) return cachedGameId;
   const g = await Game.findOneAndUpdate(
     { slug: "chicken-dash" },
@@ -78,7 +78,7 @@ async function gameId() {
     { upsert: true, returnDocument: "after" },
   ).lean();
   cachedGameId = g!._id;
-  return cachedGameId;
+  return cachedGameId!;
 }
 
 type GameLike = {
@@ -109,7 +109,7 @@ function pub(g: GameLike) {
   };
 }
 
-const winFor = (bet: number, m: number, bonus: number) => r2(bet * Math.min(MAX_MULTIPLIER, m + bonus));
+const winFor = (bet: number, m: number, bonus: number) => payoutAfterHouseShare(bet * Math.min(MAX_MULTIPLIER, m + bonus));
 
 export async function getState(userId: string | null) {
   await dbConnect();
@@ -152,8 +152,7 @@ export async function startGame(userId: string, amount: number, level: string) {
   }
   const gid = await gameId();
   const result = await GameResult.create({ gameId: gid, userId: uid, betAmount: amount, outcome: "pending", resultData: `${spec.label} · started` });
-  void payBetCommission(uid, amount);
-  const g = await ChickenDash.create({ userId: uid, resultId: result._id, level, betAmount: amount, lanes: spec.steps, crashLane, bagLane, bagMult });
+  const g = await ChickenDash.create({ userId: uid, resultId: String(result._id), level, betAmount: amount, lanes: spec.steps, crashLane, bagLane, bagMult });
   return { ok: true, game: pub(g.toObject()) };
 }
 
@@ -166,6 +165,7 @@ async function finish(g: Doc<ChickenDashDoc>, how: "cashed" | "finished") {
   g.winAmount = win;
   await g.save();
   await User.updateOne({ _id: g.userId }, { $inc: { balance: win } });
+  await holdWinShare(String(g.userId), g.betAmount * Math.min(MAX_MULTIPLIER, m + bonus));
   const bonusTxt = bonus ? ` + bag ${bonus}x` : "";
   await GameResult.updateOne(
     { _id: g.resultId },

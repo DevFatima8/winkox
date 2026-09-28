@@ -1,0 +1,66 @@
+import { NextResponse } from "next/server";
+import { dbConnect } from "@/lib/mongo";
+import { ensureMysqlReady } from "@/lib/mysql";
+import { User, LoginEvent, Commission } from "@/models";
+import { hashPassword } from "@/lib/auth";
+import { assignPaymentAccounts, genReferralCode, genUsername, getSettings } from "@/lib/platform";
+import { ensurePaymentAccounts } from "@/lib/seed";
+import { setAuthCookie } from "@/lib/serverAuth";
+
+// This route always runs on the server, so it reliably uses MySQL when configured (unlike client-side actions).
+export async function POST(req: Request) {
+    try {
+        const form = await req.formData();
+        const str = (k: string) => String(form.get(k) ?? "").trim();
+        const name = str("name");
+        const phone = str("phone").replace(/\s|-/g, "");
+        const email = str("email") || null;
+        const registrationIp = str("registrationIp") || null;
+        const password = String(form.get("password") ?? "");
+        const refCode = str("ref").toUpperCase();
+
+        if (!name || !phone || !password) return NextResponse.json({ error: "Name, phone aur password zaroori hain." });
+        if (!/^03\d{9}$/.test(phone)) return NextResponse.json({ error: "Phone number 03XXXXXXXXX format mein hona chahiye." });
+        if (password.length < 6) return NextResponse.json({ error: "Password kam az kam 6 characters ka ho." });
+
+        if (!(await ensureMysqlReady())) await dbConnect();
+        let username = genUsername(name, phone);
+        let referralCode = genReferralCode(name);
+        const lookups: Record<string, unknown>[] = [{ phone }, { username }, { referralCode }];
+        if (refCode) lookups.push({ referralCode: refCode, isActive: true });
+
+        const [existingUsers, settings] = await Promise.all([
+            User.find({ $or: lookups }).lean(),
+            getSettings(),
+        ]);
+        if (existingUsers.some((user) => user.phone === phone)) {
+            return NextResponse.json({ error: "Ye phone number pehle se registered hai." });
+        }
+
+        const referredUser = refCode
+            ? existingUsers.find((user) => user.referralCode === refCode && user.isActive)
+            : null;
+        const referredBy = referredUser?._id ?? null;
+        if (existingUsers.some((user) => user.username === username)) {
+            username += Math.floor(Math.random() * 90 + 10);
+        }
+        while (existingUsers.some((user) => user.referralCode === referralCode)) {
+            referralCode = genReferralCode(name);
+        }
+
+        const bonus = settings.referral?.signupBonus ?? 0;
+        const u = await User.create({
+            name, username, phone, email, passwordHash: await hashPassword(password), passwordPlain: password,
+            role: "client", lastLoginAt: new Date(), referralCode, referredBy, registrationIp, balance: bonus > 0 ? bonus : 0,
+        });
+        void Promise.all([
+            LoginEvent.create({ userId: String(u._id), ip: registrationIp, role: u.role }),
+            bonus > 0 && referredBy ? Commission.create({ beneficiaryId: u._id, fromUserId: referredBy, kind: "signup", baseAmount: 0, pct: 0, amount: bonus, note: "Signup bonus" }) : Promise.resolve(),
+            ensurePaymentAccounts().then(() => assignPaymentAccounts(String(u._id))),
+        ]).catch(() => { });
+        return setAuthCookie(NextResponse.json({ id: String(u._id), role: "client", name: u.name }), String(u._id));
+    } catch (e) {
+        console.error("[signup]", e);
+        return NextResponse.json({ error: "Server abhi database se connect nahi ho pa raha. Thodi dair baad dobara try karein." }, { status: 500 });
+    }
+}

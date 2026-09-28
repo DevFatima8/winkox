@@ -100,7 +100,7 @@ export function AviatorGame({ table = "aviator" }: { table?: Table }) {
     const j = await api("/api/aviator/cashout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ table, slot: i }) });
     setPanel(i, { busy: false });
     if (!j) return;
-    if (j.error) showToast("err", j.error); else { if (sound) { playGameSound("cashout"); speakGameVoice("planeWin"); } showToast("ok", `You have cashed out! ${fmt2(j.multiplier)}x`, `Win PKR ${fmt2(j.win)}`); }
+    if (j.error) showToast("err", j.error); else { if (sound) { playGameSound("cashout"); speakGameVoice("planeWin"); } showToast("ok", `You have cashed out! ${fmt2(j.multiplier)}x`, `Win PKR ${fmt2(j.win)}`); window.dispatchEvent(new CustomEvent("wx:game-result", { detail: { game: "Aviator", bet: Number(p.amount), win: j.win, won: j.win > 0 } })); }
     await refresh();
   }, [api, table, refresh, setPanel, showToast, sound]);
 
@@ -186,7 +186,7 @@ export function AviatorGame({ table = "aviator" }: { table?: Table }) {
           <button onClick={() => setSound(!sound)} className="flex w-full items-center justify-between rounded px-2 py-2 hover:bg-white/5"><span>Sound</span><span className={`h-4 w-8 rounded-full p-0.5 ${sound ? "bg-[#28a909]" : "bg-slate-600"}`}><span className={`block h-3 w-3 rounded-full bg-white transition ${sound ? "translate-x-4" : ""}`} /></span></button>
           <div className="my-1 border-t" style={{ borderColor: T.line }} />
           {[["Game rules", () => { setRules(true); setMenu(false); }], ["My bet history", () => { setTab("prev"); setMenu(false); }], ["Provably fair settings", () => setMenu(false)]].map(([l, fn]) => <button key={String(l)} onClick={fn as () => void} className="block w-full rounded px-2 py-2 text-left hover:bg-white/5">{String(l)}</button>)}
-          <div className="my-1 border-t" style={{ borderColor: T.line }} /><a href="/client" className="block rounded px-2 py-2 hover:bg-white/5">Home</a>
+          <div className="my-1 border-t" style={{ borderColor: T.line }} /><a href="/player" className="block rounded px-2 py-2 hover:bg-white/5">Home</a>
         </div>
       )}
 
@@ -286,7 +286,7 @@ export function AviatorGame({ table = "aviator" }: { table?: Table }) {
                           <input value={p.amount} onChange={(e) => setPanel(i, { amount: e.target.value })} onBlur={() => setAmt(Number(p.amount) || state.config.minBet)} className="w-full min-w-0 bg-transparent text-center text-sm font-bold text-white outline-none" />
                           <button onClick={() => setAmt(amount + 10)} className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-base leading-none text-slate-400" style={{ border: `1px solid #3c3e44` }}>+</button>
                         </div>
-                        <div className="mt-1 grid grid-cols-4 gap-1">{[100, 300, 500, 1000].map((v) => <button key={v} onClick={() => setAmt(v)} className={`whitespace-nowrap rounded-md py-1 text-[9px] font-bold ${amount === v ? "bg-[#28a909] text-white" : "text-slate-300 hover:text-white"}`} style={amount === v ? {} : { background: T.panel2, border: `1px solid ${T.line}` }}>{v}</button>)}</div>
+                        <div className="mt-1 grid grid-cols-4 gap-1">{[50, 100, 150, 200].map((v) => <button key={v} onClick={() => setAmt(v)} className={`whitespace-nowrap rounded-md py-1 text-[9px] font-bold ${amount === v ? "bg-[#28a909] text-white" : "text-slate-300 hover:text-white"}`} style={amount === v ? {} : { background: T.panel2, border: `1px solid ${T.line}` }}>{v}</button>)}</div>
                         <div className="mt-1 flex items-center gap-1 rounded-md px-1 py-1" style={{ background: T.panel2, border: `1px solid ${T.line}` }}>
                           <input type="number" min={state.config.minBet} max={state.config.maxBet} value={p.customAmount} onChange={(e) => setPanel(i, { customAmount: e.target.value })} className="w-full min-w-0 bg-transparent text-center text-[9px] font-bold text-white outline-none" />
                           <button onClick={() => setAmt(Number(p.customAmount) || state.config.minBet)} className={`shrink-0 rounded-md px-2 py-1 text-[8px] font-black ${amount === (Number(p.customAmount) || state.config.minBet) ? "bg-[#28a909] text-white" : "text-slate-300"}`} style={amount === (Number(p.customAmount) || state.config.minBet) ? {} : { background: T.panel }}>Custom</button>

@@ -1,9 +1,6 @@
 "use client";
 
-import { localApi } from "@/lib/client";
-
 import { useCallback, useEffect, useRef, useState } from "react";
-import { closeSupportThreadAction } from "@/lib/actions";
 
 type T = { id: string; name: string; phone: string | null; status: string; last: string; at: string; unread: number; assignedTo: string | null; assignedName: string | null };
 type M = { id: string; from: "user" | "agent" | "system"; text: string; agentName: string | null; at: string };
@@ -19,30 +16,59 @@ export function SupportInbox({ initialThread }: { initialThread?: string }) {
   const endRef = useRef<HTMLDivElement>(null);
 
   const loadThreads = useCallback(async () => {
-    const r = await localApi("/api/admin/support", { cache: "no-store" });
-    if (r.ok) { const j = await r.json(); setThreads(j.threads); if (j.me) setMeInfo(j.me); }
+    try {
+      const r = await fetch("/api/admin/support", { cache: "no-store" });
+      const j = await r.json();
+      if (!r.ok) throw new Error(j.error ?? "Inbox load nahi ho saka.");
+      setThreads(j.threads); if (j.me) setMeInfo(j.me); setErr(null);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Inbox load nahi ho saka.");
+    }
   }, []);
   const loadMsgs = useCallback(async () => {
     if (!active) return;
-    const r = await localApi(`/api/admin/support?thread=${active}`, { cache: "no-store" });
-    if (r.ok) { setMsgs((await r.json()).messages); setErr(null); } else if (r.status === 403) { setErr((await r.json()).error); setMsgs([]); }
+    try {
+      const r = await fetch(`/api/admin/support?thread=${encodeURIComponent(active)}`, { cache: "no-store" });
+      const j = await r.json();
+      if (!r.ok) throw new Error(j.error ?? "Messages load nahi huay.");
+      setMsgs(j.messages); setErr(null);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Messages load nahi huay.");
+      setMsgs([]);
+    }
   }, [active]);
 
   useEffect(() => { loadThreads(); const id = setInterval(loadThreads, 4000); return () => clearInterval(id); }, [loadThreads]);
   useEffect(() => { loadMsgs(); const id = setInterval(loadMsgs, 3000); return () => clearInterval(id); }, [loadMsgs]);
+  useEffect(() => {
+    const refresh = () => { void loadThreads(); void loadMsgs(); };
+    window.addEventListener("wx:support-update", refresh);
+    return () => window.removeEventListener("wx:support-update", refresh);
+  }, [loadMsgs, loadThreads]);
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [msgs.length]);
 
   const send = async () => {
     const t = text.trim(); if (!t || !active) return;
     setText("");
-    const r = await localApi("/api/admin/support", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ threadId: active, text: t }) });
-    if (!r.ok) setErr((await r.json()).error ?? "Error");
-    loadMsgs(); loadThreads();
+    const r = await fetch("/api/admin/support", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ threadId: active, text: t }) });
+    const result = await r.json();
+    if (!r.ok) { setErr(result.error ?? "Reply nahi bheja ja saka."); setText(t); return; }
+    await loadMsgs(); await loadThreads();
   };
   const release = async () => {
     if (!active) return;
-    await localApi("/api/admin/support", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ threadId: active }) });
-    loadThreads();
+    const r = await fetch("/api/admin/support", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ threadId: active, action: "release" }) });
+    const result = await r.json();
+    if (!r.ok) { setErr(result.error ?? "Chat release nahi hui."); return; }
+    await loadThreads();
+  };
+  const toggleStatus = async () => {
+    if (!cur) return;
+    const nextStatus = cur.status === "open" ? "closed" : "open";
+    const r = await fetch("/api/admin/support", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ threadId: cur.id, status: nextStatus }) });
+    const result = await r.json();
+    if (!r.ok) { setErr(result.error ?? "Chat status update nahi hua."); return; }
+    await loadThreads();
   };
   const cur = threads.find((t) => t.id === active);
   const shown = threads.filter((t) => filter === "all" || t.status === filter);
@@ -53,6 +79,7 @@ export function SupportInbox({ initialThread }: { initialThread?: string }) {
         <div className="flex gap-1 border-b border-[#3a2470] p-2">
           {(["open", "closed", "all"] as const).map((f) => <button key={f} onClick={() => setFilter(f)} className={`flex-1 rounded-lg py-1.5 text-xs font-bold capitalize ${filter === f ? "btn-violet" : "text-[#b8a7e6]"}`}>{f}</button>)}
         </div>
+        {err && !active && <p className="mx-2 mt-2 rounded-lg bg-red-500/15 px-3 py-2 text-xs text-red-300">{err}</p>}
         <div className="flex-1 overflow-y-auto">
           {shown.map((t) => (
             <button key={t.id} onClick={() => setActive(t.id)} className={`flex w-full items-start gap-2 border-b border-[#3a2470]/50 px-3 py-2.5 text-left hover:bg-[#8b5cf6]/10 ${active === t.id ? "bg-[#8b5cf6]/15" : ""}`}>
@@ -76,7 +103,7 @@ export function SupportInbox({ initialThread }: { initialThread?: string }) {
               <div className="flex min-w-0 items-center gap-2"><button onClick={() => setActive(null)} className="rounded-lg bg-black/30 px-2 py-1 text-xs text-[#b8a7e6] lg:hidden">←</button><div className="min-w-0"><div className="truncate font-bold text-white">{cur.name}</div><div className="text-xs text-[#b8a7e6]">{cur.phone ?? "guest visitor"} · {cur.status}{cur.assignedName ? ` · handled by ${cur.assignedTo === meInfo.id ? "you" : cur.assignedName}` : " · unassigned"}</div></div></div>
               <div className="flex gap-2">
                 {meInfo.level >= 2 && cur.assignedTo && <button onClick={release} className="rounded-lg bg-[#ffb800]/15 px-3 py-1.5 text-xs font-bold text-[#ffb800]">Release</button>}
-                <form action={closeSupportThreadAction.bind(null, cur.id, cur.status === "open" ? "closed" : "open")}><button className={`rounded-lg px-3 py-1.5 text-xs font-bold ${cur.status === "open" ? "bg-red-500/15 text-red-300" : "bg-emerald-500/15 text-emerald-300"}`}>{cur.status === "open" ? "Close chat" : "Reopen"}</button></form>
+                <button type="button" onClick={toggleStatus} className={`rounded-lg px-3 py-1.5 text-xs font-bold ${cur.status === "open" ? "bg-red-500/15 text-red-300" : "bg-emerald-500/15 text-emerald-300"}`}>{cur.status === "open" ? "Close chat" : "Reopen"}</button>
               </div>
             </div>
             <div className="flex-1 space-y-2 overflow-y-auto p-4">

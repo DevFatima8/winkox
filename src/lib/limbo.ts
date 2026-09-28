@@ -1,8 +1,8 @@
 import { dbConnect } from "./mongo";
 import { Game, GameResult, User, oid, type ObjectId } from "@/models";
 import { checkGameAccess } from "./gameAccess";
-import { payBetCommission } from "./platform";
-import { isWinOutcome, MAX_MULTIPLIER } from "./outcomes";
+import { payoutAfterHouseShare, isWinOutcome, MAX_MULTIPLIER } from "./outcomes";
+import { holdWinShare } from "./winHold";
 
 /** browser/node-safe random hex (provably-fair style seed) */
 function randomHex(bytes = 32) {
@@ -16,10 +16,10 @@ export const RTP = 0.99; // Stake Limbo: 99% RTP (1% house edge)
 export const MIN_TARGET = 1.01, MAX_TARGET = MAX_MULTIPLIER;
 
 let cachedGameId: ObjectId | null = null;
-async function gameId() {
+async function gameId(): Promise<ObjectId> {
   if (cachedGameId) return cachedGameId;
   const g = await Game.findOneAndUpdate({ slug: "limbo" }, { $setOnInsert: { name: "Limbo", slug: "limbo", icon: "🎯", category: "original", description: "Target multiplier set karein — 100x tak instant result!", isActive: true } }, { upsert: true, returnDocument: "after" }).lean();
-  cachedGameId = g!._id; return cachedGameId;
+  cachedGameId = g!._id; return cachedGameId!;
 }
 
 /** Stake-style: result = floor((2^52 * RTP) / (h+1) * 100)/100, min 1.00 */
@@ -63,11 +63,10 @@ export async function play(userId: string, amount: number, target: number) {
   const uid = oid(userId);
   const upd = await User.updateOne({ _id: uid, balance: { $gte: amount } }, { $inc: { balance: -amount } });
   if (!upd.modifiedCount) return { error: "Insufficient balance." };
-  void payBetCommission(uid, amount);
   const { result, hash } = roll(target);
   const won = result >= target;
-  const payout = won ? Math.floor(amount * Math.min(target, MAX_MULTIPLIER) * 100) / 100 : 0;
-  if (payout > 0) await User.updateOne({ _id: uid }, { $inc: { balance: payout } });
+  const payout = won ? payoutAfterHouseShare(amount * Math.min(target, MAX_MULTIPLIER)) : 0;
+  if (payout > 0) { await User.updateOne({ _id: uid }, { $inc: { balance: payout } }); await holdWinShare(userId, amount * Math.min(target, MAX_MULTIPLIER)); }
   const gid = await gameId();
   await GameResult.create({ gameId: gid, userId: uid, betAmount: amount, winAmount: payout, outcome: won ? "win" : "lose", resultData: `result ${result}x · target ${target}x · ${hash.slice(0, 10)}` });
   const me = await User.findById(uid, "balance").lean();

@@ -439,7 +439,7 @@ export function ChickenRoadGame() {
     setBusyBoth(true);
     const j = await post("/api/chicken/cashout");
     if (j.error) setMsg({ t: "err", m: j.error });
-    else { playGameSound("cashout"); speakGameVoice("chickenWin"); v.status = "cashed"; burst(v, v.cx, MANHOLE_Y); setGame(j.game); setPhase("idle"); setMsg({ t: "ok", m: `Cashed out @ ${fmtMult(j.multiplier)} — ${money(j.win)} jeete!` }); }
+    else { playGameSound("cashout"); speakGameVoice("chickenWin"); v.status = "cashed"; burst(v, v.cx, MANHOLE_Y); setGame(j.game); setPhase("idle"); setMsg({ t: "ok", m: `Cashed out @ ${fmtMult(j.multiplier)} — ${money(j.win)} jeete!` }); window.dispatchEvent(new CustomEvent("wx:game-result", { detail: { game: "Chicken Road 2", bet: j.game.bet, win: j.win, won: j.win > 0 } })); }
     setBusyBoth(false); refresh();
   };
 
@@ -549,7 +549,7 @@ export function ChickenRoadGame() {
               <button onClick={() => setAmount(Math.max(min, Math.min(max, Math.floor(balance))))} className="rounded-md px-2 py-1 text-[10px] font-bold text-slate-400 hover:text-white">MAX</button>
             </div>
             <div className="mt-1 grid grid-cols-4 gap-1.5">
-              {[100, 300, 500, 1000].map((v) => (
+              {[50, 100, 150, 200].map((v) => (
                 <button key={v} onClick={() => setAmount(v)} className={`rounded-md py-1 text-[11px] font-bold ${amount === v ? "bg-[#3ecf5a] text-slate-950" : "bg-[#2b3136] text-slate-200 hover:bg-[#363d43]"}`}>{v}</button>
               ))}
             </div>

@@ -1,10 +1,8 @@
 "use client";
 import Link from "next/link";
-import { getCurrentUser } from "@/lib/auth";
 import { Header, BottomNav, CONTAINER } from "@/components/lobby/Lobby";
 import { SupportWidget } from "@/components/SupportWidget";
 import { getInfoPage, INFO_PAGES } from "@/lib/infoPages";
-import { getSettings, supportOnline } from "@/lib/platform";
 import { OpenSupportButton } from "@/components/OpenSupport";
 import { WhatsAppIcon, TelegramIcon, HeadsetIcon, CrownIcon, BookIcon, MailIcon } from "@/components/Icons";
 import { useI18n } from "@/lib/i18n/client";
@@ -19,12 +17,13 @@ export default function InfoPageRouteClient({ params, searchParams }: { params?:
     const info = getInfoPage(page);
     if (!info) return NOT_FOUND;
     const ur = locale === "ur";
-    const [me, settings] = await Promise.all([getCurrentUser().catch(() => null), getSettings()]);
+    const response = await fetch("/api/public/data?view=info", { cache: "no-store" });
+    const data = await response.json(); if (!response.ok) throw new Error(data.error ?? "Page data load nahi ho saka.");
+    const me = data.me, settings = data.settings;
     const viewer = { loggedIn: !!me, isAdmin: me?.role === "admin", name: me?.name, balance: me?.balance };
-    const online = supportOnline(settings.support);
+    const online = Boolean(data.supportOnline);
     const l: { whatsapp?: string; telegram?: string; whatsappChannel?: string; telegramChannel?: string } = settings.links ?? {};
     const vip = [...settings.vipLevels].sort((a, b) => (a.level ?? 0) - (b.level ?? 0));
-    const ref = settings.referral;
 
     const renderP = (txt: string) => {
       if (txt === "VIP_TABLE") return (
@@ -36,8 +35,8 @@ export default function InfoPageRouteClient({ params, searchParams }: { params?:
         </div>
       );
       if (txt === "REF_RATES") return (
-        <div className="grid gap-2 sm:grid-cols-3">
-          {[[`${ref?.depositCommissionPct ?? 2}%`, ur ? "دوست کے ہر ڈپازٹ پر" : "on every friend's deposit"], [`${ref?.betCommissionPct ?? 1.5}%`, ur ? "دوست کی ہر بیٹ پر" : "on every friend's bet"], [`${ref?.agentDepositCommissionPct ?? 8}%`, ur ? "ایجنٹ اکاؤنٹس کے لیے ڈپازٹ کمیشن" : "deposit commission for Agent accounts"]].map(([v, d]) => (
+        <div className="grid gap-2 sm:grid-cols-1">
+          {[["1.5%", ur ? "ہر ریفرر کے ذریعے آنے والے کلائنٹ کے پہلے منظور شدہ ڈپازٹ پر" : "on the first approved deposit from each referred client"]].map(([v, d]) => (
             <div key={d} className="rounded-xl bg-black/30 p-3 ring-1 ring-[#3a2470]"><div className="text-2xl font-black text-[#ffb800]">{v}</div><div className="text-xs text-[#b8a7e6]">{d}</div></div>
           ))}
         </div>

@@ -1448,7 +1448,27 @@ table {
 }
 
 .wx-drawer-overlay {
-  background: rgba(5, 1, 15, .92);
+  background: rgba(5, 1, 15, .58);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  transition-property: opacity, backdrop-filter;
+}
+
+@keyframes wxDrawerItemIn {
+  from {
+    opacity: 0;
+    transform: translate3d(-12px, 8px, 0) scale(.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+.wx-drawer-item {
+  animation: wxDrawerItemIn .34s cubic-bezier(.22, 1, .36, 1) both;
+  animation-delay: calc(var(--drawer-index, 0) * 45ms + 90ms);
 }
 
 html.light .wx-drawer-panel {
@@ -1460,7 +1480,7 @@ html.light .wx-drawer-panel {
 }
 
 html.light .wx-drawer-overlay {
-  background: rgba(15, 23, 42, .55);
+  background: rgba(15, 23, 42, .34);
 }
 
 /* panel text colors */
@@ -1579,16 +1599,20 @@ html.light .wx-drawer-panel .wx-chip {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .wx-drawer-item {
+    animation: none;
+  }
+
   .wx-winners {
     animation: none;
   }
 }
 
-/* Top Winners card stays dark even in light mode so usernames remain readable/white */
+/* Top Winners card follows the active theme. */
 html.light .wx-winners-card {
-  background: linear-gradient(180deg, #160d33 0%, #0b0720 100%) !important;
-  border-color: #3a2470 !important;
-  color: #fff !important;
+  background: #fff !important;
+  border-color: #d5dde6 !important;
+  color: #0f172a !important;
 }
 
 html.light .wx-winners-card .text-white,
@@ -1596,20 +1620,93 @@ html.light .wx-winners-card .text-white\/90,
 html.light .wx-winners-card .text-slate-200,
 html.light .wx-winners-card [class*="text-slate-200"],
 html.light .wx-winners-card [class*="text-white"] {
-  color: #fff !important;
+  color: #0f172a !important;
 }
 
 html.light .wx-winners-card .text-\[#b8a7e6\],
 html.light .wx-winners-card [class*="text-\[#b8a7e6\]"] {
-  color: #c4b5fd !important;
+  color: #64748b !important;
 }
 
 html.light .wx-winners-card .text-amber-300 {
-  color: #fcd34d !important;
+  color: #b45309 !important;
+}
+
+html.light .wx-winners-card .text-slate-900,
+html.light .wx-winners-card .text-slate-800,
+html.light .wx-winners-card .text-slate-700 {
+  color: #0f172a !important;
 }
 
 html.light .wx-winners-card [style*="rgba(255,255,255,.03)"] {
-  background: rgba(255, 255, 255, .04) !important;
+  background: rgba(15, 23, 42, .04) !important;
+}
+
+html.light .wx-winners-card .bg-slate-50 {
+  background-color: #f8fafc !important;
+}
+
+html.light .wx-winners-card .bg-slate-200 {
+  background-color: #e2e8f0 !important;
+}
+
+html.light .wx-winners-card .bg-white {
+  background-color: #fff !important;
+}
+
+html.light .wx-winners-card .border-slate-200,
+html.light .wx-winners-card .border-slate-300 {
+  border-color: #d5dde6 !important;
+}
+
+html.light .wx-winners-card .bg-rose-500.text-white,
+html.light .wx-winners-card .bg-gradient-to-br.text-white {
+  color: #fff !important;
+}
+
+/* Promo overlays stay dark in light mode, so their close controls need white contrast. */
+html.light .wx-promo-overlay .text-white {
+  color: #fff !important;
+}
+
+html.light .wx-promo-overlay .border-white {
+  border-color: rgba(255, 255, 255, .9) !important;
+}
+
+html.light .wx-promo-overlay .border-white\/80 {
+  border-color: rgba(255, 255, 255, .9) !important;
+}
+
+/* The app uses html.light for the light theme; dark mode is the default. */
+html:not(.light) .wx-winners-card {
+  background: #0b0716 !important;
+  border-color: #3a2470 !important;
+  color: #fff !important;
+}
+
+html:not(.light) .wx-winners-card .bg-slate-50,
+html:not(.light) .wx-winners-card .bg-white {
+  background-color: #0b0716 !important;
+}
+
+html:not(.light) .wx-winners-card .bg-slate-200 {
+  background-color: #140c2a !important;
+}
+
+html:not(.light) .wx-winners-card .border-slate-200,
+html:not(.light) .wx-winners-card .border-slate-300 {
+  border-color: #3a2470 !important;
+}
+
+html:not(.light) .wx-winners-card .text-slate-900,
+html:not(.light) .wx-winners-card .text-slate-800,
+html:not(.light) .wx-winners-card .text-slate-700 {
+  color: #fff !important;
+}
+
+html:not(.light) .wx-winners-card .text-slate-500,
+html:not(.light) .wx-winners-card .text-slate-400 {
+  color: #b8a7e6 !important;
 }
 
 /* ============================================================
@@ -1674,6 +1771,7 @@ body {
     bottom: 0;
     height: 100dvh !important;
     max-height: 100dvh;
+    background: linear-gradient(180deg, #140c2a 0%, #0c0720 100%) !important;
   }
 
   .wx-drawer-panel>div,

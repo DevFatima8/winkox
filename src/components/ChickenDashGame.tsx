@@ -613,7 +613,7 @@ export function ChickenDashGame() {
     setBusyBoth(true);
     const j = await post("/api/chickendash/cashout");
     if (j.error) setMsg({ t: "err", m: j.error });
-    else { playGameSound("cashout"); speakGameVoice("chickenWin"); v.status = "cashed"; burst(v, v.cx, ROW_Y, "coin", 18); setGame(j.game); setPhase("idle"); setMsg({ t: "ok", m: `Cashed out @ ${fmtMult(j.multiplier)} — ${money(j.win)} jeete!` }); }
+    else { playGameSound("cashout"); speakGameVoice("chickenWin"); v.status = "cashed"; burst(v, v.cx, ROW_Y, "coin", 18); setGame(j.game); setPhase("idle"); setMsg({ t: "ok", m: `Cashed out @ ${fmtMult(j.multiplier)} — ${money(j.win)} jeete!` }); window.dispatchEvent(new CustomEvent("wx:game-result", { detail: { game: "Chicken Dash", bet: j.game.bet, win: j.win, won: j.win > 0 } })); }
     setBusyBoth(false); refresh();
   };
 
@@ -650,7 +650,7 @@ export function ChickenDashGame() {
             {game && phase === "active" && <div className="hidden rounded-lg bg-[#1f2533] px-3 py-1 text-xs text-slate-300 sm:block">Tile <b className="text-white">{game.position}</b>/{game.lanes}{game.bagCollected ? <> · <b className="text-yellow-400">+{game.bagMult}x</b></> : null}</div>}
             <div className="flex items-center gap-2 rounded-lg bg-[#1f2533] px-3 py-1 text-sm font-bold text-white"><span className="inline-block h-4 w-4 rounded-full border-2 border-yellow-600 bg-yellow-400" />{balance.toLocaleString()}</div>
             <button onClick={() => setShowRules((s) => !s)} className="flex h-7 w-7 items-center justify-center rounded-full bg-[#1f2533] text-xs font-bold text-slate-300 hover:text-white">i</button>
-            <Link href="/client" className="flex h-7 w-7 items-center justify-center rounded-full bg-[#1f2533] text-xs text-slate-300 hover:text-white"></Link>
+            <Link href="/player" className="flex h-7 w-7 items-center justify-center rounded-full bg-[#1f2533] text-xs text-slate-300 hover:text-white"></Link>
           </div>
         </div>
 
@@ -686,8 +686,8 @@ export function ChickenDashGame() {
               <input type="number" value={amount} min={min} max={max} onChange={(e) => setAmount(Number(e.target.value))} className="w-full min-w-0 flex-1 bg-transparent text-center text-lg font-bold text-white outline-none" />
               <button onClick={() => setAmount((a) => Math.min(max, a + 10))} className="h-9 w-9 rounded-lg bg-[#2b3140] text-lg font-bold text-white">+</button>
             </div>
-            <div className="mt-2 grid grid-cols-6 gap-1">
-              {[["Min", min], ["100", 100], ["300", 300], ["500", 500], ["1K", 1000], ["Max", Math.max(min, Math.min(max, Math.floor(balance)))]].map(([l, v]) => (
+            <div className="mt-2 grid grid-cols-7 gap-1">
+              {[["Min", min], ["50", 50], ["100", 100], ["150", 150], ["200", 200], ["Custom", customAmount], ["Max", Math.max(min, Math.min(max, Math.floor(balance)))]].map(([l, v]) => (
                 <button key={String(l)} onClick={() => setAmount(Number(v))} className="rounded-md bg-[#2b3140] py-1 text-[11px] font-bold text-slate-200 hover:bg-[#364054]">{l}</button>
               ))}
             </div>

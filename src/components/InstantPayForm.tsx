@@ -10,11 +10,11 @@ import { ZapIcon } from "@/components/Icons";
 const input = "w-full rounded-xl border border-[#3a2470] bg-black/30 px-4 py-2.5 text-white outline-none placeholder:text-slate-500 focus:border-[#d946ef]";
 type Account = { provider: "jazzcash" | "easypaisa"; accountTitle: string; accountNumber: string };
 
-export function InstantPayForm({ kind, min, max, label, hasPin, accounts = [] }: { kind: "deposit" | "withdraw"; min: number; max: number; label: string; hasPin: boolean; accounts?: Account[] }) {
+export function InstantPayForm({ kind, min, max, label, hasPin, accounts = [], initialAmount }: { kind: "deposit" | "withdraw"; min: number; max: number; label: string; hasPin: boolean; accounts?: Account[]; initialAmount?: number }) {
   const { isUr } = useI18n();
   const router = useRouter();
   const [provider, setProvider] = useState<"jazzcash" | "easypaisa">("jazzcash");
-  const [amount, setAmount] = useState(kind === "deposit" ? 1000 : 500);
+  const [amount, setAmount] = useState(initialAmount ?? (kind === "deposit" ? 1000 : 500));
   const [acc, setAcc] = useState("");
   const [holder, setHolder] = useState("");
   const [referenceId, setReferenceId] = useState("");
@@ -56,7 +56,7 @@ export function InstantPayForm({ kind, min, max, label, hasPin, accounts = [] }:
         <label className="block"><span className="mb-1 block text-sm font-medium text-slate-300">Transaction ID (TID) <span className="text-xs text-slate-500">or screenshot below</span></span><input value={referenceId} onChange={(e) => setReferenceId(e.target.value)} placeholder="e.g. 1234567890" className={input} /></label>
         <label className="block"><span className="mb-1 block text-sm font-medium text-slate-300">Payment screenshot <span className="text-xs text-slate-500">(TID ya screenshot mein se ek lazmi)</span></span><input type="file" accept="image/*" onChange={(e) => { const file = e.target.files?.[0]; if (!file) return; if (file.size > 2 * 1024 * 1024) { setErr("Screenshot 2MB se chhota hona chahiye."); return; } const reader = new FileReader(); reader.onload = () => setProofImage(String(reader.result ?? "")); reader.readAsDataURL(file); }} className="w-full text-sm text-slate-300 file:mr-3 file:rounded-lg file:border-0 file:bg-[#ffb800] file:px-3 file:py-2 file:font-bold file:text-black" /></label>
       </>}
-      {kind === "withdraw" && (hasPin ? <label className="block"><span className="mb-1 block text-sm font-medium text-slate-300">Withdrawal PIN</span><input value={pin} onChange={(e) => setPin(e.target.value)} inputMode="numeric" maxLength={4} placeholder="••••" className={input} /></label> : <p className="rounded-xl bg-[#ffb800]/10 p-3 text-xs text-[#ffe0a3]">Pehle <a href="/client/profile" className="font-bold underline">Profile</a> se Withdrawal PIN set karein.</p>)}
+      {kind === "withdraw" && (hasPin ? <label className="block"><span className="mb-1 block text-sm font-medium text-slate-300">Withdrawal PIN</span><input value={pin} onChange={(e) => setPin(e.target.value)} inputMode="numeric" maxLength={4} placeholder="••••" className={input} /></label> : <p className="rounded-xl bg-[#ffb800]/10 p-3 text-xs text-[#ffe0a3]">Pehle <a href="/player/profile" className="font-bold underline">Profile</a> se Withdrawal PIN set karein.</p>)}
       {err && <p className="rounded-lg bg-red-500/15 px-3 py-2 text-sm text-red-300">{err}</p>}
       <button disabled={busy} onClick={go} className="btn-gold flex w-full items-center justify-center gap-2 rounded-xl py-3 font-black disabled:opacity-60"><ZapIcon size={16} /> {busy ? "..." : label}</button>
     </div>

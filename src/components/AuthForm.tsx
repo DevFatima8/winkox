@@ -2,19 +2,13 @@
 
 import { useActionState, useEffect, useState } from "react";
 import Link from "next/link";
-import { loginAction, signupAction, type ActionState } from "@/lib/actions";
+import { loginAction, signupAction } from "@/lib/clientActions";
+import type { ActionState } from "@/lib/actions";
 import { useI18n } from "@/lib/i18n/client";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { LanguageSwitch } from "@/components/LanguageSwitch";
 import { BrandLogo } from "@/components/BrandLogo";
-
-const DEMO_LOGINS = [
-  { role: "Super Admin", name: "full control", id: "WX-ADM-0001", pw: "admin123" },
-  { role: "Sub Admin", name: "Ahmed Support", id: "WX-ADM-0002", pw: "subadmin123" },
-  { role: "Client", name: "Demo Client · Rs. 50,000", id: "demo", pw: "client123" },
-  { role: "Client", name: "Ali Khan · Rs. 12,000", id: "ali", pw: "ali123" },
-  { role: "Agent", name: "Bilal Agent", id: "agent", pw: "agent123" },
-];
+import { InstallPrompt } from "@/components/InstallPrompt";
 
 export function AuthForm({ mode }: { mode: "login" | "signup" }) {
   const action = mode === "login" ? loginAction : signupAction;
@@ -23,14 +17,37 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
   const [ref, setRef] = useState("");
   const [login, setLogin] = useState("");
   const [pw, setPw] = useState("");
-  const [showDemo, setShowDemo] = useState(false);
   const [registrationIp, setRegistrationIp] = useState("");
   const [loginIp, setLoginIp] = useState("");
+  const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
+
+  useEffect(() => {
+    const s = state as any;
+    if (s?.success) {
+      setToast({ type: "success", message: s.success });
+      if (s.redirect) {
+        const timer = setTimeout(() => window.location.assign(s.redirect), 1500);
+        return () => clearTimeout(timer);
+      } else {
+        const timer = setTimeout(() => setToast(null), 3000);
+        return () => clearTimeout(timer);
+      }
+    } else if (s?.error) {
+      setToast({ type: "error", message: s.error });
+      const timer = setTimeout(() => setToast(null), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [state]);
+
   useEffect(() => {
     const r = new URLSearchParams(window.location.search).get("ref");
-    if (r) { setRef(r.toUpperCase()); document.cookie = `ref=${r.toUpperCase()}; path=/; max-age=${60 * 60 * 24 * 30}`; }
+    if (r) {
+      setRef(r.toUpperCase()); document.cookie = `ref=${r.toUpperCase()}; path=/; max-age=${60 * 60 * 24 * 30}`;
+      // Referral link → open the install-app prompt right away so the friend installs the PWA.
+      if (mode === "signup") setTimeout(() => window.dispatchEvent(new CustomEvent("wx:open-install")), 500);
+    }
     else { const m = document.cookie.match(/(?:^|; )ref=([^;]+)/); if (m) setRef(m[1]); }
-  }, []);
+  }, [mode]);
   useEffect(() => {
     if (mode !== "signup") return;
     fetch("/api/ip").then((r) => r.ok ? r.json() : null).then((data) => { if (data?.ip) { setRegistrationIp(String(data.ip)); setLoginIp(String(data.ip)); } }).catch(() => { });
@@ -38,6 +55,11 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
 
   return (
     <main className="wx-bg flex min-h-screen items-center justify-center px-4 py-12">
+      {toast && (
+        <div className={`fixed left-1/2 top-4 z-[100] -translate-x-1/2 animate-[pop_.3s_ease-out] rounded-full px-6 py-3 text-sm font-bold shadow-2xl transition-all ${toast.type === "success" ? "bg-green-500 text-white" : "bg-[#e50539] text-white"}`}>
+          {toast.message}
+        </div>
+      )}
       <div className="wx-card w-full max-w-md rounded-3xl p-8 shadow-[0_20px_60px_rgba(139,92,246,.35)]">
         <div className="mb-4 flex items-center justify-between"><Link href="/" className="inline-flex items-center gap-1 text-xs text-[#b8a7e6] hover:text-white">{t("backHome")}</Link><div className="flex items-center gap-2"><LanguageSwitch compact /><ThemeToggle compact /></div></div>
         <div className="mb-6 text-center">
@@ -57,7 +79,6 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
           {mode === "signup" && <Field label={t("emailOptional")} name="email" type="email" placeholder="you@email.com" />}
           {mode === "signup" && <Field label={t("refOptional")} name="ref" value={ref} onChange={(e) => setRef(e.target.value.toUpperCase())} placeholder="e.g. ALIK7X2P" />}
           <Field label={t("password")} name="password" type="password" value={pw} onChange={(e) => setPw(e.target.value)} placeholder="••••••••" required />
-          {state?.error && <p className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-400">{state.error}</p>}
           <button
             disabled={pending}
             className="btn-gold w-full rounded-full py-3 font-black transition disabled:opacity-60"
@@ -65,21 +86,6 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
             {pending ? t("pleaseWait") : mode === "login" ? t("login") : t("register")}
           </button>
         </form>
-        {mode === "login" && (
-          <div className="mt-4 rounded-xl border border-dashed border-[#ffb800]/50 bg-[#ffb800]/10 p-3 text-xs">
-            <button type="button" onClick={() => setShowDemo((v) => !v)} className="flex w-full items-center justify-between font-bold text-[#ffe0a3]"><span>Demo accounts (tap to fill)</span><span>{showDemo ? "▴" : "▾"}</span></button>
-            {showDemo && (
-              <ul className="mt-2 space-y-1.5">
-                {DEMO_LOGINS.map((d) => (
-                  <li key={d.id}><button type="button" onClick={() => { setLogin(d.id); setPw(d.pw); }} className="flex w-full items-center justify-between gap-2 rounded-lg bg-black/30 px-2.5 py-1.5 text-left hover:bg-black/40">
-                    <span><b className="text-white">{d.role}</b> <span className="text-[#b8a7e6]">— {d.name}</span></span>
-                    <span className="shrink-0 font-mono text-[11px] text-[#ffb800]">{d.id} / {d.pw}</span>
-                  </button></li>
-                ))}
-              </ul>
-            )}
-          </div>
-        )}
         <p className="mt-5 text-center text-sm text-slate-400">
           {mode === "login" ? (
             <>
@@ -94,6 +100,7 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
           )}
         </p>
       </div>
+      {mode === "signup" && <InstallPrompt />}
     </main>
   );
 }

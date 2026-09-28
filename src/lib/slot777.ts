@@ -1,8 +1,8 @@
 import { dbConnect } from "./mongo";
 import { Game, GameResult, User, oid, type ObjectId } from "@/models";
 import { checkGameAccess } from "./gameAccess";
-import { payBetCommission } from "./platform";
-import { isWinOutcome, MAX_MULTIPLIER } from "./outcomes";
+import { payoutAfterHouseShare, isWinOutcome, MAX_MULTIPLIER } from "./outcomes";
+import { holdWinShare } from "./winHold";
 
 export const MIN_BET = 10, MAX_BET = 10000, MAX_WIN = Number.MAX_SAFE_INTEGER;
 // Classic 3-reel, 1-line "Lucky 777". Symbols and weighted reel strips.
@@ -59,10 +59,10 @@ export function theoreticalRtp() {
 }
 
 let cachedGameId: ObjectId | null = null;
-async function gameId() {
+async function gameId(): Promise<ObjectId> {
   if (cachedGameId) return cachedGameId;
   const g = await Game.findOneAndUpdate({ slug: "lucky-777" }, { $setOnInsert: { name: "Lucky 777", slug: "lucky-777", icon: "🎰", category: "original", description: "Classic 3-reel slot — 7 7 7 par jackpot!", isActive: true } }, { upsert: true, returnDocument: "after" }).lean();
-  cachedGameId = g!._id; return cachedGameId;
+  cachedGameId = g!._id; return cachedGameId!;
 }
 
 export async function getState(userId: string | null) {
@@ -81,7 +81,6 @@ export async function spin(userId: string, amount: number) {
   const uid = oid(userId);
   const upd = await User.updateOne({ _id: uid, balance: { $gte: amount } }, { $inc: { balance: -amount } });
   if (!upd.modifiedCount) return { error: "Insufficient balance." };
-  void payBetCommission(uid, amount);
   // decide win/loss first: ~35% winning spins
   const wantWin = isWinOutcome();
   let reels: Sym[] = [spinReel(0), spinReel(1), spinReel(2)];
@@ -106,10 +105,10 @@ export async function spin(userId: string, amount: number) {
       if (!e || e.mult < 1.5) { hit = e; break; } hit = e;
     }
   }
-  const payout = hit ? amount * Math.min(MAX_MULTIPLIER, hit.mult) : 0;
-  if (payout > 0) await User.updateOne({ _id: uid }, { $inc: { balance: payout } });
+  const payout = hit ? payoutAfterHouseShare(amount * Math.min(MAX_MULTIPLIER, hit.mult)) : 0;
+  if (payout > 0 && hit) { await User.updateOne({ _id: uid }, { $inc: { balance: payout } }); await holdWinShare(userId, amount * Math.min(MAX_MULTIPLIER, hit.mult)); }
   const gid = await gameId();
-  await GameResult.create({ gameId: gid, userId: uid, betAmount: amount, winAmount: payout, outcome: payout >= amount && payout > 0 ? "win" : "lose", resultData: `${reels.join(" | ")}${hit ? ` → ${hit.label} ×${hit.mult}` : ""}` });
+  await GameResult.create({ gameId: gid, userId: uid, betAmount: amount, winAmount: payout, outcome: payout > 0 ? "win" : "lose", resultData: `${reels.join(" | ")}${hit ? ` → ${hit.label} ×${hit.mult}` : ""}` });
   const me = await User.findById(uid, "balance").lean();
   return { ok: true, reels, win: hit ? { label: hit.label, mult: hit.mult } : null, payout, balance: me?.balance ?? 0 };
 }

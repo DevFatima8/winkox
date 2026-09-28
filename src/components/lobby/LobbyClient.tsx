@@ -1,14 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useI18n, Hi } from "@/lib/i18n/client";
+import { useRealtime } from "@/components/RealtimeSync";
 import { LanguageSwitch } from "@/components/LanguageSwitch";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { BrandLogo } from "@/components/BrandLogo";
 import { Drawer as GlobalDrawer } from "@/components/Drawer";
 import { HomeIcon, FlameIcon, SpadeIcon, GamepadIcon, GiftIcon, WalletIcon, BanknoteIcon, HistoryIcon, BookIcon, UserIcon, MegaphoneIcon, MailIcon, ArrowUpIcon, XIcon, MenuIcon, GlobeIcon, CrownIcon, UsersIcon } from "@/components/Icons";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 
 /* ---------- Banner carousel ---------- */
 export type Slide = { img?: string; bg: string; kicker?: string; title: string; sub?: string; href: string; cta: string; emoji?: string };
@@ -47,7 +48,21 @@ export function BannerCarousel({ slides }: { slides: Slide[] }) {
 
 /* ---------- Marquee ---------- */
 export function Marquee({ items }: { items: string[] }) {
-  const text = items.join("      •      ");
+  const { announcement, notification } = useRealtime();
+  const [broadcasts, setBroadcasts] = useState<string[]>([]);
+  const load = useCallback(async () => {
+    const response = await fetch("/api/notifications", { cache: "no-store" });
+    if (!response.ok) return;
+    const data = await response.json() as { items?: { title: string; body: string; audience?: string }[] };
+    setBroadcasts((data.items ?? []).filter((item) => item.audience === "all").map((item) => `${item.title}: ${item.body}`));
+  }, []);
+  useEffect(() => {
+    const initial = window.setTimeout(() => void load(), 0);
+    const id = window.setInterval(() => void load(), 5000);
+    return () => { window.clearTimeout(initial); window.clearInterval(id); };
+  }, [load]);
+  const liveBroadcast = notification?.audience === "all" ? `${notification.title}: ${notification.body}` : "";
+  const text = announcement.trim() || [liveBroadcast, ...broadcasts.filter((item) => item !== liveBroadcast)].filter(Boolean).join("      •      ") || items.join("      •      ");
   return (
     <div className="flex items-center gap-2 rounded-xl bg-black/30 px-3 py-2 ring-1 ring-[#3a2470]">
       <span className="shrink-0 text-[#ffb800]"><MegaphoneIcon size={16} /></span>
@@ -61,6 +76,7 @@ export function Marquee({ items }: { items: string[] }) {
     </div>
   );
 }
+
 
 /* ---------- Jackpot counter ---------- */
 export function JackpotCounter({ start }: { start: number }) {
@@ -128,9 +144,9 @@ export function Drawer({ loggedIn, isAdmin }: { loggedIn: boolean; isAdmin: bool
   const { t } = useI18n();
   const links: [ReactNode, string, string][] = [
     [<HomeIcon key="h" size={18} />, t("home"), "/"], [<FlameIcon key="f" size={18} />, t("hotGames"), "/#games"], [<SpadeIcon key="c" size={18} />, t("cards"), "/?cat=Cards#games"], [<GamepadIcon key="g" size={18} />, t("miniGames"), "/?cat=Mini%20Games#games"],
-    [<GiftIcon key="p" size={18} />, t("promo"), "/promo"], [<CrownIcon key="v" size={18} />, "VIP", "/vip"], [<UsersIcon key="i" size={18} />, t("invite"), loggedIn ? "/client/team" : "/invite"],
-    [<WalletIcon key="d" size={18} />, t("deposit"), loggedIn ? "/client/wallet" : "/login"], [<BanknoteIcon key="w" size={18} />, t("withdraw"), loggedIn ? "/client/wallet" : "/login"],
-    [<HistoryIcon key="b" size={18} />, t("betHistory"), loggedIn ? "/client/history" : "/login"], [<BookIcon key="k" size={18} />, t("helpCenter"), "/help"], [<UserIcon key="u" size={18} />, t("profile"), isAdmin ? "/admin" : loggedIn ? "/client/profile" : "/login"],
+    [<GiftIcon key="p" size={18} />, t("promo"), "/promo"], [<CrownIcon key="v" size={18} />, "VIP", "/vip"], [<UsersIcon key="i" size={18} />, t("invite"), loggedIn ? "/player/team" : "/invite"],
+    [<WalletIcon key="d" size={18} />, t("deposit"), loggedIn ? "/player/wallet" : "/login"], [<BanknoteIcon key="w" size={18} />, t("withdraw"), loggedIn ? "/player/wallet" : "/login"],
+    [<HistoryIcon key="b" size={18} />, t("betHistory"), loggedIn ? "/player/history" : "/login"], [<BookIcon key="k" size={18} />, t("helpCenter"), "/help"], [<UserIcon key="u" size={18} />, t("profile"), isAdmin ? "/admin" : loggedIn ? "/player/profile" : "/login"],
   ];
   return (
     <>
@@ -144,7 +160,7 @@ export function Drawer({ loggedIn, isAdmin }: { loggedIn: boolean; isAdmin: bool
           <div className="wx-chip flex items-center justify-between rounded-xl bg-black/30 px-3 py-2.5 text-xs text-[#b8a7e6]"><span>Theme</span><ThemeToggle compact /></div>
         </div>
         <nav className="mt-3 space-y-0.5 px-3">
-          {links.map(([i, l, h]) => <Link key={l + h} href={h} onClick={() => setOpen(false)} className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold wx-rowtext hover:wx-row"><span className="wx-rowicon">{i}</span>{l}</Link>)}
+          {links.map(([i, l, h], index) => <Link key={l + h} href={h} onClick={() => setOpen(false)} style={{ "--drawer-index": index } as CSSProperties} className="wx-drawer-item flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold wx-rowtext hover:wx-row"><span className="wx-rowicon">{i}</span>{l}</Link>)}
         </nav>
         {!loggedIn && (
           <div className="mt-5 grid grid-cols-2 gap-2 border-t border-white/10 p-4">

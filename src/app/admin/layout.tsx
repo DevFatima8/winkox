@@ -1,15 +1,16 @@
 "use client";
 import { useEffect, type ReactNode } from "react";
 import { Shell } from "@/components/Shell";
+import { AdminLiveSync } from "@/components/AdminLiveSync";
 import { useSession } from "@/lib/useDb";
 import { useI18n } from "@/lib/i18n/client";
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const { user, loading } = useSession();
+  const { t } = useI18n();
   useEffect(() => { if (!loading && (!user || user.role !== "admin")) window.location.replace("/login"); }, [user, loading]);
   if (loading || !user || user.role !== "admin") return <div className="wx-bg flex min-h-screen items-center justify-center text-sm text-[#b8a7e6]"><span className="h-8 w-8 animate-spin rounded-full border-2 border-[#00e5a0] border-t-transparent" /></div>;
   const superNav = user.level >= 2;
-  const { t } = useI18n();
   const nav = [
     { href: "/admin", label: t("dashboard"), icon: "📊" },
     { href: "/admin/support", label: t("liveSupportAdmin"), icon: "💬" },
@@ -23,6 +24,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     { href: "/admin/agents", label: t("agentsAdmin"), icon: "🤝" },
     { href: "/admin/notifications", label: t("notificationsAdmin"), icon: "🔔" },
     ...(superNav ? [
+    { href: "/admin/announcements", label: "Announcements", icon: "📢" },
       { href: "/admin/staff", label: t("staffAdmin"), icon: "🛡️" },
       { href: "/admin/logs", label: t("activityLogs"), icon: "📜" },
       { href: "/admin/cleanup", label: t("historyCleanup"), icon: "🧹" },
@@ -35,6 +37,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   ];
   return (
     <Shell title={superNav ? t("superAdmin") : t("admin")} nav={nav} userName={`${user.name}${user.adminId ? ` · ${user.adminId}` : ""}`} support={false} showInstallPrompt={false} badge={<span className="btn-violet rounded-lg px-3 py-1 text-xs font-bold">{superNav ? t("superAdmin") : t("admin")}</span>}>
+      <AdminLiveSync />
       {children}
     </Shell>
   );
