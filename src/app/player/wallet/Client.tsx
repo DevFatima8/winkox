@@ -24,14 +24,7 @@ export default function WalletPageClient({ params, searchParams }: { params?: Re
         <WinHoldCard locked={holds.locked} claimable={holds.claimable} />
         <div className="grid gap-6 lg:grid-cols-2">
           <Card title={t("depositTitle")}>
-            {gw.enabled ? (
-              <WalletTabs
-                tabs={[
-                  { key: "instant", label: gw.label, badge: "TEST", content: <InstantPayForm kind="deposit" min={gw.minDeposit} max={gw.maxPerTxn} initialAmount={initialDepositAmount} label={gw.label} hasPin={me.hasPin} accounts={accounts} /> },
-                  { key: "manual", label: "Manual (TID)", content: <DepositForm accounts={accounts} initialAmount={initialDepositAmount} /> },
-                ]}
-              />
-            ) : <DepositForm accounts={accounts} initialAmount={initialDepositAmount} />}
+            <DepositForm accounts={accounts} initialAmount={initialDepositAmount} />
           </Card>
           <Card title={t("withdrawTitle")}>
             {gw.enabled && gw.autoWithdraw ? (

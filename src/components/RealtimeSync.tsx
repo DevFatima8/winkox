@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { unlockGameAudio } from "@/lib/gameAudio";
 
-export type LiveNotification = { id: string; title: string; body: string; type: string; audience?: string; at: string; read: boolean };
+export type LiveNotification = { id: string; title: string; body: string; type: string; audience?: string; href?: string | null; at: string; read: boolean };
 type RealtimeValue = { notification: LiveNotification | null; announcement: string };
 
 const RealtimeContext = createContext<RealtimeValue>({ notification: null, announcement: "" });

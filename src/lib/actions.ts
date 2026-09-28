@@ -190,9 +190,9 @@ export async function toggleUserActiveAction(id: string, isActive: boolean, form
   const update = isActive ? { isActive: true } : { isActive: false, adminNote: reason || "Account blocked by administrator." };
   await User.updateOne({ _id: oid(id) }, { $set: update });
   if (isActive) {
-    await notifyUser(id, "Account unblocked", "Your account has been unblocked. You can use the website again.", "success");
+    await notifyUser(id, "Account unblocked", "Your account has been unblocked. You can use the website again.", "success", { href: "/player/profile" });
   } else {
-    await notifyUser(id, "Account blocked", `Your account has been blocked. Reason: ${reason || "Account blocked by administrator."} Contact Support if you believe this is incorrect.`, "warning");
+    await notifyUser(id, "Account blocked", `Your account has been blocked. Reason: ${reason || "Account blocked by administrator."} Contact Support if you believe this is incorrect.`, "warning", { href: "/player/profile" });
   }
   await logAdmin(me, isActive ? "unblock_user" : "block_user", t.phone, reason || t.adminNote || "No reason provided");
   revalidatePath("/admin/users"); revalidatePath(`/admin/users/${id}`);
@@ -220,7 +220,7 @@ export async function adjustUserBalanceAction(_: ActionState, form: FormData): P
   u.balance = (u.balance ?? 0) + change;
   await u.save();
   const label = direction === "add" ? "Balance added" : "Balance removed";
-  await notifyUser(id, label, `Super Admin ne aapke wallet mein Rs. ${amount.toLocaleString()} ${direction === "add" ? "add" : "remove"} kiye. New balance: Rs. ${u.balance.toLocaleString()}.`, direction === "add" ? "success" : "warning");
+  await notifyUser(id, label, `Super Admin ne aapke wallet mein Rs. ${amount.toLocaleString()} ${direction === "add" ? "add" : "remove"} kiye. New balance: Rs. ${u.balance.toLocaleString()}.`, direction === "add" ? "success" : "warning", { href: "/player/wallet" });
   await logAdmin(me, direction === "add" ? "add_user_balance" : "remove_user_balance", u.phone, `Rs. ${amount.toLocaleString()} | new balance Rs. ${u.balance.toLocaleString()}`);
   revalidatePath("/admin/users"); revalidatePath(`/admin/users/${id}`);
   return { success: `Rs. ${amount.toLocaleString()} ${direction === "add" ? "add" : "remove"} ho gaye. New balance: Rs. ${u.balance.toLocaleString()}.` };

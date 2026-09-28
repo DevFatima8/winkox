@@ -39,7 +39,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
     const actionLabel = decision === "approved" ? "approved" : "rejected";
     const transactionLabel = transaction.type === "deposit" ? "Purchase/deposit" : "Withdrawal";
-    await notifyUser(String(transaction.userId), `${transactionLabel} ${actionLabel}`, `Your ${transactionLabel.toLowerCase()} of Rs. ${transaction.amount.toLocaleString()} has been ${actionLabel} by admin.${note ? ` Note: ${note}` : ""}`, decision === "approved" ? "success" : "warning");
+    await notifyUser(String(transaction.userId), `${transactionLabel} ${actionLabel}`, `Your ${transactionLabel.toLowerCase()} of Rs. ${transaction.amount.toLocaleString()} has been ${actionLabel} by admin.${note ? ` Note: ${note}` : ""}`, decision === "approved" ? "success" : "warning", { href: "/player/wallet" });
     await AdminLog.create({ actorId: me.id, actorName: me.name, actorRole: me.dbRole, action: `${decision}_${transaction.type}`, target: String(transaction.userId), details: `Rs. ${transaction.amount}` });
     return NextResponse.json({ success: `${transactionLabel} ${actionLabel}.` });
   } catch (error) {
