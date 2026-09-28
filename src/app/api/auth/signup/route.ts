@@ -23,7 +23,7 @@ export async function POST(req: Request) {
         if (!/^03\d{9}$/.test(phone)) return NextResponse.json({ error: "Phone number 03XXXXXXXXX format mein hona chahiye." });
         if (password.length < 6) return NextResponse.json({ error: "Password kam az kam 6 characters ka ho." });
 
-        if (!(await ensureMysqlReady())) await dbConnect();
+        try { await ensureMysqlReady(); } catch { await dbConnect(); }
         let username = genUsername(name, phone);
         let referralCode = genReferralCode(name);
         const lookups: Record<string, unknown>[] = [{ phone }, { username }, { referralCode }];

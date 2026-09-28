@@ -15,12 +15,17 @@ export function SupportWidget({ userName }: { userName?: string }) {
   const [error, setError] = useState<string | null>(null);
   const [unread, setUnread] = useState(0);
   const seen = useRef(0);
+  const retryAt = useRef(0);
   const endRef = useRef<HTMLDivElement>(null);
 
   const load = useCallback(async () => {
+    if (Date.now() < retryAt.current) return;
     try {
       const r = await fetch("/api/support", { cache: "no-store" });
-      if (!r.ok) throw new Error("Support abhi load nahi ho saka.");
+      if (!r.ok) {
+        if (r.status === 503) retryAt.current = Date.now() + 30000;
+        throw new Error("Support abhi load nahi ho saka.");
+      }
       const j: S = await r.json();
       setS(j);
       setError(null);

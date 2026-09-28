@@ -39,6 +39,9 @@ const COLLECTIONS = [
 let pool: Pool | null = null;
 let initPromise: Promise<boolean> | null = null;
 let mysqlModule: Promise<typeof import("mysql2/promise")> | null = null;
+let initFailure: { error: unknown; retryAt: number } | null = null;
+
+const MYSQL_RETRY_DELAY = Number(process.env.MYSQL_RETRY_DELAY || 10000);
 
 function loadMysql() {
     // client.ts (a "use client" module) transitively imports this file via mongo.ts/support.ts.
@@ -111,11 +114,13 @@ export async function ensureMysqlReady(): Promise<boolean> {
     if (!cfg) {
         pool = null;
         initPromise = null;
+        initFailure = null;
         throw new Error("MySQL is required. Configure MYSQL_HOST, MYSQL_DATABASE, MYSQL_USER, and MYSQL_PASSWORD.");
     }
 
-    if (pool) return true;
     if (initPromise) return initPromise;
+    if (pool) return true;
+    if (initFailure && Date.now() < initFailure.retryAt) throw initFailure.error;
 
     initPromise = (async () => {
         const mysql = await loadMysql();
@@ -129,7 +134,7 @@ export async function ensureMysqlReady(): Promise<boolean> {
             database: cfg.database,
             waitForConnections: true,
             connectionLimit: 10,
-            connectTimeout: Number(process.env.MYSQL_CONNECT_TIMEOUT || 5000),
+            connectTimeout: Number(process.env.MYSQL_CONNECT_TIMEOUT || 2000),
             charset: "utf8mb4",
             ssl: cfg.ssl ? { rejectUnauthorized: false } : undefined,
         });
@@ -153,15 +158,20 @@ export async function ensureMysqlReady(): Promise<boolean> {
             }
         } catch (error) {
             pool = null;
-            initPromise = null;
+            initFailure = { error, retryAt: Date.now() + MYSQL_RETRY_DELAY };
             void currentPool.end().catch(() => undefined);
             throw error;
         }
 
+        initFailure = null;
         return true;
     })();
 
-    return initPromise;
+    try {
+        return await initPromise;
+    } finally {
+        initPromise = null;
+    }
 }
 
 export async function ensureMysqlTable(collection: string): Promise<void> {
