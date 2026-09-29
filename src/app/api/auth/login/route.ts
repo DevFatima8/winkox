@@ -26,7 +26,7 @@ export async function POST(req: Request) {
         const password = String(form.get("password") ?? "");
         const loginIp = String(form.get("loginIp") ?? "").trim() || null;
 
-        if (!(await retryTransientDbError(ensureMysqlReady))) await dbConnect();
+        try { await ensureMysqlReady(); } catch { await dbConnect(); }
 
         const idLike = /^WX[-\s]?(ADM|SYS)/i.test(rawLogin);
         const login = idLike

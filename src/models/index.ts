@@ -63,7 +63,7 @@ export type SettingsDoc = Base & {
   wallet: { minDeposit: number; minWithdraw: number };
   fakeGateway: { enabled: boolean; testOtp: string; maxPerTxn: number; dailyLimit: number; label: string; autoWithdraw: boolean };
 };
-export type NotificationDoc = Base & { title: string; body: string; type: "info" | "promo" | "warning" | "success"; audience: "all" | "clients" | "agents" | "admins" | "user"; userId: string | null; isActive: boolean; readBy: string[] };
+export type NotificationDoc = Base & { title: string; body: string; type: "info" | "promo" | "warning" | "success"; audience: "all" | "clients" | "agents" | "admins" | "user"; userId: string | null; href?: string | null; isActive: boolean; readBy: string[] };
 export type SupportThreadDoc = Base & { userId: string | null; guestId: string | null; guestName: string | null; status: "open" | "closed"; lastMessageAt: Date; lastMessage: string; unreadForAdmin: number; unreadForUser: number; assignedTo: string | null; assignedName: string | null };
 export type SupportMessageDoc = Base & { threadId: string; from: "user" | "agent" | "system"; text: string; agentName: string | null; agentId: string | null };
 export type HelpArticleDoc = Base & { title: string; category: string; order: number; isActive: boolean; steps: { text?: string | null; image?: string | null }[] };

@@ -125,18 +125,6 @@ export default function AdminDashboardClient({ params, searchParams }: { params?
         </Card>
 
         <Card title="Today’s Signups & Repeat Players">
-
-          <Card title="Login & Earning Statistics (last 7 days)">
-            <div className="mb-3 text-xs text-slate-400">Earning % = logged-in users who won today. Repeat % = logged-in users who signed up before that day. Amounts are game bets, payouts and house earning.</div>
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[980px] text-left text-sm">
-                <thead className="text-xs uppercase text-slate-500"><tr><th className="pb-2">Statistics date</th><th className="pb-2">Logins</th><th className="pb-2">Repeat users</th><th className="pb-2">Repeat %</th><th className="pb-2">Earners %</th><th className="pb-2">Repeat earners %</th><th className="pb-2">Bets</th><th className="pb-2">Payouts</th><th className="pb-2">Earned</th></tr></thead>
-                <tbody className="divide-y divide-slate-800">
-                  {statsRows.map((row) => <tr key={row.key}><td className="py-2 font-medium text-white">{row.date.toLocaleDateString("en-CA")}</td><td className="py-2 text-slate-300">{row.logins}</td><td className="py-2 text-cyan-300">{row.repeats}</td><td className="py-2 text-cyan-300">{row.repeatPct.toFixed(2)}%</td><td className="py-2 text-emerald-300">{row.earningPct.toFixed(2)}%</td><td className="py-2 text-emerald-300">{row.repeatEarningPct.toFixed(2)}%</td><td className="py-2 text-slate-300">{fmt(row.bet)}</td><td className="py-2 text-slate-300">{fmt(row.payout)}</td><td className={`py-2 font-bold ${row.earned >= 0 ? "text-emerald-300" : "text-red-300"}`}>{fmt(row.earned)}</td></tr>)}
-                </tbody>
-              </table>
-            </div>
-          </Card>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[760px] text-left text-sm">
               <thead className="text-xs uppercase text-slate-500"><tr><th className="pb-2">User</th><th className="pb-2">Phone</th><th className="pb-2">Signup date</th><th className="pb-2">Registration IP</th><th className="pb-2">Today status</th></tr></thead>
@@ -159,6 +147,18 @@ export default function AdminDashboardClient({ params, searchParams }: { params?
               </div>
             </div>
           )}
+        </Card>
+
+        <Card title="Login & Earning Statistics (last 7 days)">
+          <div className="mb-3 text-xs text-slate-400">Earning % = logged-in users who won today. Repeat % = logged-in users who signed up before that day. Amounts are game bets, payouts and house earning.</div>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[980px] text-left text-sm">
+              <thead className="text-xs uppercase text-slate-500"><tr><th className="pb-2">Statistics date</th><th className="pb-2">Logins</th><th className="pb-2">Repeat users</th><th className="pb-2">Repeat %</th><th className="pb-2">Earners %</th><th className="pb-2">Repeat earners %</th><th className="pb-2">Bets</th><th className="pb-2">Payouts</th><th className="pb-2">Earned</th></tr></thead>
+              <tbody className="divide-y divide-slate-800">
+                {statsRows.map((row) => <tr key={row.key}><td className="py-2 font-medium text-white">{row.date.toLocaleDateString("en-CA")}</td><td className="py-2 text-slate-300">{row.logins}</td><td className="py-2 text-cyan-300">{row.repeats}</td><td className="py-2 text-cyan-300">{row.repeatPct.toFixed(2)}%</td><td className="py-2 text-emerald-300">{row.earningPct.toFixed(2)}%</td><td className="py-2 text-emerald-300">{row.repeatEarningPct.toFixed(2)}%</td><td className="py-2 text-slate-300">{fmt(row.bet)}</td><td className="py-2 text-slate-300">{fmt(row.payout)}</td><td className={`py-2 font-bold ${row.earned >= 0 ? "text-emerald-300" : "text-red-300"}`}>{fmt(row.earned)}</td></tr>)}
+              </tbody>
+            </table>
+          </div>
         </Card>
       </div>
     );

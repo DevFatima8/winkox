@@ -39,8 +39,8 @@ export async function POST(request: Request) {
             paymentAccountId: account?._id ? account._id : null,
             accountName: account?.accountTitle ?? null, method: "manual",
         });
-        await notifyUser(me.id, "Withdrawal request received", `Your withdrawal request of Rs. ${amount.toLocaleString()} is pending admin approval.`, "info");
-        await notifyAdmins("New withdrawal request", `${me.name} requested a withdrawal of Rs. ${amount.toLocaleString()} via ${provider}.`, "warning");
+        await notifyUser(me.id, "Withdrawal request received", `Your withdrawal request of Rs. ${amount.toLocaleString()} is pending admin approval.`, "info", { href: "/player/wallet" });
+        await notifyAdmins("New withdrawal request", `${me.name} requested a withdrawal of Rs. ${amount.toLocaleString()} via ${provider}.`, "warning", { href: "/admin/withdrawals?status=pending" });
         return NextResponse.json({ success: "Withdraw request submit ho gayi. Amount 24 ghanton mein aapke account mein aa jayegi." });
     } catch (error) {
         console.error("[player withdraw]", error);

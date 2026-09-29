@@ -7,17 +7,26 @@ export function useDb<T>(loader: () => Promise<T>, deps: unknown[] = []) {
   const [data, setData] = useState<T | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
-  const ref = useRef(loader); ref.current = loader;
+  const ref = useRef(loader);
+  useEffect(() => { ref.current = loader; }, [loader]);
   useEffect(() => {
     let alive = true;
-    ref.current().then((d) => { if (alive) { setData(d); setError(null); } }).catch((e) => { if (alive) setError(String(e?.message ?? e)); });
+    let timeoutId: number | undefined;
+    const timeout = new Promise<never>((_, reject) => {
+      timeoutId = window.setTimeout(() => reject(new Error("Page load timed out. Database se connection check karein.")), 7000);
+    });
+    Promise.race([ref.current(), timeout])
+      .then((d) => { if (alive) { setData(d); setError(null); } })
+      .catch((e) => { if (alive) setError(String(e?.message ?? e)); })
+      .finally(() => { if (timeoutId !== undefined) window.clearTimeout(timeoutId); });
     return () => { alive = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [...deps, tick]);
   useEffect(() => {
     const refresh = () => setTick((t) => t + 1);
     window.addEventListener("wx:admin-refresh", refresh);
-    return () => window.removeEventListener("wx:admin-refresh", refresh);
+    window.addEventListener("wx:data-refresh", refresh);
+    return () => { window.removeEventListener("wx:admin-refresh", refresh); window.removeEventListener("wx:data-refresh", refresh); };
   }, []);
   const reload = useCallback(() => setTick((t) => t + 1), []);
   return { data, error, reload };
