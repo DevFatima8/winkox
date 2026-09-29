@@ -45,8 +45,8 @@ const laneX = (l: number) => SIDE_W + (l - 0.5) * LANE_W;
 const posX = (p: number, lanes: number) => (p <= 0 ? SIDE_W - 46 : p > lanes ? SIDE_W + lanes * LANE_W + 46 : laneX(p));
 const rnd = (a: number, b: number) => a + Math.random() * (b - a);
 const pick = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
-const trim = (n: number, d: number) => String(parseFloat(n.toFixed(d)));
-const fmtMult = (m: number) => "x" + (m >= 10000 ? trim(m / 1000, 1) + "K" : m >= 1000 ? m.toLocaleString("en-US", { maximumFractionDigits: 0 }) : m >= 100 ? trim(m, 1) : trim(m, 2));
+const trim = (n: number, d: number) => String(parseFloat((n ?? 0).toFixed(d)));
+const fmtMult = (m: number) => { m = m ?? 0; return "x" + (m >= 10000 ? trim(m / 1000, 1) + "K" : m >= 1000 ? m.toLocaleString("en-US", { maximumFractionDigits: 0 }) : m >= 100 ? trim(m, 1) : trim(m, 2)); };
 const money = (n: number) => "Rs. " + n.toLocaleString("en-PK", { maximumFractionDigits: 2 });
 
 function newVis(ladder: number[], prev?: Vis | null): Vis {
