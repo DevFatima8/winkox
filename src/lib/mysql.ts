@@ -1,4 +1,4 @@
-import type { Pool } from "mysql2/promise";
+import mysql, { type Pool } from "mysql2/promise";
 import type { EventEmitter } from "events";
 
 export type MysqlConfig = {
@@ -36,118 +36,86 @@ const COLLECTIONS = [
     "winholds",
 ];
 
-let pool: Pool | null = null;
-let initPromise: Promise<boolean> | null = null;
-let mysqlModule: Promise<typeof import("mysql2/promise")> | null = null;
-let initFailure: { error: unknown; retryAt: number } | null = null;
-
-const MYSQL_RETRY_DELAY = Number(process.env.MYSQL_RETRY_DELAY || 10000);
-
-function loadMysql() {
-    // client.ts (a "use client" module) transitively imports this file via mongo.ts/support.ts.
-    // Hide this server-only dependency behind an indirect import so client bundlers can't
-    // statically resolve 'mysql2' (which needs Node's net/tls) into the browser bundle.
-    if (!mysqlModule) {
-        mysqlModule = (Function("return import('mysql2/promise')")() as Promise<typeof import("mysql2/promise")>).catch((error) => {
-            mysqlModule = null;
-            const msg = error instanceof Error ? error.message : String(error);
-            if (/mysql2/.test(msg) && /module|package|find/i.test(msg)) {
-                throw new Error("Database driver missing on server. Install production dependency 'mysql2' and redeploy.");
-            }
-            throw error;
-        });
-    }
-    return mysqlModule;
-}
-
-function parseMysqlUrl(url: string): MysqlConfig | null {
-    try {
-        const u = new URL(url);
-        if (u.protocol !== "mysql:" && u.protocol !== "mariadb:") return null;
-        if (!u.hostname || !u.username || !u.pathname || u.pathname === "/") return null;
-        return {
-            host: u.hostname,
-            port: Number(u.port || 3306),
-            user: decodeURIComponent(u.username),
-            password: decodeURIComponent(u.password),
-            database: decodeURIComponent(u.pathname.replace(/^\//, "")),
-            ssl: u.searchParams.get("ssl") !== "false",
-        };
-    } catch {
-        return null;
-    }
-}
-
-export function getMysqlConfig(): MysqlConfig | null {
-    const fromUrl = process.env.MYSQL_URL || process.env.DATABASE_URL;
-    if (fromUrl) {
-        const cfg = parseMysqlUrl(fromUrl);
-        if (cfg) return cfg;
-    }
-
+// Ridexd-nextjs approach: Use single DATABASE_URL or fallback to individual vars
+let databaseUrl = process.env.DATABASE_URL || process.env.MYSQL_URL;
+if (!databaseUrl) {
     const host = process.env.MYSQL_HOST || process.env.DB_HOST || process.env.DATABASE_HOST;
     const user = process.env.MYSQL_USER || process.env.DB_USER || process.env.DATABASE_USER;
     const password = process.env.MYSQL_PASSWORD || process.env.DB_PASSWORD || process.env.DATABASE_PASSWORD;
     const database = process.env.MYSQL_DATABASE || process.env.DB_NAME || process.env.DATABASE_NAME;
-    const port = Number(process.env.MYSQL_PORT || process.env.DB_PORT || process.env.DATABASE_PORT || 3306);
-    if (!host || !user || !password || !database) return null;
-    return { host, port, user, password, database, ssl: (process.env.MYSQL_SSL || process.env.DB_SSL || "true").toLowerCase() !== "false" };
+    const port = process.env.MYSQL_PORT || process.env.DB_PORT || process.env.DATABASE_PORT || "3306";
+    if (host && user && password && database) {
+        databaseUrl = `mysql://${encodeURIComponent(user)}:${encodeURIComponent(password)}@${host}:${port}/${database}`;
+    }
 }
 
-export function isMysqlEnabled(): boolean {
-    return Boolean(getMysqlConfig());
+const globalForDb = globalThis as typeof globalThis & {
+  __winkoxMysqlPool?: Pool;
+  __winkoxInitPromise?: Promise<boolean>;
+};
+
+// Exact Ridexd-nextjs pool creation
+export const pool =
+  globalForDb.__winkoxMysqlPool ??
+  (databaseUrl ? mysql.createPool({
+    uri: databaseUrl,
+    connectionLimit: 10,
+    maxIdle: 10,
+    idleTimeout: 60000,
+    queueLimit: 0,
+    waitForConnections: true,
+    enableKeepAlive: true,
+    keepAliveInitialDelay: 0,
+    charset: "utf8mb4_unicode_ci",
+    timezone: "Z",
+    connectTimeout: 10000,
+  }) : null);
+
+if (process.env.NODE_ENV !== "production" && pool) {
+  globalForDb.__winkoxMysqlPool = pool;
+}
+
+if (pool && !(pool as unknown as EventEmitter).listenerCount("error")) {
+    (pool as unknown as EventEmitter).on("error", (err: Error) => {
+        console.error("[mysql] pool error:", err.message);
+    });
 }
 
 function tableName(name: string) {
     return `\`${name.replace(/`/g, "")}\``;
 }
 
+export function getMysqlConfig(): MysqlConfig | null {
+    if (!databaseUrl) return null;
+    return { host: "uri", port: 3306, user: "uri", password: "uri", database: "uri", ssl: false };
+}
+
+export function isMysqlEnabled(): boolean {
+    return Boolean(pool);
+}
+
+const MYSQL_RETRY_DELAY = Number(process.env.MYSQL_RETRY_DELAY || 10000);
+let initFailure: { error: unknown; retryAt: number } | null = null;
+
 export async function getMysqlPool(): Promise<Pool | null> {
-    if (!pool) {
+    if (pool) {
         await ensureMysqlReady();
     }
     return pool;
 }
 
 export async function ensureMysqlReady(): Promise<boolean> {
-    const cfg = getMysqlConfig();
-    if (!cfg) {
-        pool = null;
-        initPromise = null;
-        initFailure = null;
-        throw new Error("MySQL is required. Configure MYSQL_HOST, MYSQL_DATABASE, MYSQL_USER, and MYSQL_PASSWORD.");
+    if (!pool) {
+        throw new Error("DATABASE_URL is required (mysql://user:password@host:3306/database)");
     }
 
-    if (initPromise) return initPromise;
-    if (pool) return true;
+    if (globalForDb.__winkoxInitPromise) return globalForDb.__winkoxInitPromise;
     if (initFailure && Date.now() < initFailure.retryAt) throw initFailure.error;
 
-    initPromise = (async () => {
-        const mysql = await loadMysql();
-        // Hostinger provisions the database in hPanel. Its application users usually
-        // do not have permission to create databases, only tables inside their database.
-        pool = mysql.createPool({
-            host: cfg.host,
-            port: cfg.port,
-            user: cfg.user,
-            password: cfg.password,
-            database: cfg.database,
-            waitForConnections: true,
-            connectionLimit: 10,
-            connectTimeout: Number(process.env.MYSQL_CONNECT_TIMEOUT || 2000),
-            charset: "utf8mb4",
-            ssl: cfg.ssl ? { rejectUnauthorized: false } : undefined,
-        });
-        const currentPool = pool;
-        // Idle connections dropped by the server/firewall (e.g. ECONNRESET) surface as pool
-        // 'error' events; mysql2's Pool type omits this event, so listen via EventEmitter.
-        (pool as unknown as EventEmitter).on("error", (err: Error) => {
-            console.error("[mysql] pool error:", err.message);
-        });
-
+    const promise = (async () => {
         try {
             for (const table of COLLECTIONS) {
-                await currentPool.execute(`
+                await pool.execute(`
         CREATE TABLE IF NOT EXISTS ${tableName(table)} (
           id VARCHAR(64) PRIMARY KEY,
           data JSON NOT NULL,
@@ -157,29 +125,26 @@ export async function ensureMysqlReady(): Promise<boolean> {
                 `);
             }
         } catch (error) {
-            pool = null;
             initFailure = { error, retryAt: Date.now() + MYSQL_RETRY_DELAY };
-            void currentPool.end().catch(() => undefined);
             throw error;
         }
-
         initFailure = null;
         return true;
     })();
 
+    globalForDb.__winkoxInitPromise = promise;
     try {
-        return await initPromise;
-    } finally {
-        initPromise = null;
+        return await promise;
+    } catch (e) {
+        globalForDb.__winkoxInitPromise = undefined;
+        throw e;
     }
 }
 
 export async function ensureMysqlTable(collection: string): Promise<void> {
     const active = await ensureMysqlReady();
-    if (!active) return;
-    const current = await getMysqlPool();
-    if (!current) return;
-    await current.execute(`
+    if (!active || !pool) return;
+    await pool.execute(`
     CREATE TABLE IF NOT EXISTS ${tableName(collection)} (
       id VARCHAR(64) PRIMARY KEY,
       data JSON NOT NULL,

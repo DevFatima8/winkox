@@ -58,7 +58,7 @@ export function Marquee({ items }: { items: string[] }) {
   }, []);
   useEffect(() => {
     const initial = window.setTimeout(() => void load(), 0);
-    const id = window.setInterval(() => void load(), 5000);
+    const id = window.setInterval(() => void load(), 60000);
     return () => { window.clearTimeout(initial); window.clearInterval(id); };
   }, [load]);
   const liveBroadcast = notification?.audience === "all" ? `${notification.title}: ${notification.body}` : "";

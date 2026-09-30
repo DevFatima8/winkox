@@ -21,6 +21,11 @@ cpSync(standalone, deployDir, { recursive: true });
 cpSync(path.join(root, ".next", "static"), path.join(deployDir, ".next", "static"), { recursive: true });
 cpSync(path.join(root, "public"), path.join(deployDir, "public"), { recursive: true });
 
-console.log(`Deploy folder ready at: ${deployDir}`);
+import { execSync } from "node:child_process";
+console.log("Installing missing database driver (mysql2) into the deploy folder...");
+cpSync(path.join(root, "package.json"), path.join(deployDir, "package.json"));
+execSync("npm install mysql2 --no-save", { cwd: deployDir, stdio: "inherit" });
+
+console.log(`\nDeploy folder ready at: ${deployDir}`);
 console.log("Zip the contents of that folder and upload to Hostinger.");
 console.log("On the server: set the Node.js app entry point to server.js and start with `node server.js` (no npm install needed).");

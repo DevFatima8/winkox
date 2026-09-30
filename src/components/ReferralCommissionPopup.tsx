@@ -22,7 +22,7 @@ export function ReferralCommissionPopup() {
             } catch { }
         };
         void check();
-        const id = window.setInterval(check, 15000);
+        const id = window.setInterval(check, 60000);
         return () => { active = false; window.clearInterval(id); };
     }, [seen]);
 

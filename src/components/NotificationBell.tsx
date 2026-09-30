@@ -58,7 +58,7 @@ export function NotificationBell({ loggedIn }: { loggedIn: boolean }) {
   }, [loggedIn]);
   useEffect(() => {
     void load();
-    const id = setInterval(load, loggedIn ? 15000 : 30000);
+    const id = setInterval(load, 60000);
     const handleLocalNotification = () => { void load(); };
     window.addEventListener("wx:notification-local", handleLocalNotification);
     return () => { clearInterval(id); window.removeEventListener("wx:notification-local", handleLocalNotification); };
