@@ -1,6 +1,5 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
+/** @type {import('next').NextConfig} */
+const nextConfig = {
     // Bundles a self-contained server + node_modules (mysql2 included) so Hostinger
     // doesn't need to run npm install and can't lose native/production dependencies.
     output: "standalone",
@@ -13,4 +12,3 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
-

@@ -60,6 +60,7 @@ export async function POST(req: Request) {
         return setAuthCookie(NextResponse.json({ id: String(u._id), role, name: u.name }), String(u._id));
     } catch (e) {
         console.error("[login]", e);
-        return NextResponse.json({ error: "Server abhi database se connect nahi ho pa raha. Thodi dair baad dobara try karein." }, { status: 500 });
+        const errMsg = e instanceof Error ? e.message : String(e);
+        return NextResponse.json({ error: `Live DB Error (Temporary): ${errMsg}. Pura error humein btain ta k fix ho saky.` }, { status: 500 });
     }
 }
