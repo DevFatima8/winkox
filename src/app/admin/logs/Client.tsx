@@ -16,7 +16,7 @@ export default function LogsPageClient({ params, searchParams }: { params?: Reco
       <div className="space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div><h1 className="text-2xl font-bold text-white">Activity Logs</h1><p className="text-sm text-[#b8a7e6]">Har admin ne kya kiya — logins, approvals, user changes, notifications.</p></div>
-          <form className="flex flex-wrap gap-2"><input name="q" defaultValue={q} placeholder="Search admin / action" className="rounded-xl border border-[#3a2470] bg-black/30 px-3 py-2 text-sm text-white" /><select name="order" defaultValue={order === "asc" ? "asc" : "desc"} aria-label="Log date order" className="rounded-xl border border-[#3a2470] bg-black/30 px-3 py-2 text-sm text-white"><option value="desc">Newest first</option><option value="asc">Oldest first</option></select><button className="btn-violet rounded-xl px-4 py-2 text-sm font-bold">Search</button></form>
+          <form className="flex flex-wrap gap-2"><input name="q" defaultValue={q} placeholder="Search admin / action" className="rounded-xl border border-[#3a2470] bg-black/30 px-3 py-2 text-sm text-white" /><select name="order" defaultValue={order === "asc" ? "asc" : "desc"} aria-label="Log sort order" className="rounded-xl border border-[#3a2470] bg-black/30 px-3 py-2 text-sm text-white"><option value="asc">Ascending (oldest first)</option><option value="desc">Descending (newest first)</option></select><button className="btn-violet rounded-xl px-4 py-2 text-sm font-bold">Search</button></form>
         </div>
         <Card>
           <div className="overflow-x-auto">

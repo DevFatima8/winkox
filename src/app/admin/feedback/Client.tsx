@@ -6,8 +6,8 @@ import { usePage, NOT_FOUND, REDIRECT } from "@/lib/useDb";
 export default function FeedbackAdminPageClient({ params, searchParams }: { params?: Record<string, string>; searchParams?: Record<string, string> }) {
   void params; void searchParams;
   return usePage(async () => {
-    const { status } = searchParams ?? {};
-    const query = new URLSearchParams({ view: "feedback" }); if (status) query.set("status", status);
+    const { status, order } = searchParams ?? {};
+    const query = new URLSearchParams({ view: "feedback" }); if (status) query.set("status", status); if (order) query.set("order", order);
     const response = await fetch(`/api/admin/data?${query}`, { cache: "no-store" });
     const data = await response.json(); if (!response.ok) throw new Error(data.error ?? "Feedback load nahi ho saka.");
     const list = data.list as { _id: string; type: string; name: string; phone: string; createdAt: string; status: string; message: string; adminNote: string }[];
@@ -16,8 +16,11 @@ export default function FeedbackAdminPageClient({ params, searchParams }: { para
     return (
       <div className="space-y-6">
         <div><h1 className="text-2xl font-bold text-white">Reward Feedback & Complaints</h1><p className="text-sm text-[#b8a7e6]">Users ke bonus/reward claims, shikayat aur suggestions (/feedback page se).</p></div>
-        <div className="flex gap-2">
-          {[["", "All"], ["new", `New (${n("new")})`], ["reviewed", `Reviewed (${n("reviewed")})`], ["resolved", `Resolved (${n("resolved")})`]].map(([v, l]) => <a key={v} href={v ? `/admin/feedback?status=${v}` : "/admin/feedback"} className={`rounded-lg px-3 py-1.5 text-sm font-medium ${(status ?? "") === v ? "btn-violet" : "bg-black/30 text-[#b8a7e6]"}`}>{l}</a>)}
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex gap-2">
+            {[["", "All"], ["new", `New (${n("new")})`], ["reviewed", `Reviewed (${n("reviewed")})`], ["resolved", `Resolved (${n("resolved")})`]].map(([v, l]) => { const params = new URLSearchParams(); if (v) params.set("status", v); if (order) params.set("order", order); const suffix = params.toString(); return <a key={v} href={suffix ? `/admin/feedback?${suffix}` : "/admin/feedback"} className={`rounded-lg px-3 py-1.5 text-sm font-medium ${(status ?? "") === v ? "btn-violet" : "bg-black/30 text-[#b8a7e6]"}`}>{l}</a>; })}
+          </div>
+          <form className="flex gap-2"><input type="hidden" name="status" value={status ?? ""} /><select name="order" defaultValue={order === "asc" ? "asc" : "desc"} aria-label="Feedback sort order" className="rounded-lg border border-[#3a2470] bg-black/30 px-3 py-2 text-sm text-white"><option value="asc">Ascending (oldest first)</option><option value="desc">Descending (newest first)</option></select><button className="btn-violet rounded-lg px-3 py-2 text-sm font-bold">Sort</button></form>
         </div>
         <Card>
           <ul className="divide-y divide-[#3a2470]/50">

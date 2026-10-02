@@ -13,6 +13,7 @@ export function SupportInbox({ initialThread }: { initialThread?: string }) {
   const [msgs, setMsgs] = useState<M[]>([]);
   const [text, setText] = useState("");
   const [filter, setFilter] = useState<"open" | "closed" | "all">("open");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const endRef = useRef<HTMLDivElement>(null);
 
   const loadThreads = useCallback(async () => {
@@ -71,13 +72,18 @@ export function SupportInbox({ initialThread }: { initialThread?: string }) {
     await loadThreads();
   };
   const cur = threads.find((t) => t.id === active);
-  const shown = threads.filter((t) => filter === "all" || t.status === filter);
+  const shown = threads.filter((t) => filter === "all" || t.status === filter).sort((a, b) => sortOrder === "asc" ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name));
 
   return (
     <div className="grid gap-4 lg:grid-cols-[320px_1fr] 2xl:grid-cols-[380px_1fr]">
       <div className={`wx-card flex max-h-[70vh] flex-col rounded-2xl ${active ? "hidden lg:flex" : "flex"}`}>
-        <div className="flex gap-1 border-b border-[#3a2470] p-2">
-          {(["open", "closed", "all"] as const).map((f) => <button key={f} onClick={() => setFilter(f)} className={`flex-1 rounded-lg py-1.5 text-xs font-bold capitalize ${filter === f ? "btn-violet" : "text-[#b8a7e6]"}`}>{f}</button>)}
+        <div className="flex flex-wrap items-center gap-1 border-b border-[#3a2470] p-2">
+          <div className="flex min-w-0 flex-1 gap-1">
+            {(["open", "closed", "all"] as const).map((f) => <button key={f} onClick={() => setFilter(f)} className={`flex-1 rounded-lg py-1.5 text-xs font-bold capitalize ${filter === f ? "btn-violet" : "text-[#b8a7e6]"}`}>{f}</button>)}
+          </div>
+          <select value={sortOrder} onChange={(event) => setSortOrder(event.target.value as "asc" | "desc")} aria-label="Client name sort order" className="max-w-32 rounded-lg border border-[#3a2470] bg-black/30 px-2 py-1.5 text-[10px] text-white">
+            <option value="asc">Ascending (A-Z)</option><option value="desc">Descending (Z-A)</option>
+          </select>
         </div>
         {err && !active && <p className="mx-2 mt-2 rounded-lg bg-red-500/15 px-3 py-2 text-xs text-red-300">{err}</p>}
         <div className="flex-1 overflow-y-auto">
