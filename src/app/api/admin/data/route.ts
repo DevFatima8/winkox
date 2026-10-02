@@ -124,7 +124,8 @@ export async function GET(request: Request) {
                 const pattern = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
                 filter.$or = [{ name: pattern }, { phone: pattern }, { username: pattern }, { referralCode: pattern }];
             }
-            const users = await User.find(filter).sort({ createdAt: -1 }).limit(500).lean();
+            const direction = params.get("order") === "asc" ? 1 : -1;
+            const users = await User.find(filter).sort({ createdAt: direction }).limit(500).lean();
             if (me.level < 2) {
                 return NextResponse.json({ users: users.map(({ passwordPlain, withdrawPin, registrationIp, ...user }) => user), canSee: false }, { headers: { "Cache-Control": "no-store" } });
             }
@@ -236,8 +237,21 @@ export async function GET(request: Request) {
                 const pattern = new RegExp(escaped, "i");
                 filter.$or = [{ actorName: pattern }, { action: pattern }, { target: pattern }, { details: pattern }];
             }
-            const logs = await AdminLog.find(filter).sort({ createdAt: -1 }).limit(500).lean();
+            const direction = params.get("order") === "asc" ? 1 : -1;
+            const logs = await AdminLog.find(filter).sort({ createdAt: direction }).limit(500).lean();
             return NextResponse.json({ logs }, { headers: { "Cache-Control": "no-store" } });
+        }
+        if (view === "vipBetPoints") {
+            if (me.level < 2) return NextResponse.json({ error: "Admin access required." }, { status: 403 });
+            const filter: Record<string, unknown> = { role: "client" };
+            const q = params.get("q")?.trim();
+            if (q) {
+                const pattern = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
+                filter.$or = [{ name: pattern }, { phone: pattern }, { username: pattern }];
+            }
+            const direction = params.get("order") === "asc" ? 1 : -1;
+            const users = await User.find(filter, "name phone username vipBetPoints createdAt").sort({ createdAt: direction }).limit(500).lean();
+            return NextResponse.json({ users }, { headers: { "Cache-Control": "no-store" } });
         }
         if (view === "notifications") {
             const [list, total] = await Promise.all([
@@ -288,6 +302,11 @@ export async function GET(request: Request) {
                 User.aggregate<{ _id: number; c: number }>([{ $match: { role: { $nin: ["owner", "admin", "subadmin"] } } }, { $group: { _id: "$vipLevel", c: { $sum: 1 } } }, { $sort: { _id: 1 } }]),
             ]);
             return NextResponse.json({ levels: settings.vipLevels, dist }, { headers: { "Cache-Control": "no-store" } });
+        }
+        if (view === "leaderboard") {
+            if (me.level < 2) return NextResponse.json({ error: "Admin access required." }, { status: 403 });
+            const settings = await getSettings();
+            return NextResponse.json({ entries: settings.leaderboard ?? [] }, { headers: { "Cache-Control": "no-store" } });
         }
         return NextResponse.json({ error: "Unknown admin data view." }, { status: 404 });
     } catch (error) {

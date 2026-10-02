@@ -1,6 +1,6 @@
 import { dbConnect } from "./mongo";
 import { GatewaySession, Transaction, User, oid } from "@/models";
-import { getSettings, vipInfo, withdrawnToday } from "./platform";
+import { getSettings, vipInfo, withdrawalCountToday, withdrawnToday } from "./platform";
 import { notifyAdmins, notifyUser } from "./notifications";
 
 const TTL_MS = 10 * 60 * 1000;
@@ -45,6 +45,8 @@ export async function createSession(userId: string, kind: "deposit" | "withdraw"
     if (pin !== u.withdrawPin) return { error: "Withdrawal PIN ghalat hai." };
     if ((u.balance ?? 0) < amount) return { error: "Insufficient balance." };
     const { cur } = vipInfo(u.vipLevel ?? 0, cfg.vipLevels);
+    const countToday = await withdrawalCountToday(oid(userId));
+    if (cur?.withdrawalsPerDay && countToday >= cur.withdrawalsPerDay) return { error: `VIP limit: rozana ${cur.withdrawalsPerDay} withdrawals allowed hain.` };
     if (cur?.perWithdrawMax && amount > cur.perWithdrawMax) return { error: `VIP limit: ek withdraw max Rs. ${cur.perWithdrawMax.toLocaleString()}.` };
     const today = await withdrawnToday(oid(userId));
     if (cur?.dailyWithdrawLimit && today + amount > cur.dailyWithdrawLimit) return { error: `VIP daily withdraw limit Rs. ${cur.dailyWithdrawLimit.toLocaleString()}.` };

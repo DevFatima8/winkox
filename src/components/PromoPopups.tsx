@@ -3,6 +3,7 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { XIcon } from "@/components/Icons";
+import { useSession } from "@/lib/useDb";
 
 /*
  * Promotional popups — website khulte hi pehla popup, phir har 3 minutes baad
@@ -22,6 +23,19 @@ function CloseBelow({ onClose }: { onClose: () => void }) {
     <button type="button" aria-label="Close" onClick={onClose} className="mx-auto mt-4 flex h-11 w-11 items-center justify-center rounded-full border-2 border-white/80 bg-black/55 text-white">
       <XIcon size={20} />
     </button>
+  );
+}
+
+function VipPointsWelcomePopup({ points, onClose }: { points: number; onClose: () => void }) {
+  return (
+    <Overlay>
+      <div className="w-full max-w-sm rounded-2xl border border-emerald-300/40 bg-[#10231e] p-6 text-center shadow-2xl">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-400/15 text-4xl">🏆</div>
+        <h2 className="mt-4 text-2xl font-black text-white">Congratulations!</h2>
+        <p className="mt-2 text-sm text-emerald-100">You earned <b className="text-amber-300">{points} VIP bet points</b> for joining.</p>
+        <button type="button" onClick={onClose} className="mt-5 w-full rounded-xl bg-emerald-400 px-5 py-3 text-sm font-black text-slate-950">Awesome</button>
+      </div>
+    </Overlay>
   );
 }
 
@@ -213,13 +227,16 @@ function FirstDepositPopup({ onClose }: { onClose: (today: boolean, never: boole
 /* ---------- controller: rotation + admin exclusion ---------- */
 export function PromoPopups() {
   const pathname = usePathname();
+  const { user, loading } = useSession();
   const [idx, setIdx] = useState<number | null>(null);
+  const [dismissedVipUserId, setDismissedVipUserId] = useState<string | null>(null);
   const idxRef = useRef(0);
   const timerRef = useRef<number | null>(null);
   const startedRef = useRef(false);
 
   const isAdminPath = pathname?.startsWith("/admin");
   const isGamePath = !!pathname && (pathname.startsWith("/games") || pathname.startsWith("/player/games"));
+  const showWelcome = user?.role === "client" && user.vipPointsWelcomePending && dismissedVipUserId !== user.id;
 
   const fddOff = useCallback(() => {
     try {
@@ -273,22 +290,33 @@ export function PromoPopups() {
     showNextPopup();
   }, [fddOff, scheduleRotation, showNextPopup]);
 
+  const closeWelcome = useCallback(() => {
+    if (!user) return;
+    setIdx(null);
+    setDismissedVipUserId(user.id);
+    void fetch("/api/player/vip-points-popup", { method: "POST" });
+  }, [user]);
+
   useEffect(() => {
     if (isAdminPath || isGamePath) {
-      setIdx(null);
-      return;
+      const frame = window.requestAnimationFrame(() => setIdx(null));
+      return () => window.cancelAnimationFrame(frame);
     }
+    if (loading) return;
+    if (showWelcome) return;
 
     if (!startedRef.current) {
       startedRef.current = true;
       const id = window.setTimeout(() => openPopup(0), 800);
       return () => window.clearTimeout(id);
     }
-  }, [isAdminPath, isGamePath, openPopup]);
+  }, [isAdminPath, isGamePath, loading, openPopup, showWelcome]);
 
   useEffect(() => () => { if (timerRef.current) window.clearTimeout(timerRef.current); }, []);
 
-  if (isAdminPath || isGamePath || idx === null) return null;
+  if (isAdminPath || isGamePath) return null;
+  if (showWelcome) return <VipPointsWelcomePopup points={100} onClose={closeWelcome} />;
+  if (idx === null) return null;
   return (
     <>
       <style>{`@keyframes wxpromo-spin{to{transform:rotate(360deg)}}@keyframes wxpromo-marq{0%{transform:translateX(0)}100%{transform:translateX(-100%)}}`}</style>

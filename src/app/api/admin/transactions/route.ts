@@ -64,7 +64,8 @@ export async function GET(request: Request) {
             ];
         }
 
-        const transactions = await Transaction.find(filter).sort({ createdAt: -1 }).limit(500).lean();
+        const direction = params.get("order") === "asc" ? 1 : -1;
+        const transactions = await Transaction.find(filter).sort({ createdAt: direction }).limit(500).lean();
         const userIds = [...new Set(transactions.map((transaction) => String(transaction.userId)))];
         const accountIds = [...new Set(transactions.flatMap((transaction) => transaction.paymentAccountId ? [String(transaction.paymentAccountId)] : []))];
         const [users, accounts] = await Promise.all([

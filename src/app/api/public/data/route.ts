@@ -32,7 +32,7 @@ export async function GET(request: Request) {
             const me = await getServerSessionUser();
             return NextResponse.json({ settings, me, supportOnline: supportOnline(settings.support) });
         }
-        if (view === "lobby") return NextResponse.json({ links: { ...settings.links, androidUrl: settings.app?.androidUrl, iosUrl: settings.app?.iosUrl } });
+        if (view === "lobby") return NextResponse.json({ links: { ...settings.links, androidUrl: settings.app?.androidUrl, iosUrl: settings.app?.iosUrl }, leaderboard: settings.leaderboard ?? [] });
         return NextResponse.json({ error: "Unknown public data view." }, { status: 404 });
     } catch (error) {
         console.error("[public data]", error);

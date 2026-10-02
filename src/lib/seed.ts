@@ -1,7 +1,7 @@
 import { dbConnect } from "./mongo";
 import { isMysqlEnabled } from "./mysql";
 import { Game, HelpArticle, PaymentAccount, Settings, User } from "@/models";
-import { DEFAULT_HELP, DEFAULT_VIP } from "./platform";
+import { DEFAULT_HELP, DEFAULT_LEADERBOARD, DEFAULT_VIP } from "./platform";
 
 const envStr = (name: string, fallback = "") => process.env[name]?.trim() || fallback;
 const envNum = (name: string, fallback = 0) => {
@@ -87,7 +87,7 @@ export async function ensureGames() {
   }));
 }
 export async function ensureHelp() { if ((await HelpArticle.countDocuments()) === 0) await HelpArticle.insertMany(DEFAULT_HELP as never); }
-export async function ensureSettings() { if (!(await Settings.exists({ key: "main" }))) await Settings.create({ key: "main", vipLevels: DEFAULT_VIP }); }
+export async function ensureSettings() { if (!(await Settings.exists({ key: "main" }))) await Settings.create({ key: "main", vipLevels: DEFAULT_VIP, leaderboard: DEFAULT_LEADERBOARD }); }
 export async function ensurePaymentAccounts() {
   if ((await PaymentAccount.countDocuments()) === 0) {
     await PaymentAccount.insertMany([{ provider: "jazzcash", accountTitle: "winkox Official", accountNumber: "03035433872", isActive: true }, { provider: "easypaisa", accountTitle: "winkox Official", accountNumber: "03035433872", isActive: true }]);

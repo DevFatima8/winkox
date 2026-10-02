@@ -267,6 +267,26 @@ export async function setUserGameBlockAction(userId: string, slug: string, block
   revalidatePath(`/admin/users/${userId}`);
 }
 
+export async function adjustVipBetPointsAction(userId: string, _: ActionState, form: FormData): Promise<ActionState> {
+  const me = await requireSuper();
+  const amount = Math.floor(num(form, "amount"));
+  const direction = str(form, "direction");
+  if (!Number.isFinite(amount) || amount <= 0) return { error: "Points 0 se zyada hone chahiye." };
+  if (direction !== "add" && direction !== "remove") return { error: "Add ya remove select karein." };
+  const user = await User.findById(userId, "name phone role vipBetPoints").lean();
+  if (!user || user.role !== "client") return { error: "Player nahi mila." };
+  const current = user.vipBetPoints ?? 0;
+  if (direction === "remove" && current < amount) return { error: "Player ke current points se zyada remove nahi kar sakte." };
+  const result = await User.updateOne(
+    direction === "remove" ? { _id: oid(userId), vipBetPoints: { $gte: amount } } : { _id: oid(userId) },
+    { $inc: { vipBetPoints: direction === "add" ? amount : -amount } },
+  );
+  if (!result.modifiedCount) return { error: "Points update nahi huay; list refresh karke dobara try karein." };
+  await logAdmin(me, direction === "add" ? "vip_bet_points_add" : "vip_bet_points_remove", user.phone, `${amount} points | ${current} → ${current + (direction === "add" ? amount : -amount)}`);
+  revalidatePath("/admin/vip-bets"); revalidatePath(`/admin/users/${userId}`);
+  return { success: `VIP bet points ${direction === "add" ? "add" : "remove"} ho gaye.` };
+}
+
 // games on/off
 export async function toggleGameAction(id: string, isActive: boolean) {
   await requireSuper();
@@ -278,10 +298,13 @@ export async function toggleGameAction(id: string, isActive: boolean) {
 export async function saveVipLevelsAction(_: ActionState, form: FormData): Promise<ActionState> {
   await requireSuper();
   const levels = [];
-  for (let i = 0; i < 12; i++) {
+  for (let i = 0; i < 16; i++) {
     const name = str(form, `name_${i}`);
     if (!name) continue;
-    levels.push({ level: i, name, minDeposit: num(form, `min_${i}`) || 0, dailyWithdrawLimit: num(form, `daily_${i}`) || 0, perWithdrawMax: num(form, `per_${i}`) || 0, minWithdraw: num(form, `minw_${i}`) || 500 });
+    const nextLevelBonus = num(form, `bonus_${i}`), withdrawalsPerDay = num(form, `count_${i}`);
+    const minDeposit = num(form, `min_${i}`), dailyWithdrawLimit = num(form, `daily_${i}`), perWithdrawMax = num(form, `per_${i}`), minWithdraw = num(form, `minw_${i}`) || 500;
+    if ([minDeposit, nextLevelBonus, dailyWithdrawLimit, withdrawalsPerDay, perWithdrawMax, minWithdraw].some((value) => !Number.isFinite(value) || value < 0)) return { error: "VIP values zero ya us se zyada honi chahiye." };
+    levels.push({ level: i, name, minDeposit, nextLevelBonus, dailyWithdrawLimit, withdrawalsPerDay, perWithdrawMax, minWithdraw });
   }
   if (!levels.length) return { error: "Kam az kam ek level zaroori hai." };
   await Settings.updateOne({ key: "main" }, { $set: { vipLevels: levels } }, { upsert: true });
@@ -290,6 +313,24 @@ export async function saveVipLevelsAction(_: ActionState, form: FormData): Promi
   for (const u of users) await recomputeVip(u._id);
   revalidatePath("/admin/vip");
   return { success: "VIP levels save ho gayi aur sab users ki levels update ho gayin." };
+}
+
+export async function saveLeaderboardAction(_: ActionState, form: FormData): Promise<ActionState> {
+  const me = await requireSuper();
+  let raw: unknown;
+  try { raw = JSON.parse(String(form.get("entries") ?? "[]")); } catch { return { error: "Leaderboard data invalid hai." }; }
+  if (!Array.isArray(raw) || raw.length > 100) return { error: "Leaderboard mein 100 se zyada entries nahi ho sakti." };
+  const entries: { name: string; amount: number }[] = [];
+  for (const item of raw) {
+    if (!item || typeof item.name !== "string" || !item.name.trim()) continue;
+    const amount = Number(item.amount);
+    if (!Number.isFinite(amount) || amount < 0) return { error: "Winning amount zero ya us se zyada hona chahiye." };
+    entries.push({ name: item.name.trim().slice(0, 50), amount: Math.floor(amount) });
+  }
+  await Settings.updateOne({ key: "main" }, { $set: { leaderboard: entries } }, { upsert: true });
+  await logAdmin(me, "leaderboard_update", "home leaderboard", `${entries.length} winner(s) updated`);
+  revalidatePath("/"); revalidatePath("/admin/leaderboard");
+  return { success: "Leaderboard update ho gaya." };
 }
 
 export async function saveSettingsAction(_: ActionState, form: FormData): Promise<ActionState> {

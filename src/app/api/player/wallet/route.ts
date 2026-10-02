@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { PaymentAccount } from "@/models";
 import { getServerSessionUser } from "@/lib/serverAuth";
-import { assignPaymentAccounts, getSettings, vipInfo, withdrawnToday } from "@/lib/platform";
+import { assignPaymentAccounts, getSettings, vipInfo, withdrawalCountToday, withdrawnToday } from "@/lib/platform";
 import { gatewayConfig } from "@/lib/gateway";
 import { getWinHoldSummary } from "@/lib/winHold";
 
@@ -19,6 +19,7 @@ export async function GET() {
         const settings = await getSettings();
         const { cur } = vipInfo(me.vipLevel, settings.vipLevels);
         const usedToday = await withdrawnToday(me.id);
+        const withdrawalsToday = await withdrawalCountToday(me.id);
         const gateway = await gatewayConfig();
         const holds = await getWinHoldSummary(me.id);
 
@@ -30,6 +31,8 @@ export async function GET() {
                 daily: cur?.dailyWithdrawLimit ?? 0,
                 perMax: cur?.perWithdrawMax ?? 0,
                 usedToday,
+                withdrawalsToday,
+                withdrawalsPerDay: cur?.withdrawalsPerDay ?? 0,
                 min: cur?.minWithdraw ?? settings.wallet?.minWithdraw ?? 1000,
             },
             gateway: {
