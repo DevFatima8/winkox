@@ -39,7 +39,7 @@ export default function VipBetPointsClient({ params, searchParams }: { params?: 
                     <div><h1 className="text-2xl font-bold text-white">VIP Required Bets</h1><p className="text-sm text-[#b8a7e6]">Player ke VIP bet points manually add ya remove karein. New registration par 100 points milte hain.</p></div>
                     <form className="flex flex-wrap gap-2">
                         <input name="q" defaultValue={q ?? ""} placeholder="Search player / phone / username" className="min-w-56 rounded-xl border border-[#3a2470] bg-black/30 px-3 py-2 text-sm text-white" />
-                        <select name="order" defaultValue={order === "asc" ? "asc" : "desc"} className="rounded-xl border border-[#3a2470] bg-black/30 px-3 py-2 text-sm text-white"><option value="desc">Newest first</option><option value="asc">Oldest first</option></select>
+                        <select name="order" defaultValue={order === "asc" ? "asc" : "desc"} aria-label="Client name sort order" className="rounded-xl border border-[#3a2470] bg-black/30 px-3 py-2 text-sm text-white"><option value="asc">Ascending (A-Z)</option><option value="desc">Descending (Z-A)</option></select>
                         <button className="btn-violet rounded-xl px-4 py-2 text-sm font-bold">Search</button>
                     </form>
                 </div>

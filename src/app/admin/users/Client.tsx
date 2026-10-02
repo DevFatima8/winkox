@@ -20,7 +20,7 @@ export default function UsersPageClient({ params, searchParams }: { params?: Rec
           <form className="flex w-full flex-wrap gap-2 md:w-auto">
             <input name="q" defaultValue={q} placeholder="Search name / phone / username" className="min-w-0 flex-1 rounded-xl border border-[#3a2470] bg-black/30 px-3 py-2 text-sm text-white outline-none focus:border-[#d946ef] md:w-64 md:flex-none" />
             <select name="role" defaultValue={role ?? ""} className="rounded-xl border border-[#3a2470] bg-black/30 px-3 py-2 text-sm text-white"><option value="">All</option><option value="client">Clients</option><option value="agent">Agents</option></select>
-            <select name="order" defaultValue={order === "asc" ? "asc" : "desc"} aria-label="Signup date order" className="rounded-xl border border-[#3a2470] bg-black/30 px-3 py-2 text-sm text-white"><option value="desc">Newest first</option><option value="asc">Oldest first</option></select>
+            <select name="order" defaultValue={order === "asc" ? "asc" : "desc"} aria-label="Client name sort order" className="rounded-xl border border-[#3a2470] bg-black/30 px-3 py-2 text-sm text-white"><option value="asc">Ascending (A-Z)</option><option value="desc">Descending (Z-A)</option></select>
             <button className="btn-violet rounded-xl px-4 py-2 text-sm font-bold">Search</button>
           </form>
           <span className="rounded-lg bg-black/30 px-3 py-1 text-sm text-[#b8a7e6]">Total: <b className="text-[#ffb800]">{list.length}</b></span>

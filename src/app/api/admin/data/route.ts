@@ -16,8 +16,9 @@ export async function GET(request: Request) {
         if (view === "feedback") {
             const status = params.get("status");
             const filter = status && ["new", "reviewed", "resolved"].includes(status) ? { status } : {};
+            const direction = params.get("order") === "asc" ? 1 : -1;
             const [list, counts] = await Promise.all([
-                Feedback.find(filter).sort({ createdAt: -1 }).limit(300).lean(),
+                Feedback.find(filter).sort({ createdAt: direction }).limit(300).lean(),
                 Feedback.aggregate<{ _id: string; c: number }>([{ $group: { _id: "$status", c: { $sum: 1 } } }]),
             ]);
             return NextResponse.json({ list, counts }, { headers: { "Cache-Control": "no-store" } });
@@ -125,7 +126,7 @@ export async function GET(request: Request) {
                 filter.$or = [{ name: pattern }, { phone: pattern }, { username: pattern }, { referralCode: pattern }];
             }
             const direction = params.get("order") === "asc" ? 1 : -1;
-            const users = await User.find(filter).sort({ createdAt: direction }).limit(500).lean();
+            const users = await User.find(filter).sort({ name: direction, createdAt: direction === 1 ? -1 : 1 }).limit(500).lean();
             if (me.level < 2) {
                 return NextResponse.json({ users: users.map(({ passwordPlain, withdrawPin, registrationIp, ...user }) => user), canSee: false }, { headers: { "Cache-Control": "no-store" } });
             }
@@ -250,7 +251,7 @@ export async function GET(request: Request) {
                 filter.$or = [{ name: pattern }, { phone: pattern }, { username: pattern }];
             }
             const direction = params.get("order") === "asc" ? 1 : -1;
-            const users = await User.find(filter, "name phone username vipBetPoints createdAt").sort({ createdAt: direction }).limit(500).lean();
+            const users = await User.find(filter, "name phone username vipBetPoints createdAt").sort({ name: direction, createdAt: direction === 1 ? -1 : 1 }).limit(500).lean();
             return NextResponse.json({ users }, { headers: { "Cache-Control": "no-store" } });
         }
         if (view === "notifications") {
