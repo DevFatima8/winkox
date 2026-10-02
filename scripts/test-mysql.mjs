@@ -14,7 +14,7 @@ const COLLECTIONS = [
     "users", "loginevents", "paymentaccounts", "transactions", "games", "gameresults",
     "aviatorrounds", "chickengames", "chickendashes", "plinkobets", "cardrounds", "cardbets",
     "settings", "notifications", "supportthreads", "supportmessages", "helparticles",
-    "commissions", "adminlogs", "feedbacks", "gatewaysessions", "minesgames",
+    "commissions", "adminlogs", "feedbacks", "gatewaysessions", "minesgames", "winholds",
 ];
 
 const pool = mysql.createPool({ ...cfg, waitForConnections: true, connectionLimit: 5, charset: "utf8mb4" });
