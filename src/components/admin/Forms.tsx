@@ -11,7 +11,7 @@ function Msg({ s }: { s: ActionState }) {
 }
 
 /* ---------- VIP ---------- */
-export type VipRow = { level: number; name: string; minDeposit: number; dailyWithdrawLimit: number; perWithdrawMax: number; minWithdraw: number };
+export type VipRow = { level: number; name: string; minDeposit: number; nextLevelBonus: number; dailyWithdrawLimit: number; withdrawalsPerDay: number; perWithdrawMax: number; minWithdraw: number };
 export function VipForm({ levels }: { levels: VipRow[] }) {
   const [state, action, pending] = useActionState<ActionState, FormData>(saveVipLevelsAction, undefined);
   const [rows, setRows] = useState<VipRow[]>(levels);
@@ -19,14 +19,16 @@ export function VipForm({ levels }: { levels: VipRow[] }) {
     <form action={action} className="space-y-4">
       <div className="overflow-x-auto">
         <table className="w-full text-left text-sm">
-          <thead className="text-xs uppercase text-[#6f5fa3]"><tr><th className="pb-2 pr-2">Level</th><th className="pb-2 pr-2">Name</th><th className="pb-2 pr-2">Min total deposit (Rs.)</th><th className="pb-2 pr-2">Daily withdraw limit</th><th className="pb-2 pr-2">Max per withdraw</th><th className="pb-2 pr-2">Min withdraw</th><th className="pb-2"></th></tr></thead>
+          <thead className="text-xs uppercase text-[#6f5fa3]"><tr><th className="pb-2 pr-2">Level</th><th className="pb-2 pr-2">VIP name</th><th className="pb-2 pr-2">Deposit (Rs.)</th><th className="pb-2 pr-2">Next-level bonus</th><th className="pb-2 pr-2">Daily withdrawal limit</th><th className="pb-2 pr-2">Withdrawals per day</th><th className="pb-2 pr-2">Max per withdrawal</th><th className="pb-2 pr-2">Min withdrawal</th><th className="pb-2"></th></tr></thead>
           <tbody>
             {rows.map((r, i) => (
               <tr key={i}>
                 <td className="py-1 pr-2 font-black text-[#ffb800]">{i}</td>
                 <td className="py-1 pr-2"><input name={`name_${i}`} defaultValue={r.name} className={input} /></td>
                 <td className="py-1 pr-2"><input name={`min_${i}`} type="number" defaultValue={r.minDeposit} className={input} /></td>
+                <td className="py-1 pr-2"><input name={`bonus_${i}`} type="number" min={0} defaultValue={r.nextLevelBonus} className={input} /></td>
                 <td className="py-1 pr-2"><input name={`daily_${i}`} type="number" defaultValue={r.dailyWithdrawLimit} className={input} /></td>
+                <td className="py-1 pr-2"><input name={`count_${i}`} type="number" min={0} defaultValue={r.withdrawalsPerDay} className={input} /></td>
                 <td className="py-1 pr-2"><input name={`per_${i}`} type="number" defaultValue={r.perWithdrawMax} className={input} /></td>
                 <td className="py-1 pr-2"><input name={`minw_${i}`} type="number" defaultValue={r.minWithdraw} className={input} /></td>
                 <td className="py-1">{i === rows.length - 1 && rows.length > 1 && <button type="button" onClick={() => setRows(rows.slice(0, -1))} className="rounded-lg bg-red-500/15 px-2 py-1 text-xs text-red-300"></button>}</td>
@@ -36,7 +38,7 @@ export function VipForm({ levels }: { levels: VipRow[] }) {
         </table>
       </div>
       <div className="flex flex-wrap gap-2">
-        {rows.length < 12 && <button type="button" onClick={() => setRows([...rows, { level: rows.length, name: `Level ${rows.length}`, minDeposit: (rows[rows.length - 1]?.minDeposit ?? 0) * 3 || 300, dailyWithdrawLimit: (rows[rows.length - 1]?.dailyWithdrawLimit ?? 5000) * 2, perWithdrawMax: (rows[rows.length - 1]?.perWithdrawMax ?? 5000) * 2, minWithdraw: 500 }])} className="btn-outline rounded-xl px-4 py-2 text-sm font-bold">+ Add level</button>}
+        {rows.length < 16 && <button type="button" onClick={() => setRows([...rows, { level: rows.length, name: `Level ${rows.length}`, minDeposit: (rows[rows.length - 1]?.minDeposit ?? 0) * 2 || 300, nextLevelBonus: 0, dailyWithdrawLimit: 0, withdrawalsPerDay: 0, perWithdrawMax: 0, minWithdraw: 500 }])} className="btn-outline rounded-xl px-4 py-2 text-sm font-bold">+ Add level</button>}
         <button disabled={pending} className="btn-gold rounded-xl px-6 py-2 text-sm font-black disabled:opacity-60">{pending ? "Saving..." : "Save VIP levels"}</button>
       </div>
       <Msg s={state} />
@@ -90,7 +92,7 @@ export function SettingsForm({ s }: { s: SettingsShape }) {
           <label className="block"><span className={label}>iOS / App Store URL</span><input name="iosUrl" defaultValue={s.app.iosUrl} className={input} /></label>
           <label className="block"><span className={label}>App version</span><input name="appVersion" defaultValue={s.app.version} className={input} /></label>
         </div>
-        <p className="mt-2 text-xs text-[#6f5fa3]">Website khud bhi installable app (PWA) hai — "Download" par tap karne se phone par app install ho jati hai. APK link dene par download button us par jayega.</p>
+        <p className="mt-2 text-xs text-[#6f5fa3]">Website khud bhi installable app (PWA) hai — &quot;Download&quot; par tap karne se phone par app install ho jati hai. APK link dene par download button us par jayega.</p>
       </section>
 
       <section className="wx-card rounded-2xl p-4">
@@ -111,7 +113,7 @@ export function SettingsForm({ s }: { s: SettingsShape }) {
 
       <section className="wx-card rounded-2xl border-2 border-dashed border-[#ffb800]/50 p-4">
         <h2 className="mb-1 font-bold text-white">Test Payment Gateway (Fake / Sandbox)</h2>
-        <p className="mb-3 text-xs text-[#b8a7e6]">ON hone par clients ko Wallet mein "Instant Deposit (Test)" option milta hai — JazzCash/Easypaisa jaisa payment page, OTP daalte hi balance <b className="text-white">turant</b> add (koi asli paisa nahi, admin approval nahi). Games test karne ke liye. Live jaate waqt OFF kar dein.</p>
+        <p className="mb-3 text-xs text-[#b8a7e6]">ON hone par clients ko Wallet mein &quot;Instant Deposit (Test)&quot; option milta hai — JazzCash/Easypaisa jaisa payment page, OTP daalte hi balance <b className="text-white">turant</b> add (koi asli paisa nahi, admin approval nahi). Games test karne ke liye. Live jaate waqt OFF kar dein.</p>
         <div className="grid gap-3 sm:grid-cols-3">
           <label className="flex items-center gap-2 text-sm text-white"><input type="checkbox" name="fg_enabled" defaultChecked={s.fakeGateway.enabled} className="accent-[#d946ef]" /> Gateway enabled</label>
           <label className="flex items-center gap-2 text-sm text-white"><input type="checkbox" name="fg_autoWithdraw" defaultChecked={s.fakeGateway.autoWithdraw} className="accent-[#d946ef]" /> Instant test withdraw bhi</label>

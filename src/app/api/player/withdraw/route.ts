@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { PaymentAccount, Transaction, User, oid } from "@/models";
 import { getServerSessionUser } from "@/lib/serverAuth";
-import { getSettings, vipInfo, withdrawnToday } from "@/lib/platform";
+import { getSettings, vipInfo, withdrawalCountToday, withdrawnToday } from "@/lib/platform";
 import { notifyAdmins, notifyUser } from "@/lib/notifications";
 
 export async function POST(request: Request) {
@@ -25,6 +25,8 @@ export async function POST(request: Request) {
         const { cur } = vipInfo(user.vipLevel ?? 0, settings.vipLevels);
         const min = cur?.minWithdraw ?? settings.wallet?.minWithdraw ?? 1000;
         if (!Number.isFinite(amount) || amount < min) return NextResponse.json({ error: `Minimum withdraw Rs. ${min} hai.` }, { status: 400 });
+        const countToday = await withdrawalCountToday(me.id);
+        if (cur?.withdrawalsPerDay && countToday >= cur.withdrawalsPerDay) return NextResponse.json({ error: `Aapki VIP level (${cur.name}) par rozana ${cur.withdrawalsPerDay} withdrawals allowed hain.` }, { status: 400 });
         if (cur?.perWithdrawMax && amount > cur.perWithdrawMax) return NextResponse.json({ error: `Aapki VIP level (${cur.name}) par ek withdraw max Rs. ${cur.perWithdrawMax.toLocaleString()} hai.` }, { status: 400 });
         const today = await withdrawnToday(me.id);
         if (cur?.dailyWithdrawLimit && today + amount > cur.dailyWithdrawLimit) return NextResponse.json({ error: `Daily limit Rs. ${cur.dailyWithdrawLimit.toLocaleString()} (${cur.name}). Aaj baqi: Rs. ${Math.max(0, cur.dailyWithdrawLimit - today).toLocaleString()}. VIP level barhayein.` }, { status: 400 });

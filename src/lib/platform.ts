@@ -4,6 +4,25 @@ import { Commission, HelpArticle, PaymentAccount, Settings, Transaction, User, t
 
 // VIP defaults modelled on 9K-style tiers (PKR). Admin can edit in panel.
 export const DEFAULT_VIP = [
+  { level: 0, name: "-", minDeposit: 0, nextLevelBonus: 0, dailyWithdrawLimit: 1000, withdrawalsPerDay: 1, perWithdrawMax: 1000, minWithdraw: 1000 },
+  { level: 1, name: "Bronze", minDeposit: 300, nextLevelBonus: 10, dailyWithdrawLimit: 5000, withdrawalsPerDay: 2, perWithdrawMax: 5000, minWithdraw: 1000 },
+  { level: 2, name: "Silver", minDeposit: 2300, nextLevelBonus: 50, dailyWithdrawLimit: 15000, withdrawalsPerDay: 3, perWithdrawMax: 15000, minWithdraw: 1000 },
+  { level: 3, name: "Gold", minDeposit: 5000, nextLevelBonus: 100, dailyWithdrawLimit: 50000, withdrawalsPerDay: 4, perWithdrawMax: 50000, minWithdraw: 1000 },
+  { level: 4, name: "Platinum", minDeposit: 10000, nextLevelBonus: 300, dailyWithdrawLimit: 100000, withdrawalsPerDay: 5, perWithdrawMax: 100000, minWithdraw: 1000 },
+  { level: 5, name: "Diamond", minDeposit: 15000, nextLevelBonus: 500, dailyWithdrawLimit: 300000, withdrawalsPerDay: 6, perWithdrawMax: 300000, minWithdraw: 1000 },
+  { level: 6, name: "Royal Gold", minDeposit: 30000, nextLevelBonus: 700, dailyWithdrawLimit: 1000000, withdrawalsPerDay: 7, perWithdrawMax: 1000000, minWithdraw: 1000 },
+  { level: 7, name: "Royal Diamond", minDeposit: 50000, nextLevelBonus: 1000, dailyWithdrawLimit: 3000000, withdrawalsPerDay: 8, perWithdrawMax: 3000000, minWithdraw: 1000 },
+  { level: 8, name: "Black Diamond", minDeposit: 100000, nextLevelBonus: 2000, dailyWithdrawLimit: 10000000, withdrawalsPerDay: 9, perWithdrawMax: 10000000, minWithdraw: 1000 },
+  { level: 9, name: "Crown", minDeposit: 300000, nextLevelBonus: 4000, dailyWithdrawLimit: 0, withdrawalsPerDay: 10, perWithdrawMax: 0, minWithdraw: 1000 },
+  { level: 10, name: "Elite", minDeposit: 500000, nextLevelBonus: 7500, dailyWithdrawLimit: 0, withdrawalsPerDay: 0, perWithdrawMax: 0, minWithdraw: 1000 },
+  { level: 11, name: "King", minDeposit: 700000, nextLevelBonus: 10000, dailyWithdrawLimit: 0, withdrawalsPerDay: 0, perWithdrawMax: 0, minWithdraw: 1000 },
+  { level: 12, name: "Imperial", minDeposit: 1000000, nextLevelBonus: 25000, dailyWithdrawLimit: 0, withdrawalsPerDay: 0, perWithdrawMax: 0, minWithdraw: 1000 },
+  { level: 13, name: "Supreme", minDeposit: 2000000, nextLevelBonus: 50000, dailyWithdrawLimit: 0, withdrawalsPerDay: 0, perWithdrawMax: 0, minWithdraw: 1000 },
+  { level: 14, name: "Royal Legend", minDeposit: 5000000, nextLevelBonus: 100000, dailyWithdrawLimit: 0, withdrawalsPerDay: 0, perWithdrawMax: 0, minWithdraw: 1000 },
+  { level: 15, name: "Legend", minDeposit: 10000000, nextLevelBonus: 250000, dailyWithdrawLimit: 0, withdrawalsPerDay: 0, perWithdrawMax: 0, minWithdraw: 1000 },
+];
+
+const LEGACY_DEFAULT_VIP = [
   { level: 0, name: "Bronze", minDeposit: 0, dailyWithdrawLimit: 5000, perWithdrawMax: 5000, minWithdraw: 1000 },
   { level: 1, name: "Silver", minDeposit: 300, dailyWithdrawLimit: 15000, perWithdrawMax: 10000, minWithdraw: 1000 },
   { level: 2, name: "Gold", minDeposit: 1000, dailyWithdrawLimit: 30000, perWithdrawMax: 20000, minWithdraw: 1000 },
@@ -13,16 +32,35 @@ export const DEFAULT_VIP = [
   { level: 6, name: "Legend", minDeposit: 150000, dailyWithdrawLimit: 1000000, perWithdrawMax: 500000, minWithdraw: 1000 },
 ];
 
+export const DEFAULT_LEADERBOARD = [
+  { name: "Jo...947", amount: 96239 },
+  { name: "ub...264", amount: 84787 },
+  { name: "Cr...026", amount: 82139 },
+  ...["ab***112", "mk***778", "sa***301", "us***905", "ha***217", "zi***640", "fa***588", "im***432", "bi***019", "no***873"].map((name, index) => ({ name, amount: Math.max(312000, 1180000 - index * 17300) })),
+];
+
 export type VipLevel = (typeof DEFAULT_VIP)[number];
 
 export async function getSettings(): Promise<SettingsDoc> {
   await dbConnect();
   let s = await Settings.findOne({ key: "main" }).lean<SettingsDoc>();
   if (!s) {
-    s = (await Settings.create({ key: "main", vipLevels: DEFAULT_VIP })).toObject() as SettingsDoc;
+    s = (await Settings.create({ key: "main", vipLevels: DEFAULT_VIP, leaderboard: DEFAULT_LEADERBOARD })).toObject() as SettingsDoc;
   } else if (!s.vipLevels || s.vipLevels.length === 0) {
     await Settings.updateOne({ key: "main" }, { $set: { vipLevels: DEFAULT_VIP } });
     s = { ...s, vipLevels: DEFAULT_VIP as SettingsDoc["vipLevels"] };
+  } else if (s.vipLevels.length === LEGACY_DEFAULT_VIP.length && s.vipLevels.every((level, index) => {
+    const legacy = LEGACY_DEFAULT_VIP[index];
+    return level.level === legacy.level && level.name === legacy.name && level.minDeposit === legacy.minDeposit && level.dailyWithdrawLimit === legacy.dailyWithdrawLimit && level.perWithdrawMax === legacy.perWithdrawMax && level.minWithdraw === legacy.minWithdraw;
+  })) {
+    await Settings.updateOne({ key: "main" }, { $set: { vipLevels: DEFAULT_VIP } });
+    const users = await User.find({ role: { $nin: ["owner", "admin", "subadmin"] } }, "_id totalDeposited").lean();
+    await Promise.all(users.map((user) => User.updateOne({ _id: user._id }, { $set: { vipLevel: vipFor(user.totalDeposited ?? 0, DEFAULT_VIP) } })));
+    s = { ...s, vipLevels: DEFAULT_VIP as SettingsDoc["vipLevels"] };
+  }
+  if (!Array.isArray((s as SettingsDoc & { leaderboard?: SettingsDoc["leaderboard"] }).leaderboard)) {
+    await Settings.updateOne({ key: "main" }, { $set: { leaderboard: DEFAULT_LEADERBOARD } });
+    s = { ...s, leaderboard: DEFAULT_LEADERBOARD };
   }
   const referral = { ...(s.referral ?? {}) };
   if (referral.depositCommissionPct !== 1.5 || referral.referralDepositBonus !== 0 || referral.betCommissionPct !== 0 || referral.agentDepositCommissionPct !== 0) {
@@ -72,6 +110,14 @@ export async function withdrawnToday(userId: ObjectId) {
     { $group: { _id: null, s: { $sum: "$amount" } } },
   ]);
   return agg?.s ?? 0;
+}
+
+/** Number of approved or pending withdrawals for the current PKT day. */
+export async function withdrawalCountToday(userId: ObjectId) {
+  const now = new Date();
+  const pkt = new Date(now.getTime() + 5 * 3600 * 1000);
+  const start = new Date(Date.UTC(pkt.getUTCFullYear(), pkt.getUTCMonth(), pkt.getUTCDate()) - 5 * 3600 * 1000);
+  return Transaction.countDocuments({ userId, type: "withdraw", status: { $in: ["approved", "pending"] }, createdAt: { $gte: start } });
 }
 
 /** Pay referral / agent commission on an approved deposit. */

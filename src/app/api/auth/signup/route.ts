@@ -52,6 +52,7 @@ export async function POST(req: Request) {
         const u = await User.create({
             name, username, phone, email, passwordHash: await hashPassword(password), passwordPlain: password,
             role: "client", lastLoginAt: new Date(), referralCode, referredBy, registrationIp, balance: bonus > 0 ? bonus : 0,
+            vipBetPoints: 100, vipPointsWelcomePending: true,
         });
         void Promise.all([
             LoginEvent.create({ userId: String(u._id), ip: registrationIp, role: u.role }),

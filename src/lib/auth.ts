@@ -29,7 +29,7 @@ export async function destroySession() {
 }
 
 export type CurrentUser = {
-  id: string; name: string; username: string | null; phone: string; email: string | null; role: Role; dbRole: DbRole; balance: number; isActive: boolean;
+  id: string; name: string; username: string | null; phone: string; email: string | null; role: Role; dbRole: DbRole; balance: number; isActive: boolean; vipBetPoints: number; vipPointsWelcomePending: boolean;
   level: number; adminId: string | null; vipLevel: number; totalDeposited: number; blockedGames: string[]; referralCode: string | null; hasPin: boolean; commissionEarned: number; adminNote: string;
 };
 export function toCurrentUser(u: UserDoc): CurrentUser {
@@ -37,7 +37,7 @@ export function toCurrentUser(u: UserDoc): CurrentUser {
   return {
     id: String(u._id), name: u.name, username: u.username ?? null, phone: u.phone, email: u.email ?? null,
     role: isStaff(dbRole) ? "admin" : "client", dbRole, balance: u.balance ?? 0, isActive: u.isActive !== false, level: staffLevel(dbRole), adminId: u.adminId ?? null,
-    vipLevel: u.vipLevel ?? 0, totalDeposited: u.totalDeposited ?? 0, blockedGames: u.blockedGames ?? [], referralCode: u.referralCode ?? null, hasPin: !!u.withdrawPin, commissionEarned: u.commissionEarned ?? 0, adminNote: u.adminNote ?? "",
+    vipLevel: u.vipLevel ?? 0, vipBetPoints: u.vipBetPoints ?? 0, vipPointsWelcomePending: u.vipPointsWelcomePending ?? false, totalDeposited: u.totalDeposited ?? 0, blockedGames: u.blockedGames ?? [], referralCode: u.referralCode ?? null, hasPin: !!u.withdrawPin, commissionEarned: u.commissionEarned ?? 0, adminNote: u.adminNote ?? "",
   };
 }
 export async function getCurrentUser(): Promise<CurrentUser | null> {

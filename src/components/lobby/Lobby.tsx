@@ -65,14 +65,6 @@ const CATS: { key: string; label: string; icon: string; img: string; grad: strin
   { key: "Lottery", label: "Lottery", icon: "🎱", img: "/lobby/cats/lottery.jpg", grad: "from-[#ca8a04]" },
 ];
 
-const LEADER_NAMES = ["ab***112", "mk***778", "sa***301", "us***905", "ha***217", "zi***640", "fa***588", "im***432", "bi***019", "no***873", "ta***256", "ra***660", "ka***731", "um***408", "sh***925", "al***516", "ma***284", "re***693", "aq***807", "za***164"];
-const LEADERS: Row[] = Array.from({ length: 50 }, (_, i) => ({
-  rank: i + 4,
-  name: LEADER_NAMES[i % LEADER_NAMES.length],
-  amount: Math.max(312_000, 1_180_000 - i * 17_300),
-  up: i % 3 !== 1,
-}));
-
 export const CONTAINER = "mx-auto w-full max-w-[560px] md:max-w-[880px] lg:max-w-[1200px] xl:max-w-[1320px] 2xl:max-w-[1600px] min-[2200px]:max-w-[1900px]";
 
 /* ---------------- pieces ---------------- */
@@ -197,8 +189,9 @@ export function BottomNav({ viewer, active }: { viewer: Viewer; active: "home" |
 }
 
 /* ---------------- Leaderboard Component ---------------- */
-function LeaderboardCard({ t }: { t: any }) {
-  const listData = LEADERS;
+function LeaderboardCard({ rows }: { rows: Row[] }) {
+  const podium = [rows[1], rows[0], rows[2]].filter((row): row is Row => Boolean(row));
+  const listData = rows.slice(3);
 
   return (
     <section className="wx-winners-card relative overflow-hidden rounded-[2rem] border border-slate-200 bg-white dark:border-[#3a2470] dark:bg-[#0b0716] p-4 md:p-6 lg:col-span-7 shadow-2xl transition-colors duration-300">
@@ -215,47 +208,22 @@ function LeaderboardCard({ t }: { t: any }) {
       </div>
 
       {/* Top 3 Avatars/Initials Grid */}
-      <div className="flex items-end justify-center gap-4 sm:gap-8 pt-4 pb-10">
-
-        {/* Rank 2 */}
-        <div className="flex flex-col items-center w-24 group">
-          <div className="relative flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-indigo-400 to-purple-600 shadow-lg ring-4 ring-white dark:ring-[#0b0716] transition-transform group-hover:scale-105">
-            <span className="text-xl font-black text-white">2</span>
-            {/* Decorative Outer Ring */}
-            <div className="absolute inset-0 scale-[1.3] rounded-full border-[1.5px] border-dashed border-slate-300 dark:border-white/20 animate-[spin_15s_linear_infinite]"></div>
-          </div>
-          <div className="mt-5 w-full truncate text-center text-xs font-bold text-slate-800 dark:text-slate-200">ub...264</div>
-          <div className="mt-1 flex items-center gap-1 text-[11px] font-black text-emerald-500 drop-shadow-[0_0_5px_rgba(16,185,129,0.3)]">
-            <span>↑</span> 84,787
-          </div>
-        </div>
-
-        {/* Rank 1 */}
-        <div className="flex flex-col items-center w-28 -translate-y-6 group">
-          <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-amber-300 via-amber-400 to-orange-500 shadow-xl ring-4 ring-white dark:ring-[#0b0716] transition-transform group-hover:scale-105">
-            <CrownIcon size={36} className="absolute -top-7 text-amber-400 drop-shadow-[0_2px_10px_rgba(251,191,36,0.6)]" />
-            <span className="text-3xl font-black text-amber-950">1</span>
-            {/* Decorative Outer Ring */}
-            <div className="absolute inset-0 scale-[1.25] rounded-full border-2 border-dashed border-amber-400/50 animate-[spin_10s_linear_infinite]"></div>
-          </div>
-          <div className="mt-6 w-full truncate text-center text-sm font-bold text-slate-900 dark:text-white">Jo...947</div>
-          <div className="mt-1 flex items-center gap-1 text-xs font-black text-emerald-500 drop-shadow-[0_0_8px_rgba(16,185,129,0.4)]">
-            <span>↑</span> 96,239
-          </div>
-        </div>
-
-        {/* Rank 3 */}
-        <div className="flex flex-col items-center w-24 group">
-          <div className="relative flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-orange-400 to-rose-600 shadow-lg ring-4 ring-white dark:ring-[#0b0716] transition-transform group-hover:scale-105">
-            <span className="text-xl font-black text-white">3</span>
-            {/* Decorative Outer Ring */}
-            <div className="absolute inset-0 scale-[1.3] rounded-full border-[1.5px] border-dashed border-slate-300 dark:border-white/20 animate-[spin_15s_linear_infinite]"></div>
-          </div>
-          <div className="mt-5 w-full truncate text-center text-xs font-bold text-slate-800 dark:text-slate-200">Cr...026</div>
-          <div className="mt-1 flex items-center gap-1 text-[11px] font-black text-emerald-500 drop-shadow-[0_0_5px_rgba(16,185,129,0.3)]">
-            <span>↑</span> 82,139
-          </div>
-        </div>
+      <div className="flex min-h-36 items-end justify-center gap-4 pt-4 pb-10 sm:gap-8">
+        {podium.map((row) => {
+          const rank = rows.indexOf(row) + 1;
+          const champion = rank === 1;
+          const color = rank === 2 ? "from-indigo-400 to-blue-600" : rank === 3 ? "from-orange-400 to-rose-600" : "from-amber-300 via-amber-400 to-orange-500";
+          return <div key={`${rank}-${row.name}`} className={`flex w-24 flex-col items-center group ${champion ? "w-28 -translate-y-5" : ""}`}>
+            <div className={`relative flex ${champion ? "h-20 w-20" : "h-14 w-14"} items-center justify-center rounded-full bg-gradient-to-br ${color} shadow-lg ring-4 ring-white dark:ring-[#0b0716] transition-transform group-hover:scale-105`}>
+              {champion && <CrownIcon size={36} className="absolute -top-7 text-amber-400 drop-shadow-[0_2px_10px_rgba(251,191,36,0.6)]" />}
+              <span className={`${champion ? "text-3xl text-amber-950" : "text-xl text-white"} font-black`}>{rank}</span>
+              <div className="absolute inset-0 scale-[1.25] rounded-full border-[1.5px] border-dashed border-white/30 animate-[spin_15s_linear_infinite]" />
+            </div>
+            <div className="mt-4 w-full truncate text-center text-xs font-bold text-slate-800 dark:text-slate-200">{row.name}</div>
+            <div className="mt-1 flex items-center gap-1 text-[11px] font-black text-emerald-500"><span>↑</span> {row.amount.toLocaleString("en-US")}</div>
+          </div>;
+        })}
+        {rows.length === 0 && <div className="py-10 text-sm text-slate-500">Leaderboard is being updated.</div>}
       </div>
 
       {/* Glowing Curved Divider */}
@@ -311,7 +279,7 @@ function LeaderboardCard({ t }: { t: any }) {
 }
 
 /* ---------------- full lobby ---------------- */
-export function Lobby({ viewer, cat, links = {}, showHeader = true }: { viewer: Viewer; cat: string; links?: Links; showHeader?: boolean }) {
+export function Lobby({ viewer, cat, links = {}, leaderboard = [], showHeader = true }: { viewer: Viewer; cat: string; links?: Links; leaderboard?: Row[]; showHeader?: boolean }) {
   const { t, locale } = useI18n();
   const wa = links.whatsapp || BRAND.whatsapp; const tg = links.telegram || BRAND.telegram;
   const slides: Slide[] = SLIDES.map((sl, i) => ({ ...sl, kicker: t(`b${i + 1}k` as "b1k"), title: t(`b${i + 1}t` as "b1t"), sub: t(`b${i + 1}s` as "b1s"), cta: [t("registerNow"), t("playNow"), t("joinTable"), t("viewPromo")][i] }));
@@ -407,7 +375,7 @@ export function Lobby({ viewer, cat, links = {}, showHeader = true }: { viewer: 
         {/* leaderboard + app */}
         <div className="space-y-3 lg:grid lg:grid-cols-12 lg:gap-4 lg:space-y-0">
 
-          <LeaderboardCard t={t} />
+          <LeaderboardCard rows={leaderboard} />
 
           <section className="space-y-2 lg:col-span-5"><div className="flex items-center gap-2 px-1 text-sm font-bold"><DownloadIcon size={16} />{t("appDownload")}</div><div className="on-image relative overflow-hidden rounded-2xl border border-[#3a2470] bg-gradient-to-br from-[#3b0764] via-[#1b1038] to-[#0b0716] p-4 lg:flex lg:h-[calc(100%-2rem)] lg:items-center"><div className="flex items-center gap-4 lg:w-full lg:gap-6"><div className="relative h-36 w-20 shrink-0 overflow-hidden rounded-[14px] border-4 border-[#241546] bg-black shadow-xl"><img src="/lobby/jackpot.jpg" alt="" className="h-full w-full object-cover" /></div><div className="flex-1 space-y-2"><div className="text-sm font-black">{t("getApp")}</div><p className="text-[11px] text-[#b8a7e6]">{t("getAppSub")}</p><InstallApp androidUrl={links.androidUrl || undefined} iosUrl={links.iosUrl || undefined} /></div></div></div></section>
         </div>

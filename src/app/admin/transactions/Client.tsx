@@ -26,9 +26,9 @@ const getWeekRange = (value: string) => {
 
 export default function TransactionsPageClient({ type, params, searchParams }: { type: TransactionType; params?: Record<string, string>; searchParams?: Record<string, string> }) {
   return usePage(async () => {
-    const { status, q, days, date, week, year } = searchParams ?? {};
+    const { status, q, days, date, week, year, order } = searchParams ?? {};
     const query = new URLSearchParams({ type });
-    for (const [key, value] of Object.entries({ status, q, days, date, week, year })) if (value) query.set(key, value);
+    for (const [key, value] of Object.entries({ status, q, days, date, week, year, order })) if (value) query.set(key, value);
     const response = await fetch(`/api/admin/transactions?${query}`, { cache: "no-store" });
     const result = await response.json();
     if (!response.ok) throw new Error(result.error ?? "Transactions load nahi ho sake.");
@@ -43,7 +43,7 @@ export default function TransactionsPageClient({ type, params, searchParams }: {
     const makeHref = (nextStatus = status ?? "") => {
       const values = new URLSearchParams();
       if (nextStatus) values.set("status", nextStatus);
-      if (q) values.set("q", q); if (days) values.set("days", days); if (date) values.set("date", date); if (week) values.set("week", week); if (year) values.set("year", year);
+      if (q) values.set("q", q); if (days) values.set("days", days); if (date) values.set("date", date); if (week) values.set("week", week); if (year) values.set("year", year); if (order) values.set("order", order);
       const query = values.toString();
       return query ? `${basePath}?${query}` : basePath;
     };
@@ -53,6 +53,7 @@ export default function TransactionsPageClient({ type, params, searchParams }: {
         <div className="flex flex-wrap items-end justify-between gap-3"><div><h1 className="text-2xl font-bold text-white">{type === "deposit" ? "Deposits" : "Withdrawals"}</h1><p className="mt-1 text-sm text-slate-400">{type === "deposit" ? "Deposit requests ki history aur approval." : "Withdrawal requests ki history aur approval."}</p></div><div className="flex gap-2"><Link href="/admin/deposits" className={`rounded-lg px-3 py-1.5 text-sm font-medium ${type === "deposit" ? "bg-emerald-400 text-slate-950" : "bg-slate-800 text-slate-300"}`}>Deposits</Link><Link href="/admin/withdrawals" className={`rounded-lg px-3 py-1.5 text-sm font-medium ${type === "withdraw" ? "bg-red-400 text-slate-950" : "bg-slate-800 text-slate-300"}`}>Withdrawals</Link></div></div>
         <form className="grid gap-2 rounded-xl border border-slate-700 bg-slate-900/60 p-3 sm:grid-cols-2 lg:grid-cols-6" method="get">
           <input name="q" defaultValue={q ?? ""} placeholder="Search user, phone, TID..." className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white outline-none focus:border-yellow-400 lg:col-span-2" />
+          <select name="order" defaultValue={order === "asc" ? "asc" : "desc"} aria-label="Transaction date order" className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"><option value="desc">Newest first</option><option value="asc">Oldest first</option></select>
           <input name="days" type="number" min="1" defaultValue={days ?? ""} placeholder="Last N days" className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white outline-none focus:border-yellow-400" />
           <input name="date" type="date" defaultValue={date ?? ""} title="Specific day" className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white outline-none focus:border-yellow-400" />
           <input name="week" type="week" defaultValue={week ?? ""} title="Specific week" className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white outline-none focus:border-yellow-400" />
