@@ -44,6 +44,15 @@ try {
         console.log(`${table} columns verified: id, data, created_at, updated_at`);
     }
 
+    const [settingsRows] = await pool.query("SELECT data FROM `settings`");
+    const settingsDocs = settingsRows.map((row) => typeof row.data === "string" ? JSON.parse(row.data || "{}") : row.data);
+    const mainSettings = settingsDocs.find((doc) => doc.key === "main");
+    console.log("Leaderboard storage status:", JSON.stringify({
+        mainSettingsFound: Boolean(mainSettings),
+        vipLevelCount: Array.isArray(mainSettings?.vipLevels) ? mainSettings.vipLevels.length : null,
+        leaderboardEntryCount: Array.isArray(mainSettings?.leaderboard) ? mainSettings.leaderboard.length : null,
+    }));
+
     const [rows] = await pool.query("SHOW TABLES");
     console.log("Tables in database:", rows.map((r) => Object.values(r)[0]));
 } catch (e) {
