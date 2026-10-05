@@ -40,17 +40,31 @@ export function toCurrentUser(u: UserDoc): CurrentUser {
     vipLevel: u.vipLevel ?? 0, vipBetPoints: u.vipBetPoints ?? 0, vipPointsWelcomePending: u.vipPointsWelcomePending ?? false, totalDeposited: u.totalDeposited ?? 0, blockedGames: u.blockedGames ?? [], referralCode: u.referralCode ?? null, hasPin: !!u.withdrawPin, commissionEarned: u.commissionEarned ?? 0, adminNote: u.adminNote ?? "",
   };
 }
-export async function getCurrentUser(): Promise<CurrentUser | null> {
+let _userPromise: Promise<CurrentUser | null> | null = null;
+let _userPromiseTime = 0;
+if (typeof window !== "undefined") {
+  window.addEventListener("wx:session", () => { _userPromiseTime = 0; });
+}
+
+export async function getCurrentUser(force = false): Promise<CurrentUser | null> {
   if (isBrowser()) {
-    try {
-      const res = await fetch("/api/auth/me", { cache: "no-store" });
-      if (!res.ok) return null;
-      const data = await res.json();
-      if (!data.user) { await destroySession(); return null; }
-      return data.user as CurrentUser;
-    } catch {
-      return null;
+    const now = Date.now();
+    if (!force && _userPromise && (now - _userPromiseTime < 5000)) {
+      return _userPromise;
     }
+    _userPromiseTime = now;
+    _userPromise = (async () => {
+      try {
+        const res = await fetch("/api/auth/me", { cache: "no-store" });
+        if (!res.ok) return null;
+        const data = await res.json();
+        if (!data.user) { await destroySession(); return null; }
+        return data.user as CurrentUser;
+      } catch {
+        return null;
+      }
+    })();
+    return _userPromise;
   }
   return null;
 }
