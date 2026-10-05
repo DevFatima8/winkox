@@ -312,6 +312,6 @@ export async function GET(request: Request) {
         return NextResponse.json({ error: "Unknown admin data view." }, { status: 404 });
     } catch (error) {
         console.error("[admin data]", error);
-        return NextResponse.json({ error: "Admin data load nahi ho saka." }, { status: 503 });
+        return NextResponse.json({ error: "Admin data load nahi ho raha." }, { status: 503 });
     }
 }
