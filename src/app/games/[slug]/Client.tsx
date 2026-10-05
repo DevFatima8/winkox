@@ -5,6 +5,7 @@ import { Header, BottomNav, CONTAINER } from "@/components/lobby/Lobby";
 import { SupportWidget } from "@/components/SupportWidget";
 import { Hi, useI18n } from "@/lib/i18n/client";
 import { usePage, NOT_FOUND, REDIRECT } from "@/lib/useDb";
+import { getCurrentUser } from "@/lib/auth";
 
 export default function PublicGamePageClient({ params, searchParams }: { params?: Record<string, string>; searchParams?: Record<string, string> }) {
   const { t, locale } = useI18n();
@@ -13,9 +14,7 @@ export default function PublicGamePageClient({ params, searchParams }: { params?
   return usePage(async () => {
     const { slug } = params ?? {};
     if (!GAME_SLUGS.includes(slug)) return NOT_FOUND;
-    const response = await fetch("/api/auth/me", { cache: "no-store" });
-    const data = response.ok ? await response.json() : { user: null };
-    const me = data.user;
+    const me = await getCurrentUser();
     if (me?.role === "client") return REDIRECT(`/player/games/${slug}`);
 
     const viewer = { loggedIn: !!me, isAdmin: me?.role === "admin", name: me?.name };
